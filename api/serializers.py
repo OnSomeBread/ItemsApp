@@ -12,7 +12,7 @@ class TypesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ItemSerializer(serializers.ModelSerializer):
-    sellfor = SellForSerializer(read_only=True)
+    sells = SellForSerializer(many=True, read_only=True)
     types = TypesSerializer(many=True)
 
     class Meta:
