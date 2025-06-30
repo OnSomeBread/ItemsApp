@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from websiteApi.models import Item, SellFor
-from .serializers import ItemSerializer, SellForSerializer
+from websiteApi.models import Item
+from .serializers import ItemSerializer
 
 @api_view(['GET'])
 def getData(request):

@@ -14,7 +14,7 @@ class Item(models.Model):
 
     avg24hPrice = models.IntegerField(default=0, null=True)
     basePrice = models.IntegerField(default=0)
-    changeLast48hPercent = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+    changeLast48hPercent = models.DecimalField(max_digits=8, decimal_places=2, null=True)
 
     width = models.IntegerField(default=0)
     height = models.IntegerField(default=0)
