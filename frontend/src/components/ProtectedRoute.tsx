@@ -9,7 +9,7 @@ interface Props {
 }
 
 function ProtectedRoute({ children }: Props) {
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   const refreshToken = async () => {
     const refresh = localStorage.getItem("refresh_token");

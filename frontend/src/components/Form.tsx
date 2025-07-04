@@ -18,7 +18,15 @@ function Form({ route, method }: Props) {
   const name = method === "login" ? "Login" : "Register";
 
   const onFormSubmit = (e: FormEvent) => {
+    setLoading(true);
     e.preventDefault();
+    try {
+      const response = await api.post(route, { username, password });
+    } catch (error) {
+      alert(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
