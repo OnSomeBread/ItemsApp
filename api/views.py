@@ -8,7 +8,7 @@ from .serializers import ItemSerializer, UserSerializers
 
 @api_view(['GET'])
 def getData(request):
-    items = Item.objects.all()[:50]
+    items = Item.objects.all()[:100]
     serializer = ItemSerializer(items, many=True)
     permission_classes = [AllowAny]
     return Response(serializer.data)
