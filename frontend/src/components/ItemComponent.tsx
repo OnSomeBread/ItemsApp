@@ -1,9 +1,11 @@
 import type { Item, Sell } from "../constants";
+import Buttons from "./Buttons";
 
 interface Props {
   item: Item;
 }
 
+// goes through all of the traders and finds the trader that sells for the most
 function getBestTrader(allTraders: Sell[]) {
   if (allTraders.length == 1 && allTraders[0].source == "fleaMarket") {
     return <></>;
@@ -25,6 +27,7 @@ function getBestTrader(allTraders: Sell[]) {
   );
 }
 
+// creates a few lines for the items container only if item can be sold in the flea
 function getFleaPrice(item: Item) {
   for (const trader of item.sells) {
     if (trader.source == "fleaMarket") {
@@ -32,9 +35,10 @@ function getFleaPrice(item: Item) {
         <>
           <p>Flea Price: {trader.price} RUB</p>
           <p>Average 24h Price: {item.avg24hPrice} RUB</p>
-          <p style={{ color: item.changeLast48hPercent < 0 ? "red" : "green" }}>
+          <p style={{ color: item.changeLast48hPercent < 0 ? "green" : "red" }}>
             {item.changeLast48hPercent}%
           </p>
+          <Buttons />
         </>
       );
     }
@@ -57,8 +61,8 @@ function ItemComponent({ item }: Props) {
         textAlign: "center",
       }}
     >
-      <p>Name: {item.name}</p>
-      <p>Short Name: {item.shortName}</p>
+      <p>{item.name}</p>
+      <p>{item.shortName}</p>
       <p>Base Price: {item.basePrice} RUB</p>
 
       {item.sells.length > 0 ? (
