@@ -23,3 +23,18 @@ export interface Item {
   height: number;
   link: string;
 }
+
+export const ALLTYPES = ['ammo', 'ammoBox', 'armor',
+  'armorPlate', 'backpack',   'barter',
+  'container',  'glasses',    'grenade',
+  'gun',        'headphones', 'helmet',
+  'injectors',  'keys',       'markedOnly',
+  'meds',       'mods',       'noFlea',
+  'pistolGrip', 'preset',     'provisions',
+  'rig',        'suppressor', 'wearable']
+  
+ export const ALLTRADERS = ['fence',       'fleaMarket',
+  'jaeger',      'mechanic',
+  'peacekeeper', 'prapor',
+  'ragman',      'ref',
+  'skier',       'therapist']

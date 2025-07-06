@@ -1,5 +1,6 @@
 import ListItems from "../components/ListItems";
 import type { Item } from "../constants";
+import { ALLTYPES } from "../constants";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -52,6 +53,9 @@ function DisplayItems() {
       </select>
       <select defaultValue="any" onChange={(e) => setType(e.target.value)}>
         <option value="any">any</option>
+        {ALLTYPES.map((t) => (
+          <option value={t}>{t}</option>
+        ))}
       </select>
       <ListItems items={allItems} />
     </>

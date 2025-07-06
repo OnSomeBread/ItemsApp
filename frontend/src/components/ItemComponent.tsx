@@ -3,6 +3,7 @@ import Buttons from "./Buttons";
 
 interface Props {
   item: Item;
+  idx: number;
 }
 
 // goes through all of the traders and finds the trader that sells for the most
@@ -46,7 +47,7 @@ function getFleaPrice(item: Item) {
   return <>Cannot be sold on flea</>;
 }
 
-function ItemComponent({ item }: Props) {
+function ItemComponent({ item, idx }: Props) {
   return (
     <div
       style={{
@@ -61,6 +62,7 @@ function ItemComponent({ item }: Props) {
         textAlign: "center",
       }}
     >
+      <p>{idx}</p>
       <p>{item.name}</p>
       <p>{item.shortName}</p>
       <p>Base Price: {item.basePrice} RUB</p>

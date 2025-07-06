@@ -15,7 +15,11 @@ function ItemsComponent({ items }: Props) {
         padding: "20px",
       }}
     >
-      {items ? items.map((x) => <ItemComponent item={x} />) : <h1>loading</h1>}
+      {items ? (
+        items.map((x, i) => <ItemComponent item={x} idx={i + 1} />)
+      ) : (
+        <h1>loading</h1>
+      )}
     </div>
   );
 }
