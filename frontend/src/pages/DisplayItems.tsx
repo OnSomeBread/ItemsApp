@@ -3,35 +3,73 @@ import type { Item } from "../constants";
 import { ALLTYPES } from "../constants";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
-  const [search, setSearch] = useState<string>("");
-  const [asc, setAsc] = useState<string>("-");
-  const [sortBy, setSortBy] = useState<string>("fleaMarket");
-  const [type, setType] = useState<string>("any");
+  const [search, setSearch] = useState("");
+  const [asc, setAsc] = useState("-");
+  const [sortBy, setSortBy] = useState("fleaMarket");
+  const [type, setType] = useState("any");
+
+  const [hasMore, setHasMore] = useState(true);
+  //const [limit, setLimit] = useState(30);
+  const limit = 30;
+  const [offset, setOffset] = useState(0);
+
+  const q =
+    "http://127.0.0.1:8000/api/" +
+    "?search=" +
+    search +
+    "&asc=" +
+    asc +
+    "&sort=" +
+    sortBy +
+    "&type=" +
+    type;
+
+  const getMoreItems = () => {
+    const url = q + "&limit=" + limit + "&offset=" + offset;
+    axios
+      .get<Item[]>(url)
+      .then((response) => {
+        setAllItems((prev) => [...(prev ?? []), ...response.data]);
+        setHasMore(response.data.length === limit);
+        setOffset(offset + limit);
+      })
+      .catch((err) => console.log(err));
+  };
 
   useEffect(() => {
     axios
-      .get<Item[]>(
-        "http://127.0.0.1:8000/api/" +
-          "?search=" +
-          search +
-          "&asc=" +
-          asc +
-          "&sort=" +
-          sortBy +
-          "&type=" +
-          type
-      )
+      .get<Item[]>(q)
       .then((response) => setAllItems(response.data))
       .catch((err) => console.log(err));
-  }, [search, asc, sortBy, type]);
+  }, [q]);
 
   //let itemCounts = allItems ? Array(allItems.length).fill(useState(0)) : null;
 
+  // TODO add a more elaborate loading screen
+  const loading = () => {
+    return <p>loading...</p>;
+  };
+
+  if (allItems === null) {
+    return loading();
+  }
+
   return (
-    <>
+    <InfiniteScroll
+      dataLength={allItems.length}
+      next={getMoreItems}
+      hasMore={hasMore}
+      loader={loading()}
+      endMessage={
+        <p style={{ textAlign: "center" }}>
+          <b>No more items</b>
+        </p>
+      }
+    >
       <input onChange={(e) => setSearch(e.target.value)}></input>
       <label>Sort by</label>
       <select defaultValue="-" onChange={(e) => setAsc(e.target.value)}>
@@ -52,13 +90,12 @@ function DisplayItems() {
         <option value="fleaMarket">Flea Market Price</option>
       </select>
       <select defaultValue="any" onChange={(e) => setType(e.target.value)}>
-        <option value="any">any</option>
         {ALLTYPES.map((t) => (
           <option value={t}>{t}</option>
         ))}
       </select>
       <ListItems items={allItems} />
-    </>
+    </InfiniteScroll>
   );
 }
 

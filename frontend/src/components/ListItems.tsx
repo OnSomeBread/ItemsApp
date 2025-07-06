@@ -2,7 +2,7 @@ import type { Item } from "../constants";
 import ItemComponent from "./ItemComponent";
 
 interface Props {
-  items: Item[] | null;
+  items: Item[];
 }
 
 function ItemsComponent({ items }: Props) {
@@ -15,11 +15,9 @@ function ItemsComponent({ items }: Props) {
         padding: "20px",
       }}
     >
-      {items ? (
-        items.map((x, i) => <ItemComponent item={x} idx={i + 1} />)
-      ) : (
-        <h1>loading</h1>
-      )}
+      {items.map((x, i) => (
+        <ItemComponent item={x} idx={i + 1} />
+      ))}
     </div>
   );
 }

@@ -15,18 +15,31 @@ def getData(request):
     asc:str = request.query_params.get('asc')
     item_type:str = request.query_params.get('type')
 
+    limit = request.query_params.get('limit')
+    try:
+        limit = min(int(limit), 100)
+    except:
+        limit = 30
+
+    offset = request.query_params.get('offset')
+    try:
+        offset = int(offset)
+    except:
+        offset = 0
+
     # do a different search if asking for flea price since not all items have flea
     if item_type != 'any':
         items = Item.objects.filter(types__name=item_type)
     else:
         items = Item.objects
+
     if sortBy == 'fleaMarket': 
         flea_market_prices = SellFor.objects.filter(item=OuterRef('pk'), source='fleaMarket').order_by('-price')
         items = items.annotate(fleaPrice=Subquery(flea_market_prices.values('price')[:1]))
-        items = items.filter(fleaPrice__isnull=False, name__icontains=search).order_by(asc + 'fleaPrice')[:30]
+        items = items.filter(fleaPrice__isnull=False, name__icontains=search).order_by(asc + 'fleaPrice')
     else:
-        items = items.filter(name__icontains=search).order_by(asc + sortBy)[:30]
-    serializer = ItemSerializer(items, many=True)
+        items = items.filter(name__icontains=search).order_by(asc + sortBy)
+    serializer = ItemSerializer(items[offset:offset + limit], many=True)
     return Response(serializer.data)
 
 class CreateUserView(generics.CreateAPIView):

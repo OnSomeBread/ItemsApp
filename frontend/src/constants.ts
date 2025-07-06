@@ -24,7 +24,7 @@ export interface Item {
   link: string;
 }
 
-export const ALLTYPES = ['ammo', 'ammoBox', 'armor',
+export const ALLTYPES = ['any','ammo', 'ammoBox', 'armor',
   'armorPlate', 'backpack',   'barter',
   'container',  'glasses',    'grenade',
   'gun',        'headphones', 'helmet',
@@ -32,8 +32,8 @@ export const ALLTYPES = ['ammo', 'ammoBox', 'armor',
   'meds',       'mods',       'noFlea',
   'pistolGrip', 'preset',     'provisions',
   'rig',        'suppressor', 'wearable']
-  
- export const ALLTRADERS = ['fence',       'fleaMarket',
+
+ export const ALLTRADERS = ['fence', 'fleaMarket',
   'jaeger',      'mechanic',
   'peacekeeper', 'prapor',
   'ragman',      'ref',
