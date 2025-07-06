@@ -34,7 +34,7 @@ function DisplayItems() {
       .get<Item[]>(url)
       .then((response) => {
         setAllItems((prev) => [...(prev ?? []), ...response.data]);
-        setHasMore(response.data.length === limit);
+        setHasMore(response.data.length > 0);
         setOffset(offset + limit);
       })
       .catch((err) => console.log(err));
