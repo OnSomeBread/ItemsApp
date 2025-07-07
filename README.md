@@ -1,6 +1,5 @@
 How to run<br>
 1) install the required packages<br>
-
 pip install -r requirements.txt<br>
 cd frontend<br>
 npm install<br>
