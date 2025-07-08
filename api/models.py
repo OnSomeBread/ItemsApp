@@ -2,14 +2,14 @@ from django.db import models
 
 # every item can have many types
 class Types(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50, unique=True, db_index=True)
 
     def __str__(self):
         return self.name 
 
 class Item(models.Model):
-    _id = models.CharField(max_length=24, primary_key=True)
-    name = models.CharField(max_length=100)
+    _id = models.CharField(max_length=24, primary_key=True, db_index=True)
+    name = models.CharField(max_length=100, db_index=True)
     shortName = models.CharField(max_length=50)
 
     avg24hPrice = models.IntegerField(default=0, null=True)
@@ -28,8 +28,8 @@ class Item(models.Model):
 # every item can have many sources to sell from for different prices
 class SellFor(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='sells')
-    price = models.IntegerField(default=0)
-    source = models.CharField(max_length=50)
+    price = models.IntegerField(default=0, db_index=True)
+    source = models.CharField(max_length=50, db_index=True)
 
     def __str__(self):
         return 'price for ' + self.item.shortName

@@ -14,7 +14,7 @@ function DisplayItems() {
 
   const [hasMore, setHasMore] = useState(true);
   //const [limit, setLimit] = useState(30);
-  const limit = 30;
+  const limit = 50;
   const [offset, setOffset] = useState(0);
 
   const q =
@@ -28,6 +28,17 @@ function DisplayItems() {
     "&type=" +
     type;
 
+  useEffect(() => {
+    axios
+      .get<Item[]>(q)
+      .then((response) => {
+        setAllItems(response.data);
+        setHasMore(true);
+        setOffset(0);
+      })
+      .catch((err) => console.log(err));
+  }, [q]);
+
   const getMoreItems = () => {
     const url = q + "&limit=" + limit + "&offset=" + offset;
     axios
@@ -39,13 +50,6 @@ function DisplayItems() {
       })
       .catch((err) => console.log(err));
   };
-
-  useEffect(() => {
-    axios
-      .get<Item[]>(q)
-      .then((response) => setAllItems(response.data))
-      .catch((err) => console.log(err));
-  }, [q]);
 
   //let itemCounts = allItems ? Array(allItems.length).fill(useState(0)) : null;
 
@@ -71,7 +75,6 @@ function DisplayItems() {
       }
     >
       <input onChange={(e) => setSearch(e.target.value)}></input>
-      <label>Sort by</label>
       <select defaultValue="-" onChange={(e) => setAsc(e.target.value)}>
         <option value="">Ascending</option>
         <option value="-">Decending</option>
