@@ -1,0 +1,74 @@
+.item {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    border-radius: 10px;
+    width: 250px;
+    box-shadow: 0 2px 8px rgba(0 0 0 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.list_item {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.search-bar {
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  width: 100%;
+  max-width: 400px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.search-bar:focus {
+  border-color: #007bff;
+}
+
+.search-options {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.dropdown {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 140px;
+  background-color: white;
+  transition: border-color 0.2s ease;
+}
+
+.dropdown:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.stepper-btn {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  width: 96px; 
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  padding: 6px 14px;
+  transition: background 0.2s;
+}
+.stepper-btn:hover {
+  background: #f5f5f5;
+}
+
+.stepper-input {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 10px;
+  width: 50px;
+  text-align: center;
+}

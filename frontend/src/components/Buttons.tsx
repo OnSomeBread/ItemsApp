@@ -12,7 +12,7 @@ function Buttons() {
       }}
     >
       <button
-        style={{ height: "20px", width: "80px" }}
+        className="stepper-btn"
         onClick={() => {
           setCount(Math.max(count - 1, 0));
         }}
@@ -20,6 +20,7 @@ function Buttons() {
         Remove
       </button>
       <input
+        className="stepper-input"
         type="text"
         value={count}
         onChange={(e) => {
@@ -32,7 +33,7 @@ function Buttons() {
         }}
       />
       <button
-        style={{ height: "20px", width: "80px" }}
+        className="stepper-btn"
         onClick={() => {
           setCount(count + 1);
         }}

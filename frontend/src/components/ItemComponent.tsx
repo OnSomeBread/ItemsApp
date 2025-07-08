@@ -1,4 +1,5 @@
 import type { Item, Sell } from "../constants";
+import "../App.css";
 import Buttons from "./Buttons";
 
 interface Props {
@@ -49,19 +50,7 @@ function getFleaPrice(item: Item) {
 
 function ItemComponent({ item, idx }: Props) {
   return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        padding: "1rem",
-        borderRadius: "10px",
-        width: "250px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-      }}
-    >
+    <div className="item">
       <p>{idx}</p>
       <p>{item.name}</p>
       <p>{item.shortName}</p>

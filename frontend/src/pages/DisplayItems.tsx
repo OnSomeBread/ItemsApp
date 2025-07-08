@@ -74,29 +74,43 @@ function DisplayItems() {
         </p>
       }
     >
-      <input onChange={(e) => setSearch(e.target.value)}></input>
-      <select defaultValue="-" onChange={(e) => setAsc(e.target.value)}>
-        <option value="">Ascending</option>
-        <option value="-">Decending</option>
-      </select>
-      <select
-        defaultValue="fleaMarket"
-        onChange={(e) => setSortBy(e.target.value)}
-      >
-        <option value="name">name</option>
-        <option value="shortName">shortName</option>
-        <option value="avg24hPrice">Average Price 24 hours</option>
-        <option value="basePrice">Base Price</option>
-        <option value="changeLast48hPercent">
-          Change Last 48 hours Percent
-        </option>
-        <option value="fleaMarket">Flea Market Price</option>
-      </select>
-      <select defaultValue="any" onChange={(e) => setType(e.target.value)}>
-        {ALLTYPES.map((t) => (
-          <option value={t}>{t}</option>
-        ))}
-      </select>
+      <div className="search-options">
+        <input
+          className="search-bar"
+          onChange={(e) => setSearch(e.target.value)}
+        ></input>
+        <select
+          className="dropdown"
+          defaultValue="-"
+          onChange={(e) => setAsc(e.target.value)}
+        >
+          <option value="">Ascending</option>
+          <option value="-">Decending</option>
+        </select>
+        <select
+          className="dropdown"
+          defaultValue="fleaMarket"
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <option value="name">name</option>
+          <option value="shortName">shortName</option>
+          <option value="avg24hPrice">Average Price 24 hours</option>
+          <option value="basePrice">Base Price</option>
+          <option value="changeLast48hPercent">
+            Change Last 48 hours Percent
+          </option>
+          <option value="fleaMarket">Flea Market Price</option>
+        </select>
+        <select
+          className="dropdown"
+          defaultValue="any"
+          onChange={(e) => setType(e.target.value)}
+        >
+          {ALLTYPES.map((t) => (
+            <option value={t}>{t}</option>
+          ))}
+        </select>
+      </div>
       <ListItems items={allItems} />
     </InfiniteScroll>
   );
