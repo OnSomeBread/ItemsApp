@@ -32,7 +32,13 @@ function DisplayItems() {
     axios
       .get<Item[]>(q)
       .then((response) => {
-        setAllItems(response.data);
+        const newItems = response.data.map((item) => {
+          return {
+            ...item,
+            count: parseInt(localStorage.getItem(item._id) || "0"),
+          };
+        });
+        setAllItems(newItems);
         setHasMore(true);
         setOffset(0);
       })
@@ -51,7 +57,18 @@ function DisplayItems() {
       .catch((err) => console.log(err));
   };
 
-  //let itemCounts = allItems ? Array(allItems.length).fill(useState(0)) : null;
+  const changeCount = (idx: number, newNumber: number) => {
+    setAllItems(
+      allItems?.map((item, index) => {
+        if (index === idx) {
+          localStorage.setItem(item._id, newNumber.toString());
+          return { ...item, count: newNumber };
+        } else {
+          return item;
+        }
+      }) || null
+    );
+  };
 
   // TODO add a more elaborate loading screen
   const loading = () => {
@@ -61,6 +78,27 @@ function DisplayItems() {
   if (allItems === null) {
     return loading();
   }
+
+  const clearCounts = () => {
+    localStorage.clear();
+    setAllItems(
+      allItems.map((item) => {
+        return { ...item, count: 0 };
+      })
+    );
+  };
+
+  // TODO grab all flea prices, sum them, and display the total
+  // const getTotalFleaCost = () => {
+  //   let total = 0;
+  //   allItems.map((item) => {
+  //     if('fleaMarket' in item.sells) {
+  //       total += item.sells['fleaMarket']
+  //     }
+  //   });
+
+  //   return total;
+  // }
 
   return (
     <InfiniteScroll
@@ -110,8 +148,11 @@ function DisplayItems() {
             <option value={t}>{t}</option>
           ))}
         </select>
+        <button className="stepper-btn" onClick={clearCounts}>
+          Clear
+        </button>
       </div>
-      <ListItems items={allItems} />
+      <ListItems items={allItems} onChangeCount={changeCount} />
     </InfiniteScroll>
   );
 }

@@ -22,6 +22,7 @@ export interface Item {
   width: number;
   height: number;
   link: string;
+  count: number;
 }
 
 export const ALLTYPES = ['any','ammo', 'ammoBox', 'armor',

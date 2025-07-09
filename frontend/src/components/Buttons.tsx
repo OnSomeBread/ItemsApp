@@ -1,8 +1,15 @@
-import { useState } from "react";
+import type { Item } from "../constants";
+
+interface Props {
+  item: Item;
+  idx: number;
+  onChangeCount: (idx: number, newNumber: number) => void;
+}
 
 // creates 2 buttons and text input for modifying how many of that item the user wants
-function Buttons() {
-  const [count, setCount] = useState(0);
+function Buttons({ item, idx, onChangeCount }: Props) {
+  if (isNaN(item.count)) onChangeCount(idx, 0);
+
   return (
     <div
       style={{
@@ -14,7 +21,7 @@ function Buttons() {
       <button
         className="stepper-btn"
         onClick={() => {
-          setCount(Math.max(count - 1, 0));
+          onChangeCount(idx, Math.max(item.count - 1, 0));
         }}
       >
         Remove
@@ -22,20 +29,20 @@ function Buttons() {
       <input
         className="stepper-input"
         type="text"
-        value={count}
+        value={item.count}
         onChange={(e) => {
           const n = Number(e.target.value);
           if (isNaN(n)) {
-            setCount(count);
+            //setCount(count);
             return;
           }
-          setCount(n);
+          onChangeCount(idx, n);
         }}
       />
       <button
         className="stepper-btn"
         onClick={() => {
-          setCount(count + 1);
+          onChangeCount(idx, item.count + 1);
         }}
       >
         Add
