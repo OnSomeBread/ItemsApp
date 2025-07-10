@@ -42,6 +42,17 @@ def getData(request):
     serializer = ItemSerializer(items[offset:offset + limit], many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def getItemsByIds(request):
+    ids = request.query_params.getlist('ids')
+    limit = 30
+
+    items = Item.objects.filter(_id__in=ids)
+
+    serializer = ItemSerializer(items[:limit], many=True)
+    return Response(serializer.data)
+
+
 class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializers

@@ -1,9 +1,12 @@
-import ListItems from "../components/ListItems";
+import ItemComponent from "../components/ItemComponent";
 import type { Item } from "../constants";
 import { ALLTYPES } from "../constants";
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
+import Buttons from "../components/Buttons";
+import Loading from "../components/Loading";
 
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
@@ -17,16 +20,12 @@ function DisplayItems() {
   const limit = 50;
   const [offset, setOffset] = useState(0);
 
-  const q =
-    "http://127.0.0.1:8000/api/" +
-    "?search=" +
-    search +
-    "&asc=" +
-    asc +
-    "&sort=" +
-    sortBy +
-    "&type=" +
-    type;
+  const params = new URLSearchParams();
+  params.append("search", search);
+  params.append("asc", asc);
+  params.append("sort", sortBy);
+  params.append("type", type);
+  const q = "http://127.0.0.1:8000/api/?" + params.toString();
 
   useEffect(() => {
     axios
@@ -61,7 +60,11 @@ function DisplayItems() {
     setAllItems(
       allItems?.map((item, index) => {
         if (index === idx) {
-          localStorage.setItem(item._id, newNumber.toString());
+          if (newNumber === 0) {
+            localStorage.removeItem(item._id);
+          } else {
+            localStorage.setItem(item._id, newNumber.toString());
+          }
           return { ...item, count: newNumber };
         } else {
           return item;
@@ -70,13 +73,16 @@ function DisplayItems() {
     );
   };
 
-  // TODO add a more elaborate loading screen
-  const loading = () => {
-    return <p>loading...</p>;
-  };
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // used so that later the DisplayItems.tsx home location can be changed without issue
+  const currLocation = location.pathname === "/" ? "" : location.pathname;
+
+  console.log(currLocation);
 
   if (allItems === null) {
-    return loading();
+    return <Loading />;
   }
 
   const clearCounts = () => {
@@ -88,30 +94,8 @@ function DisplayItems() {
     );
   };
 
-  // TODO grab all flea prices, sum them, and display the total
-  // const getTotalFleaCost = () => {
-  //   let total = 0;
-  //   allItems.map((item) => {
-  //     if('fleaMarket' in item.sells) {
-  //       total += item.sells['fleaMarket']
-  //     }
-  //   });
-
-  //   return total;
-  // }
-
   return (
-    <InfiniteScroll
-      dataLength={allItems.length}
-      next={getMoreItems}
-      hasMore={hasMore}
-      loader={loading()}
-      endMessage={
-        <p style={{ textAlign: "center" }}>
-          <b>No more items</b>
-        </p>
-      }
-    >
+    <>
       <div className="search-options">
         <input
           className="search-bar"
@@ -151,9 +135,33 @@ function DisplayItems() {
         <button className="stepper-btn" onClick={clearCounts}>
           Clear
         </button>
+        <button
+          className="stepper-btn"
+          onClick={() => navigate(`${currLocation}/cart`)}
+        >
+          View Cart
+        </button>
       </div>
-      <ListItems items={allItems} onChangeCount={changeCount} />
-    </InfiniteScroll>
+      <InfiniteScroll
+        dataLength={allItems.length}
+        next={getMoreItems}
+        hasMore={hasMore}
+        loader={<Loading />}
+        endMessage={
+          <p style={{ textAlign: "center" }}>
+            <b>No more items</b>
+          </p>
+        }
+      >
+        <div className="list_item">
+          {allItems.map((x, i) => (
+            <ItemComponent item={x} idx={i}>
+              <Buttons item={x} idx={i} onChangeCount={changeCount}></Buttons>
+            </ItemComponent>
+          ))}
+        </div>
+      </InfiniteScroll>
+    </>
   );
 }
 

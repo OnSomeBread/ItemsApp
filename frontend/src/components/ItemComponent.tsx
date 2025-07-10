@@ -1,11 +1,11 @@
 import type { Item, Sell } from "../constants";
 import "../App.css";
-import Buttons from "./Buttons";
+import type { ReactNode } from "react";
 
 interface Props {
   item: Item;
   idx: number;
-  onChangeCount: (idx: number, newNumber: number) => void;
+  children: ReactNode;
 }
 
 // goes through all of the traders and finds the trader that sells for the most
@@ -31,7 +31,7 @@ function getBestTrader(allTraders: Sell[]) {
 }
 
 // creates a few lines for the items container only if item can be sold in the flea
-function getFleaPrice({ item, idx, onChangeCount }: Props) {
+function getFleaPrice({ item, children }: Props) {
   for (const trader of item.sells) {
     if (trader.source == "fleaMarket") {
       return (
@@ -41,7 +41,7 @@ function getFleaPrice({ item, idx, onChangeCount }: Props) {
           <p style={{ color: item.changeLast48hPercent < 0 ? "green" : "red" }}>
             {item.changeLast48hPercent}%
           </p>
-          <Buttons item={item} idx={idx} onChangeCount={onChangeCount} />
+          {children}
         </>
       );
     }
@@ -49,10 +49,9 @@ function getFleaPrice({ item, idx, onChangeCount }: Props) {
   return <>Cannot be sold on flea</>;
 }
 
-function ItemComponent({ item, idx, onChangeCount }: Props) {
+function ItemComponent({ item, idx, children }: Props) {
   return (
     <div className="item">
-      <p>{idx + 1}</p>
       <p>{item.name}</p>
       <p>{item.shortName}</p>
       <p>Base Price: {item.basePrice} RUB</p>
@@ -60,7 +59,7 @@ function ItemComponent({ item, idx, onChangeCount }: Props) {
       {item.sells.length > 0 ? (
         <>
           <p>{getBestTrader(item.sells)}</p>
-          {getFleaPrice({ item, idx, onChangeCount })}
+          {getFleaPrice({ item, idx, children })}
         </>
       ) : (
         <p>Cannot be sold</p>
