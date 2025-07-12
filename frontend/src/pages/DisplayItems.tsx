@@ -82,8 +82,6 @@ function DisplayItems() {
   // used so that later the DisplayItems.tsx home location can be changed without issue
   const currLocation = location.pathname === "/" ? "" : location.pathname;
 
-  console.log(currLocation);
-
   if (allItems === null) {
     return <Loading />;
   }
@@ -132,7 +130,9 @@ function DisplayItems() {
           onChange={(e) => setType(e.target.value)}
         >
           {ALLTYPES.map((t) => (
-            <option value={t}>{t}</option>
+            <option key={t} value={t}>
+              {t}
+            </option>
           ))}
         </select>
         <button className="stepper-btn" onClick={clearCounts}>
@@ -158,7 +158,7 @@ function DisplayItems() {
       >
         <div className="list_item">
           {allItems.map((x, i) => (
-            <ItemComponent item={x} idx={i}>
+            <ItemComponent key={x._id} item={x} idx={i}>
               <Buttons item={x} idx={i} onChangeCount={changeCount}></Buttons>
             </ItemComponent>
           ))}

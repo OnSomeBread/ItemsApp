@@ -24,7 +24,7 @@ function getBestTrader(allTraders: Sell[]) {
   }
   return (
     <>
-      Best Trader Price:{" "}
+      Highest Trader Sell Price:{" "}
       {bestTrader.charAt(0).toUpperCase() + bestTrader.slice(1)} {bestPrice} RUB
     </>
   );
@@ -37,10 +37,14 @@ function getFleaPrice({ item, children }: Props) {
       return (
         <>
           <p>Flea Price: {trader.price} RUB</p>
-          <p>Average 24h Price: {item.avg24hPrice} RUB</p>
-          <p style={{ color: item.changeLast48hPercent < 0 ? "green" : "red" }}>
-            {item.changeLast48hPercent}%
-          </p>
+          {item.avg24hPrice && <p>Average 24h Price: {item.avg24hPrice} RUB</p>}
+          {item.changeLast48hPercent != 0 && (
+            <p
+              style={{ color: item.changeLast48hPercent < 0 ? "green" : "red" }}
+            >
+              {item.changeLast48hPercent}%
+            </p>
+          )}
           {children}
         </>
       );
