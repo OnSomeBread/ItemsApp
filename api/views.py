@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from api.models import Item, SellFor, Types
+from api.models import Item, SellFor
 from django.contrib.auth.models import User
 from django.db.models import Subquery, OuterRef
 from .serializers import ItemSerializer, UserSerializers
@@ -29,7 +29,7 @@ def getData(request):
 
     # do a different search if asking for flea price since not all items have flea
     if item_type != 'any':
-        items = Item.objects.filter(types__name=item_type)
+        items = Item.objects.filter(itemtypes__name=item_type)
     else:
         items = Item.objects
 

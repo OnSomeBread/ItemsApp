@@ -1,11 +1,8 @@
 from django.db import models
 
 # every item can have many types
-class Types(models.Model):
+class ItemTypes(models.Model):
     name = models.CharField(max_length=50, unique=True, db_index=True)
-
-    def __str__(self):
-        return self.name 
 
 class Item(models.Model):
     _id = models.CharField(max_length=24, primary_key=True, db_index=True)
@@ -20,10 +17,7 @@ class Item(models.Model):
     height = models.IntegerField(default=0)
     link = models.URLField()
 
-    types = models.ManyToManyField(Types, blank=True)
-
-    def __str__(self):
-        return self.shortName
+    itemtypes = models.ManyToManyField(ItemTypes, blank=True)
 
 # every item can have many sources to sell from for different prices
 class SellFor(models.Model):
@@ -31,5 +25,22 @@ class SellFor(models.Model):
     price = models.IntegerField(default=0, db_index=True)
     source = models.CharField(max_length=50, db_index=True)
 
-    def __str__(self):
-        return 'price for ' + self.item.shortName
+# every task has multiple objectives where each objective can be on many maps
+class Task(models.Model):
+    _id = models.CharField(max_length=24, primary_key=True, db_index=True)
+    name = models.CharField(max_length=255, db_index=True)
+
+class Maps(models.Model):
+    normalized_name = models.CharField(max_length=50)
+
+class Objective(models.Model):
+    _id = models.CharField(max_length=24, db_index=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='objectives')
+    maps = models.ManyToManyField(Maps, related_name='objectives', blank=True)
+    objective_type = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+
+    # the api has this field changing depending on objective type
+    # in theory could make the 18 subclass variations
+    # but this is much more dynamic
+    objective_data = models.JSONField(default=dict, blank=True)
