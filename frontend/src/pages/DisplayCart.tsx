@@ -44,16 +44,20 @@ function DisplayCart() {
     return total;
   };
 
+  const clearCounts = () => {
+    localStorage.clear();
+    setAllItems(
+      allItems.map((item) => {
+        return { ...item, count: 0 };
+      })
+    );
+  };
+
   return (
     <>
       <div>
         <p>total fleaPrice: {getTotalFleaPrice()}</p>
-        <button
-          className="stepper-btn"
-          onClick={() => {
-            localStorage.clear();
-          }}
-        >
+        <button className="stepper-btn" onClick={clearCounts}>
           Clear
         </button>
       </div>
