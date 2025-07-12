@@ -11,13 +11,7 @@ function Buttons({ item, idx, onChangeCount }: Props) {
   if (isNaN(item.count)) onChangeCount(idx, 0);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
+    <div className="div-align">
       <button
         className="stepper-btn"
         onClick={() => {

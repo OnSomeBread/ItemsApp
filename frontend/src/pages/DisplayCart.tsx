@@ -46,7 +46,18 @@ function DisplayCart() {
 
   return (
     <>
-      <p>total fleaPrice: {getTotalFleaPrice()}</p>
+      <div>
+        <p>total fleaPrice: {getTotalFleaPrice()}</p>
+        <button
+          className="stepper-btn"
+          onClick={() => {
+            localStorage.clear();
+          }}
+        >
+          Clear
+        </button>
+      </div>
+
       <div className="list_item">
         {allItems.map((x, i) => (
           <ItemComponent item={x} idx={i}>

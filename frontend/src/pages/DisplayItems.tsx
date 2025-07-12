@@ -27,6 +27,7 @@ function DisplayItems() {
   params.append("type", type);
   const q = "http://127.0.0.1:8000/api/?" + params.toString();
 
+  // grabs the first page of items based on the search params
   useEffect(() => {
     axios
       .get<Item[]>(q)
@@ -44,6 +45,7 @@ function DisplayItems() {
       .catch((err) => console.log(err));
   }, [q]);
 
+  // used for the infinite scroll to grab more items
   const getMoreItems = () => {
     const url = q + "&limit=" + limit + "&offset=" + offset;
     axios
@@ -56,6 +58,7 @@ function DisplayItems() {
       .catch((err) => console.log(err));
   };
 
+  // this function is called when the buttons are pressed to change the value of a specific item in local storage
   const changeCount = (idx: number, newNumber: number) => {
     setAllItems(
       allItems?.map((item, index) => {
