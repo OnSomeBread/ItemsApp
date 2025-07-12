@@ -1,7 +1,7 @@
 import json
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from api.management.commands.upsert_tasks import upsert_tasks
+from api.management.commands.upsert import upsert_tasks
 
 def upsert_tasks_from_json(file_name):
     with open(file_name, 'r') as f:

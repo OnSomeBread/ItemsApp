@@ -2,7 +2,7 @@ import requests
 import json
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from api.management.commands.upsert_items import upsert_items
+from api.management.commands.upsert import upsert_items
 
 # Create your views here.
 def upsert_items_from_query():

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Item, SellFor, ItemTypes
+from api.models import Item, SellFor, ItemTypes, Task, Maps, Objective
 from django.contrib.auth.models import User
 
 class SellForSerializer(serializers.ModelSerializer):
@@ -14,10 +14,29 @@ class ItemTypesSerializer(serializers.ModelSerializer):
 
 class ItemSerializer(serializers.ModelSerializer):
     sells = SellForSerializer(many=True, read_only=True)
-    itemtypes = ItemTypesSerializer(many=True)
+    itemtypes = ItemTypesSerializer(many=True, read_only=True)
 
     class Meta:
         model = Item
+        fields = '__all__'
+
+class MapsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Maps
+        fields = '__all__'
+
+class ObjectiveSerializer(serializers.ModelSerializer):
+    maps = MapsSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Objective
+        fields = '__all__'
+
+class TaskForSerializer(serializers.ModelSerializer):
+    objectives = ObjectiveSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Task
         fields = '__all__'
 
 class UserSerializers(serializers.ModelSerializer):

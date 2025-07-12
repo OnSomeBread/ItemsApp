@@ -44,3 +44,11 @@ class Objective(models.Model):
     # in theory could make the 18 subclass variations
     # but this is much more dynamic
     objective_data = models.JSONField(default=dict, blank=True)
+
+# since api calls are small this model stores them
+# TODO ONLY GRAB THE NEEDED DATA FROM API CALL LIKE FLEA MARKET CHANGES FOR ITEMS (currently grabbing all data to be able to fully restore)
+class PassedApiCalls(models.Model):
+    API_CHOICES = [('items', 'Items'), ('tasks', 'Tasks')]
+    api_name = models.CharField(max_length=5, choices=API_CHOICES)
+    time = models.TimeField()
+    api_data = models.JSONField(default=dict)
