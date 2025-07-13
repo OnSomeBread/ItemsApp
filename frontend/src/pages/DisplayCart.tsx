@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { Item } from "../constants";
+import { SERVER_ADDRESS } from "../constants";
 import { useEffect, useState } from "react";
 import ItemComponent from "../components/ItemComponent";
 import Loading from "../components/Loading";
@@ -13,7 +14,7 @@ function DisplayCart() {
     params.append("ids", key);
   });
 
-  const q = "http://127.0.0.1:8000/api/cart?" + params.toString();
+  const q = SERVER_ADDRESS + "/api/cart?" + params.toString();
   console.log(params.toString());
 
   useEffect(() => {

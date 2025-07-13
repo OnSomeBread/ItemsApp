@@ -1,6 +1,6 @@
 import ItemComponent from "../components/ItemComponent";
 import type { Item } from "../constants";
-import { ALLTYPES } from "../constants";
+import { ALLTYPES, SERVER_ADDRESS } from "../constants";
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -25,7 +25,7 @@ function DisplayItems() {
   params.append("asc", asc);
   params.append("sort", sortBy);
   params.append("type", type);
-  const q = "http://127.0.0.1:8000/api/?" + params.toString();
+  const q = SERVER_ADDRESS + "/api/?" + params.toString();
 
   // grabs the first page of items based on the search params
   useEffect(() => {

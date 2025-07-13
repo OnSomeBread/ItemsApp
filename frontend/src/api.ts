@@ -1,8 +1,8 @@
 import axios from 'axios'
+import { SERVER_ADDRESS } from './constants'
 
 const api = axios.create({
-    // the backend server location which could be made into an environment var
-    baseURL: 'https://localhost:8000'
+    baseURL: SERVER_ADDRESS
 })
 
 api.interceptors.request.use((config) => {

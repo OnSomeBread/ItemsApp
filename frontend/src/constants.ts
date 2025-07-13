@@ -39,3 +39,7 @@ export const ALLTYPES = ['any','ammo', 'ammoBox', 'armor',
   'peacekeeper', 'prapor',
   'ragman',      'ref',
   'skier',       'therapist']
+
+
+// the backend server location which could be made into an environment var
+export const SERVER_ADDRESS = 'http://127.0.0.1:8000'
