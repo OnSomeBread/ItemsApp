@@ -1,7 +1,6 @@
 import type { Item } from "../constants";
 import { ALL_TYPES, DISPLAY_ITEM_KEYS, SERVER_ADDRESS } from "../constants";
 import { useState, useEffect } from "react";
-//import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Buttons from "../components/Buttons";
@@ -44,7 +43,7 @@ function DisplayItems() {
           };
         });
         setAllItems(newItems);
-        setHasMore(response.data.length > 0);
+        setHasMore(response.data.length > limit);
         setOffset(limit);
       })
       .catch((err) => console.log(err));
@@ -87,12 +86,6 @@ function DisplayItems() {
     );
   };
 
-  // const navigate = useNavigate();
-  // const location = useLocation();
-
-  // // used so that later the DisplayItems.tsx home location can be changed without issue
-  // const currLocation = location.pathname === "/" ? "" : location.pathname;
-
   if (allItems === null) {
     return <Loading />;
   }
@@ -113,23 +106,23 @@ function DisplayItems() {
           className="search-bar"
           onChange={(e) => setSearch(e.target.value)}
         ></input>
-        <select
-          className="dropdown"
-          defaultValue="-"
-          onChange={(e) => setAsc(e.target.value)}
+        <button
+          className="stepper-btn"
+          onClick={() => {
+            setAsc(asc == "" ? "-" : "");
+          }}
         >
-          <option value="">Ascending</option>
-          <option value="-">Decending</option>
-        </select>
+          {asc == "" ? "Ascending" : "Descending"}
+        </button>
         <select
           className="dropdown"
           defaultValue="fleaMarket"
           onChange={(e) => setSortBy(e.target.value)}
         >
-          <option value="name">name</option>
-          <option value="shortName">shortName</option>
-          <option value="avg24hPrice">Average Price 24 hours</option>
+          <option value="name">Name</option>
+          <option value="shortName">Short Name</option>
           <option value="basePrice">Base Price</option>
+          <option value="avg24hPrice">Average Price 24 hours</option>
           <option value="changeLast48hPercent">
             Change Last 48 hours Percent
           </option>
@@ -140,21 +133,15 @@ function DisplayItems() {
           defaultValue="any"
           onChange={(e) => setType(e.target.value)}
         >
-          {ALL_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+          {Object.entries(ALL_TYPES).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value}
             </option>
           ))}
         </select>
         <button className="stepper-btn" onClick={clearCounts}>
           Clear
         </button>
-        {/* <button
-          className="stepper-btn"
-          onClick={() => navigate(`${currLocation}/cart`)}
-        >
-          View Cart
-        </button> */}
       </div>
       <div className="items-container">
         <InfiniteScroll
