@@ -8,8 +8,6 @@ interface Props {
 
 // creates 2 buttons and text input for modifying how many of that item the user wants
 function Buttons({ item, idx, onChangeCount }: Props) {
-  if (isNaN(item.count)) onChangeCount(idx, 0);
-
   return (
     <div className="div-align">
       <button
@@ -27,7 +25,6 @@ function Buttons({ item, idx, onChangeCount }: Props) {
         onChange={(e) => {
           const n = Number(e.target.value);
           if (isNaN(n)) {
-            //setCount(count);
             return;
           }
           onChangeCount(idx, n);

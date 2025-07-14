@@ -1,4 +1,3 @@
-import ItemComponent from "../components/ItemComponent";
 import type { Item } from "../constants";
 import { ALLTYPES, SERVER_ADDRESS } from "../constants";
 import { useState, useEffect } from "react";
@@ -7,6 +6,11 @@ import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Buttons from "../components/Buttons";
 import Loading from "../components/Loading";
+import { lazy } from "react";
+
+const ItemComponentPreview = lazy(
+  () => import("../components/ItemComponent.tsx")
+);
 
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
@@ -40,7 +44,7 @@ function DisplayItems() {
         });
         setAllItems(newItems);
         setHasMore(true);
-        setOffset(0);
+        setOffset(limit);
       })
       .catch((err) => console.log(err));
   }, [q]);
@@ -51,7 +55,13 @@ function DisplayItems() {
     axios
       .get<Item[]>(url)
       .then((response) => {
-        setAllItems((prev) => [...(prev ?? []), ...response.data]);
+        const newItems = response.data.map((item) => {
+          return {
+            ...item,
+            count: parseInt(localStorage.getItem(item._id) || "0"),
+          };
+        });
+        setAllItems((prev) => [...(prev ?? []), ...newItems]);
         setHasMore(response.data.length > 0);
         setOffset(offset + limit);
       })
@@ -158,9 +168,9 @@ function DisplayItems() {
       >
         <div className="list_item">
           {allItems.map((x, i) => (
-            <ItemComponent key={x._id} item={x} idx={i}>
+            <ItemComponentPreview key={x._id} item={x} idx={i}>
               <Buttons item={x} idx={i} onChangeCount={changeCount}></Buttons>
-            </ItemComponent>
+            </ItemComponentPreview>
           ))}
         </div>
       </InfiniteScroll>
