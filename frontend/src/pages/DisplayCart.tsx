@@ -45,27 +45,17 @@ function DisplayCart() {
     return total;
   };
 
-  const clearCounts = () => {
-    localStorage.clear();
-    setAllItems(
-      allItems.map((item) => {
-        return { ...item, count: 0 };
-      })
-    );
-  };
+  const displayItems = ["name", "fleaMarket"];
 
   return (
     <>
       <div>
         <p>total fleaPrice: {getTotalFleaPrice()}</p>
-        <button className="stepper-btn" onClick={clearCounts}>
-          Clear
-        </button>
       </div>
 
       <div className="list_item">
         {allItems.map((x, i) => (
-          <ItemComponent item={x} idx={i}>
+          <ItemComponent item={x} idx={i} fields={displayItems}>
             <p>count: {localStorage.getItem(x._id)}</p>
           </ItemComponent>
         ))}

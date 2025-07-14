@@ -1,12 +1,13 @@
 import type { Item } from "../constants";
-import { ALLTYPES, SERVER_ADDRESS } from "../constants";
+import { ALL_TYPES, DISPLAY_ITEM_KEYS, SERVER_ADDRESS } from "../constants";
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+//import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Buttons from "../components/Buttons";
 import Loading from "../components/Loading";
 import { lazy } from "react";
+import DisplayCart from "./DisplayCart";
 
 const ItemComponentPreview = lazy(
   () => import("../components/ItemComponent.tsx")
@@ -43,7 +44,7 @@ function DisplayItems() {
           };
         });
         setAllItems(newItems);
-        setHasMore(true);
+        setHasMore(response.data.length > 0);
         setOffset(limit);
       })
       .catch((err) => console.log(err));
@@ -86,11 +87,11 @@ function DisplayItems() {
     );
   };
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  // const navigate = useNavigate();
+  // const location = useLocation();
 
-  // used so that later the DisplayItems.tsx home location can be changed without issue
-  const currLocation = location.pathname === "/" ? "" : location.pathname;
+  // // used so that later the DisplayItems.tsx home location can be changed without issue
+  // const currLocation = location.pathname === "/" ? "" : location.pathname;
 
   if (allItems === null) {
     return <Loading />;
@@ -139,7 +140,7 @@ function DisplayItems() {
           defaultValue="any"
           onChange={(e) => setType(e.target.value)}
         >
-          {ALLTYPES.map((t) => (
+          {ALL_TYPES.map((t) => (
             <option key={t} value={t}>
               {t}
             </option>
@@ -148,32 +149,42 @@ function DisplayItems() {
         <button className="stepper-btn" onClick={clearCounts}>
           Clear
         </button>
-        <button
+        {/* <button
           className="stepper-btn"
           onClick={() => navigate(`${currLocation}/cart`)}
         >
           View Cart
-        </button>
+        </button> */}
       </div>
-      <InfiniteScroll
-        dataLength={allItems.length}
-        next={getMoreItems}
-        hasMore={hasMore}
-        loader={<Loading />}
-        endMessage={
-          <p style={{ textAlign: "center" }}>
-            <b>No more items</b>
-          </p>
-        }
-      >
-        <div className="list_item">
-          {allItems.map((x, i) => (
-            <ItemComponentPreview key={x._id} item={x} idx={i}>
-              <Buttons item={x} idx={i} onChangeCount={changeCount}></Buttons>
-            </ItemComponentPreview>
-          ))}
+      <div className="items-container">
+        <InfiniteScroll
+          dataLength={allItems.length}
+          next={getMoreItems}
+          hasMore={hasMore}
+          loader={<Loading />}
+          endMessage={
+            <p style={{ textAlign: "center" }}>
+              <b>No more items</b>
+            </p>
+          }
+        >
+          <div className="list-item">
+            {allItems.map((x, i) => (
+              <ItemComponentPreview
+                key={x._id}
+                item={x}
+                idx={i}
+                fields={DISPLAY_ITEM_KEYS}
+              >
+                <Buttons item={x} idx={i} onChangeCount={changeCount}></Buttons>
+              </ItemComponentPreview>
+            ))}
+          </div>
+        </InfiniteScroll>
+        <div>
+          <DisplayCart />
         </div>
-      </InfiniteScroll>
+      </div>
     </>
   );
 }

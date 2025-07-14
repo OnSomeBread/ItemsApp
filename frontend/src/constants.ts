@@ -25,7 +25,9 @@ export interface Item {
   count: number;
 }
 
-export const ALLTYPES = ['any','ammo', 'ammoBox', 'armor',
+export const DISPLAY_ITEM_KEYS = ['name', 'shortName', 'basePrice', 'traders', 'fleaMarket']
+
+export const ALL_TYPES = ['any','ammo', 'ammoBox', 'armor',
   'armorPlate', 'backpack',   'barter',
   'container',  'glasses',    'grenade',
   'gun',        'headphones', 'helmet',
@@ -34,7 +36,7 @@ export const ALLTYPES = ['any','ammo', 'ammoBox', 'armor',
   'pistolGrip', 'preset',     'provisions',
   'rig',        'suppressor', 'wearable']
 
- export const ALLTRADERS = ['fence', 'fleaMarket',
+ export const ALL_TRADERS = ['fence', 'fleaMarket',
   'jaeger',      'mechanic',
   'peacekeeper', 'prapor',
   'ragman',      'ref',

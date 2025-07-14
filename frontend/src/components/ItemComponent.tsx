@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 interface Props {
   item: Item;
   idx: number;
+  fields: string[];
   children: ReactNode;
 }
 
@@ -53,17 +54,18 @@ function getFleaPrice({ item, children }: Props) {
   return <>Cannot be sold on flea</>;
 }
 
-function ItemComponent({ item, idx, children }: Props) {
+function ItemComponent({ item, idx, children, fields }: Props) {
   return (
     <div className="item">
-      <p>{item.name}</p>
-      <p>{item.shortName}</p>
-      <p>Base Price: {item.basePrice} RUB</p>
+      {fields.includes("name") && <p>{item.name}</p>}
+      {fields.includes("shortName") && <p>{item.shortName}</p>}
+      {fields.includes("basePrice") && <p>Base Price: {item.basePrice} RUB</p>}
 
       {item.sells.length > 0 ? (
         <>
-          <p>{getBestTrader(item.sells)}</p>
-          {getFleaPrice({ item, idx, children })}
+          {fields.includes("traders") && <p>{getBestTrader(item.sells)}</p>}
+          {fields.includes("fleaMarket") &&
+            getFleaPrice({ item, idx, children, fields })}
         </>
       ) : (
         <p>Cannot be sold</p>
