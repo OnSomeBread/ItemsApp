@@ -8,7 +8,7 @@ from django.db.models import Subquery, OuterRef
 from .serializers import ItemSerializer, UserSerializers, PastApiCallsSerializer
 
 @api_view(['GET'])
-def getItems(request):
+def get_items(request):
     # grab all of the filter and sort params
     search:str = request.query_params.get('search')
     sortBy:str = request.query_params.get('sort')
@@ -43,7 +43,7 @@ def getItems(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
-def getItemsByIds(request):
+def get_items_by_ids(request):
     ids = request.query_params.getlist('ids')
     limit = 30
 
@@ -53,7 +53,7 @@ def getItemsByIds(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
-def getPastApiCalls(requets):
+def get_past_api_calls(requets):
     passedCalls = PastApiCalls.objects.all()
     serializer = PastApiCallsSerializer(passedCalls[:1], many=True)
     return Response(serializer.data)

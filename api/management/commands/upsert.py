@@ -86,3 +86,54 @@ def upsert_items(result):
         SellFor.objects.bulk_create([
             SellFor(item=obj, source=entry['source'], price=entry['price']) for entry in sellfor
         ])
+
+
+# example tasks query
+"""
+{
+    "taskRequirements": [],
+    "name": "First in Line",
+    "experience": 1200,
+    "id": "657315ddab5a49b71f098853",
+    "kappaRequired": true,
+    "lightkeeperRequired": true,
+    "minPlayerLevel": 1,
+    "factionName": "Any",
+    "normalizedName": "first-in-line",
+    "wikiLink": "https://escapefromtarkov.fandom.com/wiki/First_in_Line",
+    "trader": {
+        "name": "Therapist"
+    },
+    "objectives": [
+        {
+        "type": "visit",
+        "description": "Locate the Emercom station on Ground Zero",
+        "maps": [
+            {
+            "id": "653e6760052c01c1c805532f",
+            "name": "Ground Zero",
+            "description": "The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began.",
+            "normalizedName": "ground-zero",
+            "players": "9-10",
+            "wiki": "https://escapefromtarkov.fandom.com/wiki/Ground_Zero"
+            },
+            {
+            "id": "65b8d6f5cdde2479cb2a3125",
+            "name": "Ground Zero 21+",
+            "description": "The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began. The area has yet again become a hot zone since the early days of the conflict.",
+            "normalizedName": "ground-zero-21",
+            "players": "9-12",
+            "wiki": "https://escapefromtarkov.fandom.com/wiki/Ground_Zero"
+            }
+        ]
+        },
+        {
+        "type": "giveItem",
+        "description": "Hand over any found in raid medicine items",
+        "maps": []
+        }
+    ]
+}
+"""
+def upsert_tasks(result):
+    return 

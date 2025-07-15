@@ -2,7 +2,7 @@ from django.db import models
 
 # every item can have many types
 class ItemTypes(models.Model):
-    name = models.CharField(max_length=50, unique=True, db_index=True)
+    name = models.CharField(max_length=50, unique=True)
 
 class Item(models.Model):
     _id = models.CharField(max_length=24, primary_key=True, db_index=True)
@@ -22,8 +22,8 @@ class Item(models.Model):
 # every item can have many sources to sell from for different prices
 class SellFor(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='sells')
-    price = models.IntegerField(default=0, db_index=True)
-    source = models.CharField(max_length=50, db_index=True)
+    price = models.IntegerField(default=0)
+    source = models.CharField(max_length=50)
 
 # since api calls are small this model stores only the data that changes often for each item
 class PastApiCalls(models.Model):
