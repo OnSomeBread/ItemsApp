@@ -25,30 +25,18 @@ class SellFor(models.Model):
     price = models.IntegerField(default=0, db_index=True)
     source = models.CharField(max_length=50, db_index=True)
 
-# every task has multiple objectives where each objective can be on many maps
-class Task(models.Model):
-    _id = models.CharField(max_length=24, primary_key=True, db_index=True)
-    name = models.CharField(max_length=255, db_index=True)
-
-class Maps(models.Model):
-    normalized_name = models.CharField(max_length=50)
-
-class Objective(models.Model):
-    _id = models.CharField(max_length=24, db_index=True)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='objectives')
-    maps = models.ManyToManyField(Maps, related_name='objectives', blank=True)
-    objective_type = models.CharField(max_length=50)
-    description = models.TextField(blank=True)
-
-    # the api has this field changing depending on objective type
-    # in theory could make the 18 subclass variations
-    # but this is much more dynamic
-    objective_data = models.JSONField(default=dict, blank=True)
-
-# since api calls are small this model stores them
-# TODO ONLY GRAB THE NEEDED DATA FROM API CALL LIKE FLEA MARKET CHANGES FOR ITEMS (currently grabbing all data to be able to fully restore)
-class PassedApiCalls(models.Model):
-    API_CHOICES = [('items', 'Items'), ('tasks', 'Tasks')]
-    api_name = models.CharField(max_length=5, choices=API_CHOICES)
+# since api calls are small this model stores only the data that changes often for each item
+class PastApiCalls(models.Model):
+    api_name = models.CharField(max_length=50)
     time = models.TimeField()
-    api_data = models.JSONField(default=dict)
+
+class SavedItemData(models.Model):
+    past_api_call = models.ForeignKey(PastApiCalls, on_delete=models.CASCADE, related_name='past_items')
+
+    # this should match up exactly with the related Item class id
+    # could instead use reference with item but not needed here
+    item_id = models.CharField(max_length=24, primary_key=True, db_index=True)
+
+    avg24hPrice = models.IntegerField(default=0, null=True)
+    changeLast48hPercent = models.DecimalField(max_digits=8, decimal_places=2, null=True)
+    fleaMarket = models.IntegerField(default=0)

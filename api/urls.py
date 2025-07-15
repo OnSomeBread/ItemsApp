@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.getData),
-    path('cart', views.getItemsByIds)
+    path('', views.getItems),
+    path('cart', views.getItemsByIds),
+    path('apiCalls', views.getPastApiCalls)
 ]

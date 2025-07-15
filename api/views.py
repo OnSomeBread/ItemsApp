@@ -2,13 +2,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from api.models import Item, SellFor
+from api.models import Item, SellFor, PastApiCalls
 from django.contrib.auth.models import User
 from django.db.models import Subquery, OuterRef
-from .serializers import ItemSerializer, UserSerializers
+from .serializers import ItemSerializer, UserSerializers, PastApiCallsSerializer
 
 @api_view(['GET'])
-def getData(request):
+def getItems(request):
     # grab all of the filter and sort params
     search:str = request.query_params.get('search')
     sortBy:str = request.query_params.get('sort')
@@ -50,6 +50,12 @@ def getItemsByIds(request):
     items = Item.objects.filter(_id__in=ids)
 
     serializer = ItemSerializer(items[:limit], many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def getPastApiCalls(requets):
+    passedCalls = PastApiCalls.objects.all()
+    serializer = PastApiCallsSerializer(passedCalls[:1], many=True)
     return Response(serializer.data)
 
 
