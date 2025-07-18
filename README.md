@@ -3,7 +3,7 @@ docker compose up<br><br>
 for the production server run<br>
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 
-all data is pulled using a GraphQL api from [`code`](https://github.com/the-hideout/tarkov-api)
+all data is pulled using a GraphQL api from [`tarkov-api`](https://github.com/the-hideout/tarkov-api)
 
 <img src=".\image previews\example0.png">
 <img src=".\image previews\example1.png">
