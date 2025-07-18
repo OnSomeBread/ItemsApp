@@ -1,6 +1,5 @@
 import axios from "axios";
 import type { Item } from "../constants";
-import { SERVER_ADDRESS } from "../constants";
 import { useEffect, useState } from "react";
 import ItemComponent from "../components/ItemComponent";
 import Loading from "../components/Loading";
@@ -13,9 +12,9 @@ function DisplayCart() {
   keys.forEach((key: string) => {
     params.append("ids", key);
   });
+  const BACKEND_ADDRESS: string = import.meta.env.VITE_BACKEND_SERVER as string;
 
-  const q = SERVER_ADDRESS + "/api/cart?" + params.toString();
-  console.log(params.toString());
+  const q = BACKEND_ADDRESS + "/api/cart?" + params.toString();
 
   useEffect(() => {
     axios

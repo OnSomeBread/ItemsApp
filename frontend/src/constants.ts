@@ -73,6 +73,3 @@ export const ALL_TRADERS = [
   "skier",
   "therapist",
 ];
-
-// the backend server location which could be made into an environment var
-export const SERVER_ADDRESS = "http://127.0.0.1:8000";

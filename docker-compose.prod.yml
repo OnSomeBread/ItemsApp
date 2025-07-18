@@ -1,4 +1,10 @@
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.dev
+    environment:
+      - DEBUG=False
   frontend:
     build:
       context: .

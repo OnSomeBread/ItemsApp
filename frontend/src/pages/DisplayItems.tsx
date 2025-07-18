@@ -1,5 +1,5 @@
 import type { Item } from "../constants";
-import { ALL_TYPES, DISPLAY_ITEM_KEYS, SERVER_ADDRESS } from "../constants";
+import { ALL_TYPES, DISPLAY_ITEM_KEYS } from "../constants";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -24,12 +24,14 @@ function DisplayItems() {
   const limit = 50;
   const [offset, setOffset] = useState(0);
 
+  const BACKEND_ADDRESS: string = import.meta.env.VITE_BACKEND_SERVER as string;
+
   const params = new URLSearchParams();
   params.append("search", search);
   params.append("asc", asc);
   params.append("sort", sortBy);
   params.append("type", type);
-  const q = SERVER_ADDRESS + "/api/?" + params.toString();
+  const q = BACKEND_ADDRESS + "/api/?" + params.toString();
 
   // grabs the first page of items based on the search params
   useEffect(() => {
