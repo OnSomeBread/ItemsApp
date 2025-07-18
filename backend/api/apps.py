@@ -10,6 +10,9 @@ class ApiConfig(AppConfig):
         if os.environ.get('RUN_MAIN') != 'true':
             return
 
+        call_command('makemigrations', 'api')
+        call_command('migrate', 'api')
+
         # attempt to populate the db if empty
         from api.models import SavedItemData
         try:
