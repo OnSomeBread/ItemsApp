@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from api.models import Item, SellFor, PastApiCalls
 from django.contrib.auth.models import User
 from django.db.models import Subquery, OuterRef
+from django.core.cache import cache
 from .serializers import ItemSerializer, UserSerializers, PastApiCallsSerializer
 
 @api_view(['GET'])
@@ -26,6 +27,10 @@ def get_items(request):
         offset = int(offset)
     except:
         offset = 0
+    
+    cache_key = search + sortBy + asc + item_type + str(limit) + str(offset)
+    if cache.has_key(cache_key):
+        return Response(cache.get(cache_key))
 
     # do a different search if asking for flea price since not all items have flea
     if item_type != 'any':
@@ -40,16 +45,17 @@ def get_items(request):
     else:
         items = items.filter(name__icontains=search).order_by(asc + sortBy)
     serializer = ItemSerializer(items[offset:offset + limit], many=True)
+
+    # TODO when api refreshes are implemented this will need to have a timeout that will last till next refresh
+    cache.set(cache_key, serializer.data)
     return Response(serializer.data)
 
 @api_view(['GET'])
 def get_items_by_ids(request):
     ids = request.query_params.getlist('ids')
-    limit = 30
-
     items = Item.objects.filter(_id__in=ids)
 
-    serializer = ItemSerializer(items[:limit], many=True)
+    serializer = ItemSerializer(items[:30], many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])

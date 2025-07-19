@@ -101,7 +101,6 @@ WSGI_APPLICATION = 'backendDjango.wsgi.application'
 #     }
 # }
 
-
 DATABASES = {
     'default': {
         'ENGINE' : 'django.db.backends.postgresql',
@@ -110,6 +109,16 @@ DATABASES = {
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'password'),
         'HOST': os.environ.get('POSTGRES_HOST', 'db'),
         'PORT': '5432',
+    }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND':'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', ''),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
     }
 }
 
