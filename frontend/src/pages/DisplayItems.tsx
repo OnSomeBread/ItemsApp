@@ -19,18 +19,18 @@ function DisplayItems() {
   const [sortBy, setSortBy] = useState("fleaMarket");
   const [type, setType] = useState("any");
 
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   //const [limit, setLimit] = useState(30);
   const limit = 50;
-  const [offset, setOffset] = useState(0);
+  const [offset, setOffset] = useState(limit);
 
   const BACKEND_ADDRESS: string = import.meta.env.VITE_BACKEND_SERVER as string;
-
   const params = new URLSearchParams();
   params.append("search", search);
   params.append("asc", asc);
   params.append("sort", sortBy);
   params.append("type", type);
+  params.append("limit", limit.toString());
   const q = BACKEND_ADDRESS + "/api/?" + params.toString();
 
   // grabs the first page of items based on the search params
@@ -45,17 +45,15 @@ function DisplayItems() {
           };
         });
         setAllItems(newItems);
-        setHasMore(response.data.length > limit);
-        setOffset(limit);
+        setHasMore(response.data.length == limit);
       })
       .catch((err) => console.log(err));
   }, [q]);
 
   // used for the infinite scroll to grab more items
   const getMoreItems = () => {
-    const url = q + "&limit=" + limit + "&offset=" + offset;
     axios
-      .get<Item[]>(url)
+      .get<Item[]>(q + "&offset=" + offset)
       .then((response) => {
         const newItems = response.data.map((item) => {
           return {
@@ -64,8 +62,8 @@ function DisplayItems() {
           };
         });
         setAllItems((prev) => [...(prev ?? []), ...newItems]);
-        setHasMore(response.data.length > 0);
-        setOffset(offset + limit);
+        setHasMore(newItems.length == limit);
+        setOffset((prevOffset) => prevOffset + limit);
       })
       .catch((err) => console.log(err));
   };

@@ -54,7 +54,7 @@ function DisplayCart() {
 
       <div className="list_item">
         {allItems.map((x, i) => (
-          <ItemComponent item={x} idx={i} fields={displayItems}>
+          <ItemComponent key={x._id + i} item={x} idx={i} fields={displayItems}>
             <p>count: {localStorage.getItem(x._id)}</p>
           </ItemComponent>
         ))}

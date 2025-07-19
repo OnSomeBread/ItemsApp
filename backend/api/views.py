@@ -38,16 +38,18 @@ def get_items(request):
     else:
         items = Item.objects
 
+    # id is needed for order_by to make it consistant because it normally varys 
+    # leading to duplicates given to user if using pagination
     if sortBy == 'fleaMarket': 
-        flea_market_prices = SellFor.objects.filter(item=OuterRef('pk'), source='fleaMarket').order_by('-price')
+        flea_market_prices = SellFor.objects.filter(item=OuterRef('pk'), source='fleaMarket').order_by('-price', 'id')
         items = items.annotate(fleaPrice=Subquery(flea_market_prices.values('price')[:1]))
-        items = items.filter(fleaPrice__isnull=False, name__icontains=search).order_by(asc + 'fleaPrice')
+        items = items.filter(fleaPrice__isnull=False, name__icontains=search).order_by(asc + 'fleaPrice', '_id')
     else:
-        items = items.filter(name__icontains=search).order_by(asc + sortBy)
+        items = items.filter(name__icontains=search).order_by(asc + sortBy, '_id')
     serializer = ItemSerializer(items[offset:offset + limit], many=True)
 
     # TODO when api refreshes are implemented this will need to have a timeout that will last till next refresh
-    cache.set(cache_key, serializer.data)
+    cache.set(cache_key, serializer.data, timeout=3600)
     return Response(serializer.data)
 
 @api_view(['GET'])
