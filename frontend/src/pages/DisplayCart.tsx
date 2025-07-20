@@ -3,6 +3,7 @@ import type { Item } from "../constants";
 import { useEffect, useState } from "react";
 import ItemComponent from "../components/ItemComponent";
 import Loading from "../components/Loading";
+import { AnimatePresence, motion } from "framer-motion";
 
 function DisplayCart() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
@@ -52,13 +53,32 @@ function DisplayCart() {
         <p>total fleaPrice: {getTotalFleaPrice()}</p>
       </div>
 
-      <div className="list_item">
-        {allItems.map((x, i) => (
-          <ItemComponent key={x._id + i} item={x} idx={i} fields={displayItems}>
-            <p>count: {localStorage.getItem(x._id)}</p>
-          </ItemComponent>
-        ))}
-      </div>
+      <motion.div
+        className="list_item"
+        initial={{ x: 200 }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <AnimatePresence>
+          {allItems.map((x, i) => (
+            <motion.li
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <ItemComponent
+                key={x._id + i}
+                item={x}
+                idx={i}
+                fields={displayItems}
+              >
+                <p>count: {localStorage.getItem(x._id)}</p>
+              </ItemComponent>
+            </motion.li>
+          ))}
+        </AnimatePresence>
+      </motion.div>
     </>
   );
 }

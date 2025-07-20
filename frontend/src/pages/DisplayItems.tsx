@@ -7,6 +7,7 @@ import Buttons from "../components/Buttons";
 import Loading from "../components/Loading";
 import { lazy } from "react";
 import DisplayCart from "./DisplayCart";
+import { AnimatePresence, motion } from "framer-motion";
 
 const ItemComponentPreview = lazy(
   () => import("../components/ItemComponent.tsx")
@@ -20,7 +21,6 @@ function DisplayItems() {
   const [type, setType] = useState("any");
 
   const [hasMore, setHasMore] = useState(false);
-  //const [limit, setLimit] = useState(30);
   const limit = 50;
   const [offset, setOffset] = useState(limit);
 
@@ -99,6 +99,23 @@ function DisplayItems() {
     );
   };
 
+  const containerVariants = {
+    show: {
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: {
+      opacity: 0,
+    },
+    show: {
+      opacity: 1,
+    },
+  };
+
   return (
     <>
       <div className="search-options">
@@ -155,18 +172,34 @@ function DisplayItems() {
             </p>
           }
         >
-          <div className="list-item">
-            {allItems.map((x, i) => (
-              <ItemComponentPreview
-                key={x._id}
-                item={x}
-                idx={i}
-                fields={DISPLAY_ITEM_KEYS}
-              >
-                <Buttons item={x} idx={i} onChangeCount={changeCount}></Buttons>
-              </ItemComponentPreview>
-            ))}
-          </div>
+          <motion.ul
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="list-item"
+          >
+            <AnimatePresence>
+              {allItems.map((x, i) => (
+                <motion.li
+                  key={x._id}
+                  transition={{ duration: 0.8 }}
+                  variants={itemVariants}
+                >
+                  <ItemComponentPreview
+                    item={x}
+                    idx={i}
+                    fields={DISPLAY_ITEM_KEYS}
+                  >
+                    <Buttons
+                      item={x}
+                      idx={i}
+                      onChangeCount={changeCount}
+                    ></Buttons>
+                  </ItemComponentPreview>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </motion.ul>
         </InfiniteScroll>
         <div>
           <DisplayCart />

@@ -1,4 +1,5 @@
 import type { Item } from "../constants";
+import { motion } from "framer-motion";
 
 interface Props {
   item: Item;
@@ -10,14 +11,17 @@ interface Props {
 function Buttons({ item, idx, onChangeCount }: Props) {
   return (
     <div className="div-align">
-      <button
+      <motion.button
         className="stepper-btn"
         onClick={() => {
           onChangeCount(idx, Math.max(item.count - 1, 0));
         }}
+        transition={{ duration: 0.2 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
         Remove
-      </button>
+      </motion.button>
       <input
         className="stepper-input"
         type="text"
@@ -30,14 +34,17 @@ function Buttons({ item, idx, onChangeCount }: Props) {
           onChangeCount(idx, n);
         }}
       />
-      <button
+      <motion.button
         className="stepper-btn"
         onClick={() => {
           onChangeCount(idx, item.count + 1);
         }}
+        transition={{ duration: 0.2 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
         Add
-      </button>
+      </motion.button>
     </div>
   );
 }
