@@ -20,7 +20,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ['ALLOWED_ORIGINS'].split(','),  # or ["*"] for all (dev only)
+    allow_origins=os.environ['ALLOWED_ORIGINS'].split(','),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,19 +34,20 @@ async def test_fastapi_view(request: Request):
     asc:str = request.query_params.get('asc')
     item_type:str = request.query_params.get('type')
 
-    limit = request.query_params.get('limit')
+    limit:str = request.query_params.get('limit')
     try:
         limit = min(int(limit), 100)
     except:
         limit = 30
 
-    offset = request.query_params.get('offset')
+    offset:str = request.query_params.get('offset')
     try:
         offset = int(offset)
     except:
         offset = 0
     
-    cache_key = search + sortBy + asc + item_type + str(limit) + str(offset)
+    # check if current query has already been done and if so just return it 
+    cache_key:str = search + sortBy + asc + item_type + str(limit) + str(offset)
     if await cache.ahas_key(cache_key):
         return await cache.aget(cache_key)
 
@@ -65,23 +66,40 @@ async def test_fastapi_view(request: Request):
     else:
         items = await sync_to_async((await sync_to_async(items.filter)(name__icontains=search)).order_by)(asc + sortBy, '_id')
     
-    serializer = await sync_to_async(ItemSerializer)(items[offset:offset + limit], many=True)
+    serializer = ItemSerializer(items[offset:offset + limit], many=True)
 
     # TODO when api refreshes are implemented this will need to have a timeout that will last till next refresh
     data = await sync_to_async(lambda: serializer.data)()
 
     asyncio.create_task(cache.aset(cache_key, data, timeout=3600))
-    #return {"message":'here'}
     return data
 
+# returns json array of each item in the list of given ids
 @app.get("/api/cart")
-def get_items_by_ids(request: Request):
-    ids = request.query_params.getlist('ids')
-    items = Item.objects.filter(_id__in=ids)
+async def get_items_by_ids(request: Request):
+    # a set is more appropriate here as fast remove opperations are needed here
+    ids = set(request.query_params.getlist('ids'))
 
-    serializer = ItemSerializer(items[:30], many=True)
-    return serializer.data
+    # get all cached item ids
+    found_items = []
+    for item_id in ids.copy():
+        if await cache.ahas_key(item_id):
+            found_items.append(await cache.aget(item_id))
+            ids.remove(item_id)
 
+    # find all the items that weren't cached
+    items = await sync_to_async(Item.objects.filter)(_id__in=ids)
+    serializer = ItemSerializer(items[:30 - len(found_items)], many=True)
+    data = await sync_to_async(lambda: serializer.data)()
+
+    # store all new ids
+    # TODO when api refreshes are implemented this will need to have a timeout that will last till next refresh
+    for itm in data:
+        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=3600))
+
+    return data + found_items
+
+# should not be async as this should not be called often
 @app.get("/api/apiCalls")
 def get_past_api_calls(request: Request):
     passedCalls = PastApiCalls.objects.all()
