@@ -31,7 +31,7 @@ function DisplayItems() {
   params.append("sort", sortBy);
   params.append("type", type);
   params.append("limit", limit.toString());
-  const q = BACKEND_ADDRESS + "/api/?" + params.toString();
+  const q = BACKEND_ADDRESS + "/api?" + params.toString();
 
   // grabs the first page of items based on the search params
   useEffect(() => {

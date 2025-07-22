@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile.dev
+      dockerfile: backend/Dockerfile
     environment:
       - DEBUG=False
   frontend:

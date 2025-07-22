@@ -61,7 +61,7 @@ def get_items_by_ids(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
-def get_past_api_calls(requets):
+def get_past_api_calls(request):
     passedCalls = PastApiCalls.objects.all()
     serializer = PastApiCallsSerializer(passedCalls, many=True)
     return Response(serializer.data)

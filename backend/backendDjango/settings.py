@@ -25,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', '')
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DEBUG', False))
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', []).split(',')
+ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 
 # REST_FRAMEWORK = {
 #     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -61,6 +61,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -68,7 +69,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'fastapi.middleware.cors.CORSMiddleware'
 ]
 
 ROOT_URLCONF = 'backendDjango.urls'
@@ -88,7 +89,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backendDjango.wsgi.application'
+ASGI_APPLICATION = 'backendDjango.asgi.application'
 
 
 # Database
@@ -104,20 +105,30 @@ WSGI_APPLICATION = 'backendDjango.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE' : 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'items'),
-        'USER': os.environ.get('POSTGRES_USER', 'username'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'password'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+        'NAME': os.environ['POSTGRES_DB'],
+        'USER': os.environ['POSTGRES_USER'],
+        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
+        'HOST': os.environ['POSTGRES_HOST'],
         'PORT': '5432',
     }
 }
 
+# CACHES = {
+#     'default': {
+#         'BACKEND':'django_redis.cache.RedisCache',
+#         'LOCATION': os.environ['REDIS_URL'],
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         }
+#     }
+# }
+
 CACHES = {
     'default': {
-        'BACKEND':'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get('REDIS_URL', ''),
+        'BACKEND':'django_async_redis.cache.RedisCache',
+        'LOCATION': os.environ['REDIS_URL'],
         'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CLIENT_CLASS': 'django_async_redis.client.DefaultClient',
         }
     }
 }
@@ -163,5 +174,5 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', []).split(',')
+CORS_ALLOWED_ORIGINS = os.environ['ALLOWED_ORIGINS'].split(',')
 CORS_ALLOWS_CREDENTIALS = True
