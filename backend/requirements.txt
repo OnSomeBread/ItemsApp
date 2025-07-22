@@ -8,3 +8,6 @@ requests
 django-async-redis
 fastapi
 uvicorn[standard]
+httpx
+pytest
+pytest-asyncio
