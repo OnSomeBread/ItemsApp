@@ -57,7 +57,7 @@ function DisplayCart() {
         className="list_item"
         initial={{ x: 200 }}
         animate={{ x: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <AnimatePresence>
           {allItems.map((x, i) => (
