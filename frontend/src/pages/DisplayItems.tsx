@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Buttons from "../components/Buttons";
-import Loading from "../components/Loading";
 import { lazy } from "react";
 import DisplayCart from "./DisplayCart";
 import { AnimatePresence, motion } from "framer-motion";
@@ -13,30 +12,50 @@ const ItemComponentPreview = lazy(
   () => import("../components/ItemComponent.tsx")
 );
 
+type QueryParams = {
+  search: string;
+  asc: string;
+  sortBy: string;
+  type: string;
+  limit: number;
+  offset: number;
+};
+
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
-  const [search, setSearch] = useState("");
-  const [asc, setAsc] = useState("-");
-  const [sortBy, setSortBy] = useState("fleaMarket");
-  const [type, setType] = useState("any");
-
   const [hasMore, setHasMore] = useState(false);
-  const limit = 50;
-  const [offset, setOffset] = useState(limit);
+
+  // TODO add ability to change limit in the page or remove this
+  const limitPerPage = 50;
+  const [queryParams, setQueryParams] = useState<QueryParams>({
+    search: "",
+    asc: "-",
+    sortBy: "fleaMarket",
+    type: "any",
+    limit: limitPerPage,
+    offset: limitPerPage,
+  });
+  const changeQueryParams = (key: string, value: string | number) => {
+    setQueryParams((prev) => {
+      return { ...prev, [key]: value };
+    });
+  };
 
   const BACKEND_ADDRESS: string = import.meta.env.VITE_BACKEND_SERVER as string;
   const params = new URLSearchParams();
-  params.append("search", search);
-  params.append("asc", asc);
-  params.append("sort", sortBy);
-  params.append("type", type);
-  params.append("limit", limit.toString());
-  const q = BACKEND_ADDRESS + "/api?" + params.toString();
+  for (const [key, value] of Object.entries(queryParams)) {
+    // offset gets skipped for use effect grab since it creates dependency hell and best to add it for scrolling
+    if (key === "offset") {
+      continue;
+    }
+    params.append(key, value.toString());
+  }
+  const query = BACKEND_ADDRESS + "/api?" + params.toString();
 
   // grabs the first page of items based on the search params
   useEffect(() => {
     axios
-      .get<Item[]>(q)
+      .get<Item[]>(query)
       .then((response) => {
         const newItems = response.data.map((item) => {
           return {
@@ -45,15 +64,15 @@ function DisplayItems() {
           };
         });
         setAllItems(newItems);
-        setHasMore(response.data.length == limit);
+        setHasMore(newItems.length == queryParams.limit);
       })
       .catch((err) => console.log(err));
-  }, [q]);
+  }, [query, queryParams.limit]);
 
   // used for the infinite scroll to grab more items
   const getMoreItems = () => {
     axios
-      .get<Item[]>(q + "&offset=" + offset)
+      .get<Item[]>(query + "&offset=" + queryParams.offset)
       .then((response) => {
         const newItems = response.data.map((item) => {
           return {
@@ -62,8 +81,8 @@ function DisplayItems() {
           };
         });
         setAllItems((prev) => [...(prev ?? []), ...newItems]);
-        setHasMore(newItems.length == limit);
-        setOffset((prevOffset) => prevOffset + limit);
+        setHasMore(newItems.length == queryParams.limit);
+        changeQueryParams("offset", queryParams.offset + queryParams.limit);
       })
       .catch((err) => console.log(err));
   };
@@ -86,12 +105,11 @@ function DisplayItems() {
     );
   };
 
-  if (allItems === null) {
-    return <Loading />;
-  }
-
   const clearCounts = () => {
     localStorage.clear();
+    if (allItems === null) {
+      return;
+    }
     setAllItems(
       allItems.map((item) => {
         return { ...item, count: 0 };
@@ -121,20 +139,20 @@ function DisplayItems() {
       <div className="search-options">
         <input
           className="search-bar"
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => changeQueryParams("search", e.target.value)}
         ></input>
         <button
           className="stepper-btn"
           onClick={() => {
-            setAsc(asc == "" ? "-" : "");
+            changeQueryParams("asc", queryParams.asc == "" ? "-" : "");
           }}
         >
-          {asc == "" ? "Ascending" : "Descending"}
+          {queryParams.asc == "" ? "Ascending" : "Descending"}
         </button>
         <select
           className="dropdown"
           defaultValue="fleaMarket"
-          onChange={(e) => setSortBy(e.target.value)}
+          onChange={(e) => changeQueryParams("sortBy", e.target.value)}
         >
           <option value="name">Name</option>
           <option value="shortName">Short Name</option>
@@ -148,7 +166,7 @@ function DisplayItems() {
         <select
           className="dropdown"
           defaultValue="any"
-          onChange={(e) => setType(e.target.value)}
+          onChange={(e) => changeQueryParams("type", e.target.value)}
         >
           {Object.entries(ALL_TYPES).map(([key, value]) => (
             <option key={key} value={key}>
@@ -162,15 +180,10 @@ function DisplayItems() {
       </div>
       <div className="items-container">
         <InfiniteScroll
-          dataLength={allItems.length}
+          dataLength={allItems?.length ?? 0}
           next={getMoreItems}
           hasMore={hasMore}
-          loader={<Loading />}
-          endMessage={
-            <p style={{ textAlign: "center" }}>
-              <b>No more items</b>
-            </p>
-          }
+          loader={<></>}
         >
           <motion.ul
             variants={containerVariants}
@@ -179,7 +192,7 @@ function DisplayItems() {
             className="list-item"
           >
             <AnimatePresence>
-              {allItems.map((x, i) => (
+              {allItems?.map((x, i) => (
                 <motion.li
                   key={x._id}
                   transition={{ duration: 0.8 }}

@@ -37,8 +37,12 @@ function getFleaPrice({ item, children }: Props) {
     if (trader.source == "fleaMarket") {
       return (
         <>
-          <p>Flea Price: {trader.price} RUB</p>
-          {item.avg24hPrice && <p>Average 24h Price: {item.avg24hPrice} RUB</p>}
+          <p>Flea Price: {trader.price.toLocaleString("en-us")} RUB</p>
+          {item.avg24hPrice && (
+            <p>
+              Average 24h Price: {item.avg24hPrice.toLocaleString("en-us")} RUB
+            </p>
+          )}
           {item.changeLast48hPercent != 0 && (
             <p
               style={{ color: item.changeLast48hPercent < 0 ? "green" : "red" }}
@@ -59,7 +63,9 @@ function ItemComponent({ item, idx, children, fields }: Props) {
     <div className="item">
       {fields.includes("name") && <p>{item.name}</p>}
       {fields.includes("shortName") && <p>{item.shortName}</p>}
-      {fields.includes("basePrice") && <p>Base Price: {item.basePrice} RUB</p>}
+      {fields.includes("basePrice") && (
+        <p>Base Price: {item.basePrice.toLocaleString("en-us")} RUB</p>
+      )}
 
       {item.sells.length > 0 ? (
         <>

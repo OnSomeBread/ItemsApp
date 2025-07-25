@@ -1,16 +1,16 @@
-export interface Sell {
+export type Sell = {
   id: number;
   price: number;
   source: string;
   itemid: string;
-}
+};
 
-export interface Type {
+export type Type = {
   id: number;
   name: string;
-}
+};
 
-export interface Item {
+export type Item = {
   _id: string;
   sells: Sell[];
   types: Type[];
@@ -23,7 +23,7 @@ export interface Item {
   height: number;
   link: string;
   count: number;
-}
+};
 
 export const DISPLAY_ITEM_KEYS = [
   "name",

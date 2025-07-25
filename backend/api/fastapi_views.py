@@ -29,10 +29,10 @@ app.add_middleware(
 @app.get("/api")
 async def test_fastapi_view(request: Request):
     # grab all of the filter and sort params
-    search:str = request.query_params.get('search')
-    sortBy:str = request.query_params.get('sort')
-    asc:str = request.query_params.get('asc')
-    item_type:str = request.query_params.get('type')
+    search:str = request.query_params.get('search', '')
+    sortBy:str = request.query_params.get('sortBy', 'fleaMarket')
+    asc:str = request.query_params.get('asc', '-')
+    item_type:str = request.query_params.get('type', 'any')
 
     limit:str = request.query_params.get('limit')
     try:
