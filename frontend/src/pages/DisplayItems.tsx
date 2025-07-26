@@ -50,7 +50,7 @@ function DisplayItems() {
     }
     params.append(key, value.toString());
   }
-  const query = BACKEND_ADDRESS + "/api?" + params.toString();
+  const query = BACKEND_ADDRESS + "/api/items?" + params.toString();
 
   // grabs the first page of items based on the search params
   useEffect(() => {

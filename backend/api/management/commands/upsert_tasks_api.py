@@ -19,10 +19,10 @@ def upsert_tasks_from_query():
         query {
             tasks {
                 taskRequirements {
-                status
-                task {
-                    id
-                }
+                    status
+                    task {
+                        id
+                    }
                 }
                 name
                 experience
@@ -30,23 +30,24 @@ def upsert_tasks_from_query():
                 kappaRequired
                 lightkeeperRequired
                 objectives {
-                type
-                description
-                maps {
                     id
-                    name
+                    type
                     description
-                    normalizedName
-                    players
-                    wiki
-                }
+                    maps {
+                        id
+                        name
+                        description
+                        normalizedName
+                        players
+                        wiki
+                    }
                 }
                 minPlayerLevel
                 factionName
                 normalizedName
                 wikiLink
                 trader {
-                name
+                    name
                 }
             }
         }
@@ -54,7 +55,7 @@ def upsert_tasks_from_query():
 
     result = run_query(new_query)
     with transaction.atomic():
-        upsert_tasks(result['data']['items'])
+        upsert_tasks(result['data']['tasks'])
 
 class Command(BaseCommand):
     help = 'use to create or refresh tasks'

@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from api.models import Item, SellFor, ItemTypes, PastApiCalls, SavedItemData
+from api.models import *
 from django.contrib.auth.models import User
 
+# item serializers
 class SellForSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellFor
@@ -25,6 +26,31 @@ class SavedItemDataSerializer(serializers.ModelSerializer):
         model = SavedItemData
         fields = '__all__'
 
+# task related serializers
+class TaskRequirementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskRequirement
+        fields = '__all__'
+
+class MapSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Map
+        fields = '__all__'
+
+class ObjectiveSerializer(serializers.ModelSerializer):
+    maps = MapSerializer(many=True, read_only=True)
+    class Meta:
+        model = Objective
+        fields = '__all__'
+
+class TaskSerializer(serializers.ModelSerializer):
+    task_requirements = TaskRequirementSerializer(many=True, read_only=True)
+    objectives = ObjectiveSerializer(many=True, read_only=True)
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+# past api calls serializer
 class PastApiCallsSerializer(serializers.ModelSerializer):
     past_items = SavedItemDataSerializer(many=True, read_only=True)
 
@@ -32,6 +58,7 @@ class PastApiCallsSerializer(serializers.ModelSerializer):
         model = PastApiCalls
         fields = '__all__'
 
+# serializer for users
 class UserSerializers(serializers.ModelSerializer):
     class Meta:
         model = User

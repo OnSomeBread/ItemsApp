@@ -1,4 +1,4 @@
-from api.models import Item, SellFor, ItemTypes, PastApiCalls, SavedItemData
+from api.models import *
 from datetime import datetime
 
 # example item 
@@ -16,7 +16,7 @@ from datetime import datetime
 }
 """
 
-# upsert all of the items
+# upsert all of the itemsManyToManyField
 def upsert_items(result):
     # only save the data that will change often
     curr_api_call = PastApiCalls.objects.create(api_name='items', time=datetime.now())
@@ -91,49 +91,105 @@ def upsert_items(result):
 # example tasks query
 """
 {
-    "taskRequirements": [],
-    "name": "First in Line",
-    "experience": 1200,
-    "id": "657315ddab5a49b71f098853",
-    "kappaRequired": true,
-    "lightkeeperRequired": true,
-    "minPlayerLevel": 1,
-    "factionName": "Any",
-    "normalizedName": "first-in-line",
-    "wikiLink": "https://escapefromtarkov.fandom.com/wiki/First_in_Line",
-    "trader": {
-        "name": "Therapist"
-    },
-    "objectives": [
-        {
-        "type": "visit",
-        "description": "Locate the Emercom station on Ground Zero",
-        "maps": [
+'taskRequirements': [], 
+'name': 'First in Line', 
+'experience': 1200, 
+'id': '657315ddab5a49b71f098853', 
+'kappaRequired': True, 
+'lightkeeperRequired': True, 
+'minPlayerLevel': 1, 
+'factionName': 'Any', 
+'normalizedName': 'first-in-line', 
+'wikiLink': 'https://escapefromtarkov.fandom.com/wiki/First_in_Line', 
+'trader': {'name': 'Therapist'}, 
+'objectives': [
+    {
+        'id': '65732ac3c67dcd96adffa3c7', 
+        'type': 'visit', 
+        'description': 'Locate the Emercom station on Ground Zero', 
+        'maps': [
             {
-            "id": "653e6760052c01c1c805532f",
-            "name": "Ground Zero",
-            "description": "The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began.",
-            "normalizedName": "ground-zero",
-            "players": "9-10",
-            "wiki": "https://escapefromtarkov.fandom.com/wiki/Ground_Zero"
-            },
+                'id': '653e6760052c01c1c805532f', 
+                'name': 'Ground Zero', 
+                'description': 'The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began.', 
+                'normalizedName': 'ground-zero', 
+                'players': '9-10', 
+                'wiki': 'https://escapefromtarkov.fandom.com/wiki/Ground_Zero'
+            }, 
             {
-            "id": "65b8d6f5cdde2479cb2a3125",
-            "name": "Ground Zero 21+",
-            "description": "The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began. The area has yet again become a hot zone since the early days of the conflict.",
-            "normalizedName": "ground-zero-21",
-            "players": "9-12",
-            "wiki": "https://escapefromtarkov.fandom.com/wiki/Ground_Zero"
+                'id': '65b8d6f5cdde2479cb2a3125', 
+                'name': 'Ground Zero 21+', 
+                'description': 'The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began. The area has yet again become a hot zone since the early days of the conflict.', 
+                'normalizedName': 'ground-zero-21', 
+                'players': '9-12', 
+                'wiki': 'https://escapefromtarkov.fandom.com/wiki/Ground_Zero'
             }
         ]
-        },
-        {
-        "type": "giveItem",
-        "description": "Hand over any found in raid medicine items",
-        "maps": []
-        }
-    ]
+    }, 
+    {
+        'id': '65817bf31404f3565aef9fec', 
+        'type': 'giveItem', 
+        'description': 'Hand over any found in raid medicine items', 
+        'maps': []
+    }]
 }
 """
 def upsert_tasks(result):
-    return 
+    # create a maps cache
+    existing_maps = {m._id: m for m in Map.objects.all()}
+
+    # grab only the new maps and add them to Map model
+    all_maps = {m['id']: m for task in result for obj in task['objectives'] for m in obj['maps']}
+    new_maps = {}
+    for map_key in all_maps.keys():
+        if map_key not in existing_maps:
+            all_maps[map_key]['_id'] = all_maps[map_key].pop('id')
+            new_maps[map_key] = all_maps[map_key]
+
+    Map.objects.bulk_create([Map(**m) for m in new_maps.values()])
+
+    # create dict to grab only the maps we need as a cache
+    existing_maps.update({m._id: m for m in Map.objects.filter(_id__in=new_maps.keys())})
+
+    for map_obj in existing_maps.values():
+        assert map_obj._state.db == 'default', f"{map_obj} is not DB-bound"
+
+    for task in result:
+        # rename some of the keys
+        task['_id'] = task.pop('id')
+        task['wiki'] = task.pop('wikiLink')
+        task['trader'] = task['trader']['name']
+
+        # these are in a separate model
+        taskReqs = task.pop('taskRequirements')
+        taskObjs = task.pop('objectives')
+
+        inserted_task, _ = Task.objects.update_or_create(_id=task['_id'], defaults=task)
+
+        # grab from the cache all the type objects we need for this item
+        Objective.objects.filter(task=inserted_task).delete()
+        prep_bulk = []
+
+        for taskObj in taskObjs:
+            # rename fields
+            taskObj['task'] = inserted_task
+            taskObj['_id'] = taskObj.pop('id')
+            taskObj['obj_type'] = taskObj.pop('type')
+
+            # remove maps before creating objective
+            obj_maps = taskObj.pop('maps')
+            
+            obj_insert = Objective(**taskObj)
+            obj_insert.save()
+
+            obj_insert.maps.set([existing_maps[m['id']] for m in obj_maps])
+            
+            prep_bulk.append(obj_insert)
+        #Objective.objects.bulk_create(prep_bulk)
+
+        # upsert the seller prices
+        # delete the old sell data and bulk create new updates
+        TaskRequirement.objects.filter(task=inserted_task).delete()
+        TaskRequirement.objects.bulk_create([
+            TaskRequirement(task=inserted_task, status=', '.join(entry['status']), req_task_id=entry['task']['id']) for entry in taskReqs
+        ])

@@ -5,11 +5,11 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backendDjango.settings')
 application = get_asgi_application()
 
-from api.models import Item, SellFor, PastApiCalls
+from api.models import Item, SellFor, PastApiCalls, Task
 from django.contrib.auth.models import User
 from django.db.models import Subquery, OuterRef
 from django.core.cache import cache
-from .serializers import ItemSerializer, UserSerializers, PastApiCallsSerializer
+from .serializers import ItemSerializer, UserSerializers, PastApiCallsSerializer, TaskSerializer
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from django.core.cache import cache
@@ -26,7 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/api")
+@app.get("/api/items")
 async def test_fastapi_view(request: Request):
     # grab all of the filter and sort params
     search:str = request.query_params.get('search', '')
@@ -104,4 +104,10 @@ async def get_items_by_ids(request: Request):
 def get_past_api_calls(request: Request):
     passedCalls = PastApiCalls.objects.all()
     serializer = PastApiCallsSerializer(passedCalls, many=True)
+    return serializer.data
+
+@app.get("/api/tasks")
+def get_tasks(request: Request):
+    tasks = Task.objects.all()
+    serializer = TaskSerializer(tasks, many=True)
     return serializer.data
