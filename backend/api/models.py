@@ -61,9 +61,9 @@ class Task(models.Model):
 # each task can have multiple task requirements which are other Task objects but here just grab id
 # since that is all that is needed to make an adjancency list (Task Graph)
 class TaskRequirement(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='task_requirements')
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='taskRequirements')
     status = models.CharField(max_length=100)
-    req_task_id = models.CharField(max_length=24, db_index=True)
+    reqTaskId = models.CharField(max_length=24, db_index=True)
 
 class Map(models.Model):
     _id = models.CharField(max_length=24, primary_key=True, db_index=True)
@@ -76,6 +76,6 @@ class Map(models.Model):
 class Objective(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='objectives')
     _id = models.CharField(max_length=24, primary_key=True, db_index=True)
-    obj_type = models.CharField(max_length=100)
+    objType = models.CharField(max_length=100)
     description = models.TextField()
     maps = models.ManyToManyField(Map, blank=True)

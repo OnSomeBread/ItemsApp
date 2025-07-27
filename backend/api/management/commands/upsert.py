@@ -151,9 +151,6 @@ def upsert_tasks(result):
     # create dict to grab only the maps we need as a cache
     existing_maps.update({m._id: m for m in Map.objects.filter(_id__in=new_maps.keys())})
 
-    for map_obj in existing_maps.values():
-        assert map_obj._state.db == 'default', f"{map_obj} is not DB-bound"
-
     for task in result:
         # rename some of the keys
         task['_id'] = task.pop('id')
@@ -174,7 +171,7 @@ def upsert_tasks(result):
             # rename fields
             taskObj['task'] = inserted_task
             taskObj['_id'] = taskObj.pop('id')
-            taskObj['obj_type'] = taskObj.pop('type')
+            taskObj['objType'] = taskObj.pop('type')
 
             # remove maps before creating objective
             obj_maps = taskObj.pop('maps')
@@ -182,6 +179,7 @@ def upsert_tasks(result):
             obj_insert = Objective(**taskObj)
             obj_insert.save()
 
+            # many to many field assignments require saved objects making bulk creates kinda difficult here
             obj_insert.maps.set([existing_maps[m['id']] for m in obj_maps])
             
             prep_bulk.append(obj_insert)
@@ -191,5 +189,5 @@ def upsert_tasks(result):
         # delete the old sell data and bulk create new updates
         TaskRequirement.objects.filter(task=inserted_task).delete()
         TaskRequirement.objects.bulk_create([
-            TaskRequirement(task=inserted_task, status=', '.join(entry['status']), req_task_id=entry['task']['id']) for entry in taskReqs
+            TaskRequirement(task=inserted_task, status=', '.join(entry['status']), reqTaskId=entry['task']['id']) for entry in taskReqs
         ])

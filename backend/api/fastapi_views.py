@@ -109,5 +109,5 @@ def get_past_api_calls(request: Request):
 @app.get("/api/tasks")
 def get_tasks(request: Request):
     tasks = Task.objects.all()
-    serializer = TaskSerializer(tasks, many=True)
+    serializer = TaskSerializer(tasks[:30], many=True)
     return serializer.data

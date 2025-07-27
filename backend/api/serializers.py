@@ -44,7 +44,7 @@ class ObjectiveSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TaskSerializer(serializers.ModelSerializer):
-    task_requirements = TaskRequirementSerializer(many=True, read_only=True)
+    taskRequirements = TaskRequirementSerializer(many=True, read_only=True)
     objectives = ObjectiveSerializer(many=True, read_only=True)
     class Meta:
         model = Task

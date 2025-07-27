@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import Home from "./pages/Home";
 // import ProtectedRoute from "./components/ProtectedRoute";
 import DisplayItems from "./pages/DisplayItems";
-import DisplayCart from "./pages/DisplayCart";
+import DisplayTasks from "./pages/DisplayTasks";
 
 // function LogOut() {
 //   localStorage.clear();
@@ -22,8 +22,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/cart" element={<DisplayCart />} />
-        <Route path="*" element={<DisplayItems />} />
+        <Route path="/items" element={<DisplayItems />} />
+        <Route path="*" element={<DisplayTasks />} />
         {/* <Route
           path="/"
           element={
