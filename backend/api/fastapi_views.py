@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from django.core.cache import cache
 from asgiref.sync import sync_to_async
 import asyncio
+import json
 
 app = FastAPI()
 
@@ -26,6 +27,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def get_redis_timeout():
+    # TODO when api refreshes are implemented this will need to have a timeout that will last till next refresh
+    return 3600
+
+# TODO too many sync_to_async calls find a way to remove these
 @app.get("/api/items")
 async def test_fastapi_view(request: Request):
     # grab all of the filter and sort params
@@ -68,10 +74,9 @@ async def test_fastapi_view(request: Request):
     
     serializer = ItemSerializer(items[offset:offset + limit], many=True)
 
-    # TODO when api refreshes are implemented this will need to have a timeout that will last till next refresh
     data = await sync_to_async(lambda: serializer.data)()
 
-    asyncio.create_task(cache.aset(cache_key, data, timeout=3600))
+    asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout()))
     return data
 
 # returns json array of each item in the list of given ids
@@ -93,9 +98,8 @@ async def get_items_by_ids(request: Request):
     data = await sync_to_async(lambda: serializer.data)()
 
     # store all new ids
-    # TODO when api refreshes are implemented this will need to have a timeout that will last till next refresh
     for itm in data:
-        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=3600))
+        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout()))
 
     return data + found_items
 
@@ -108,6 +112,63 @@ def get_past_api_calls(request: Request):
 
 @app.get("/api/tasks")
 def get_tasks(request: Request):
-    tasks = Task.objects.all()
-    serializer = TaskSerializer(tasks[:30], many=True)
+    search:str = request.query_params.get('search', '')
+    isKappa: bool = request.query_params.get('isKappa', False)
+    isLightKeeper: bool = request.query_params.get('isLightKeeper', False)
+    playerLvl: int = request.query_params.get('playerLvl', 99)
+    objType: str = request.query_params.get('objType', 'any')
+    limit: str = request.query_params.get('limit')
+    try:
+        limit = min(int(limit), 100)
+    except Exception:
+        limit = 30
+        
+    offset:str = request.query_params.get('offset')
+    try:
+        offset = int(offset)
+    except:
+        offset = 0
+    
+    completedTasks = request.query_params.get('ids', [])
+
+    tasks = Task.objects.exclude(_id__in=completedTasks).filter(name__icontains=search, minPlayerLevel__lte=playerLvl)
+    
+    # the == True is needed here otherwise always its always True
+    if isKappa == True:
+        tasks = tasks.filter(kappaRequired=True)
+    if isLightKeeper == True:
+        tasks = tasks.filter(lightkeeperRequired=True)
+
+    serializer = TaskSerializer(tasks[offset:offset + limit], many=True)
     return serializer.data
+
+# since each task has its requirements we can send over an adjacency list to handle 
+# completing a task and its required tasks in the same button
+@app.get("/api/adj_list")
+async def get_adj_list(request: Request):
+    # dont build it again if its already cached
+    if await cache.ahas_key('adj_list'):
+        return await cache.aget('adj_list')
+    
+    # if the most_recent_tasks.json file does not exist it likely means the db
+    # is also not init since the api call creates the file and pops the db
+    with open('most_recent_tasks.json', 'r') as f:
+        result = json.load(f)['data']['tasks']
+        adj_list = {}
+
+        for task in result:
+            for req in task['taskRequirements']:
+                status = ', '.join(req['status'])
+                from_id = task['id']
+                to_id = req['task']['id']
+
+                if from_id not in adj_list:
+                    adj_list[from_id] = []
+
+                adj_list[from_id].append((to_id, status))
+
+        asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout()))
+
+        return adj_list
+    print('tasks.json does not exist')
+    return {}

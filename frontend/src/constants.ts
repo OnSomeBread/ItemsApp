@@ -46,6 +46,7 @@ export type Objective = {
   status: string;
   reqTaskId: string;
   objType: string;
+  description: string;
 };
 
 export type Task = {
@@ -71,7 +72,7 @@ export const DISPLAY_ITEM_KEYS = [
   "fleaMarket",
 ];
 
-export const ALL_TYPES = {
+export const ALL_ITEM_TYPES = {
   any: "Any",
   ammo: "Ammo",
   ammoBox: "Ammo Box",
@@ -111,3 +112,25 @@ export const ALL_TRADERS = [
   "skier",
   "therapist",
 ];
+
+export const ALL_TASK_OBJECTIVE_TYPES = {
+  any: "Any",
+  shoot: "Shoot",
+  plantQuestItem: "Plant Quest Item",
+  giveItem: "Give Item",
+  taskStatus: "Task Status",
+  extract: "Extract",
+  giveQuestItem: "Give Quest Item",
+  findItem: "Find Item",
+  plantItem: "Plant Item",
+  findQuestItem: "Find Quest Item",
+  sellItem: "Sell Item",
+  buildWeapon: "Build Weapon",
+  mark: "Mark",
+  useItem: "Use Item",
+  traderLevel: "Trader Level",
+  visit: "Visit",
+  traderStanding: "Trader Standing",
+  experience: "Experience",
+  skill: "Skill",
+};

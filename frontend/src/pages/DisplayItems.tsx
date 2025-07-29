@@ -1,5 +1,5 @@
 import type { Item } from "../constants";
-import { ALL_TYPES, DISPLAY_ITEM_KEYS } from "../constants";
+import { ALL_ITEM_TYPES, DISPLAY_ITEM_KEYS } from "../constants";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -60,11 +60,11 @@ function DisplayItems() {
         const newItems = response.data.map((item) => {
           return {
             ...item,
-            count: parseInt(localStorage.getItem(item._id) || "0"),
+            count: parseInt(localStorage.getItem("item-" + item._id) || "0"),
           };
         });
         setAllItems(newItems);
-        setHasMore(newItems.length == queryParams.limit);
+        setHasMore(newItems.length === queryParams.limit);
       })
       .catch((err) => console.log(err));
   }, [query, queryParams.limit]);
@@ -77,7 +77,7 @@ function DisplayItems() {
         const newItems = response.data.map((item) => {
           return {
             ...item,
-            count: parseInt(localStorage.getItem(item._id) || "0"),
+            count: parseInt(localStorage.getItem("item-" + item._id) || "0"),
           };
         });
         setAllItems((prev) => [...(prev ?? []), ...newItems]);
@@ -93,9 +93,9 @@ function DisplayItems() {
       allItems?.map((item, index) => {
         if (index === idx) {
           if (newNumber === 0) {
-            localStorage.removeItem(item._id);
+            localStorage.removeItem("item-" + item._id);
           } else {
-            localStorage.setItem(item._id, newNumber.toString());
+            localStorage.setItem("item-" + item._id, newNumber.toString());
           }
           return { ...item, count: newNumber };
         } else {
@@ -106,7 +106,10 @@ function DisplayItems() {
   };
 
   const clearCounts = () => {
-    localStorage.clear();
+    for (const key of Object.keys(localStorage)) {
+      const [page, _id] = key.split("-");
+      if (page === "item") localStorage.removeItem(page + "-" + _id);
+    }
     if (allItems === null) {
       return;
     }
@@ -168,7 +171,7 @@ function DisplayItems() {
           defaultValue="any"
           onChange={(e) => changeQueryParams("type", e.target.value)}
         >
-          {Object.entries(ALL_TYPES).map(([key, value]) => (
+          {Object.entries(ALL_ITEM_TYPES).map(([key, value]) => (
             <option key={key} value={key}>
               {value}
             </option>

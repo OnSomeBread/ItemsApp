@@ -180,7 +180,7 @@ def upsert_tasks(result):
             obj_insert.save()
 
             # many to many field assignments require saved objects making bulk creates kinda difficult here
-            obj_insert.maps.set([existing_maps[m['id']] for m in obj_maps])
+            obj_insert.maps.set([existing_maps[m['id'] if 'id' in m else m['_id']] for m in obj_maps])
             
             prep_bulk.append(obj_insert)
         #Objective.objects.bulk_create(prep_bulk)

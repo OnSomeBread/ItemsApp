@@ -40,6 +40,9 @@ def upsert_items_from_query():
     with transaction.atomic():
         upsert_items(result['data']['items'])
 
+        with open('most_recent_items.json', 'w') as f:
+            f.write(result.json())
+
 class Command(BaseCommand):
     help = 'use to create or refresh the database'
 

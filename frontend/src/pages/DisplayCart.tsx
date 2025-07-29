@@ -10,7 +10,8 @@ function DisplayCart() {
   const params = new URLSearchParams();
   const keys = Object.keys(localStorage);
   keys.forEach((key: string) => {
-    params.append("ids", key);
+    const [page, _id] = key.split("-");
+    if (page === "item") params.append("ids", _id);
   });
   const BACKEND_ADDRESS: string = import.meta.env.VITE_BACKEND_SERVER as string;
 
@@ -37,7 +38,8 @@ function DisplayCart() {
       for (const sell of item.sells) {
         if (sell.source === "fleaMarket") {
           totalFleaPrice +=
-            sell.price * parseInt(localStorage.getItem(item._id) || "0");
+            sell.price *
+            parseInt(localStorage.getItem("item-" + item._id) || "0");
           break;
         }
       }
@@ -76,12 +78,12 @@ function DisplayCart() {
               transition={{ duration: 0.7 }}
             >
               <ItemComponent
-                key={x._id + i}
+                key={x._id + i.toString()}
                 item={x}
                 idx={i}
                 fields={["name", "fleaMarket"]}
               >
-                <p>count: {localStorage.getItem(x._id)}</p>
+                <p>count: {localStorage.getItem("item-" + x._id)}</p>
               </ItemComponent>
             </motion.li>
           ))}

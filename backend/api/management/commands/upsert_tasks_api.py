@@ -57,6 +57,9 @@ def upsert_tasks_from_query():
     with transaction.atomic():
         upsert_tasks(result['data']['tasks'])
 
+        with open('most_recent_tasks.json', 'w') as f:
+            f.write(result.json())
+
 class Command(BaseCommand):
     help = 'use to create or refresh tasks'
 
