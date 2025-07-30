@@ -62,6 +62,7 @@ from .serializers import ItemSerializer, UserSerializers, PastApiCallsSerializer
 from django.core.cache import cache
 from asgiref.sync import sync_to_async
 import json
+from datetime import datetime, timezone
 
 app.add_middleware(
     CORSMiddleware,
@@ -71,8 +72,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_redis_timeout():
-    # TODO when api refreshes are implemented this will need to have a timeout that will last till next refresh
+# returns the number of seconds til next api call for the respective api
+def get_redis_timeout(api: str):
+    job = scheduler.get_job('repeat-upsert-' + api)
+    if job: 
+        return (job.next_run_time - datetime.now(timezone.utc)).total_seconds()
     return 3600
 
 # TODO too many sync_to_async calls find a way to remove these
@@ -122,7 +126,7 @@ async def test_fastapi_view(request: Request):
     serializer = ItemSerializer(items[offset:offset + limit], many=True)
     data = await sync_to_async(lambda: serializer.data)()
 
-    asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout()))
+    asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout('items')))
     return data
 
 # returns json array of each item in the list of given ids
@@ -145,7 +149,7 @@ async def get_items_by_ids(request: Request):
 
     # store all new ids
     for itm in data:
-        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout()))
+        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
 
     return data + found_items
 
@@ -226,7 +230,7 @@ async def get_adj_list(request: Request):
 
                 adj_list[from_id].append((to_id, status))
 
-        asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout()))
+        asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks')))
         return adj_list
     print('tasks.json does not exist')
     return {}
