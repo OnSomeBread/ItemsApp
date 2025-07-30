@@ -66,14 +66,16 @@ async def test_fastapi_view(request: Request):
     # id is needed for order_by to make it consistant because it normally varys 
     # leading to duplicates given to user if using pagination
     if sortBy == 'fleaMarket': 
-        flea_market_prices = await sync_to_async((await sync_to_async(SellFor.objects.filter)(item=OuterRef('pk'), source='fleaMarket')).order_by)('-price', 'id')
+        flea_market_prices = await sync_to_async(SellFor.objects.filter)(item=OuterRef('pk'), source='fleaMarket')
+        flea_market_prices = await sync_to_async(flea_market_prices.order_by)('-price', 'id')
         items = await sync_to_async(items.annotate)(fleaPrice=Subquery(flea_market_prices.values('price')[:1]))
-        items = await sync_to_async((await sync_to_async(items.filter)(fleaPrice__isnull=False, name__icontains=search)).order_by)(asc + 'fleaPrice', '_id')
+        items = await sync_to_async(items.filter)(fleaPrice__isnull=False, name__icontains=search)
+        items = await sync_to_async(items.order_by)(asc + 'fleaPrice', '_id')
     else:
-        items = await sync_to_async((await sync_to_async(items.filter)(name__icontains=search)).order_by)(asc + sortBy, '_id')
+        items = (await sync_to_async(items.filter)(name__icontains=search))
+        items = await sync_to_async(items.order_by)(asc + sortBy, '_id')
     
     serializer = ItemSerializer(items[offset:offset + limit], many=True)
-
     data = await sync_to_async(lambda: serializer.data)()
 
     asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout()))
@@ -111,7 +113,7 @@ def get_past_api_calls(request: Request):
     return serializer.data
 
 @app.get("/api/tasks")
-def get_tasks(request: Request):
+async def get_tasks(request: Request):
     search:str = request.query_params.get('search', '')
     isKappa: bool = request.query_params.get('isKappa', False)
     isLightKeeper: bool = request.query_params.get('isLightKeeper', False)
@@ -122,7 +124,7 @@ def get_tasks(request: Request):
         limit = min(int(limit), 100)
     except Exception:
         limit = 30
-        
+
     offset:str = request.query_params.get('offset')
     try:
         offset = int(offset)
@@ -131,16 +133,26 @@ def get_tasks(request: Request):
     
     completedTasks = request.query_params.get('ids', [])
 
-    tasks = Task.objects.exclude(_id__in=completedTasks).filter(name__icontains=search, minPlayerLevel__lte=playerLvl)
+    # check if this is a repeated query and if so return it
+    cache_key:str = search + isKappa + isLightKeeper + playerLvl + objType + str(limit) + str(offset) + ''.join(completedTasks)
+    if await cache.ahas_key(cache_key):
+        return await cache.aget(cache_key)
+
+    tasks = await sync_to_async(Task.objects.exclude)(_id__in=completedTasks)
+    tasks = await sync_to_async(tasks.filter)(name__icontains=search, minPlayerLevel__lte=playerLvl)
     
     # the == True is needed here otherwise always its always True
     if isKappa == True:
-        tasks = tasks.filter(kappaRequired=True)
+        tasks = await sync_to_async(tasks.filter)(kappaRequired=True)
     if isLightKeeper == True:
-        tasks = tasks.filter(lightkeeperRequired=True)
+        tasks = await sync_to_async(tasks.filter)(lightkeeperRequired=True)
 
     serializer = TaskSerializer(tasks[offset:offset + limit], many=True)
-    return serializer.data
+    data = await sync_to_async(lambda: serializer.data)()
+
+    # save this query in the background
+    asyncio.create_task(cache.aset(cache_key, data))
+    return data
 
 # since each task has its requirements we can send over an adjacency list to handle 
 # completing a task and its required tasks in the same button
@@ -168,7 +180,6 @@ async def get_adj_list(request: Request):
                 adj_list[from_id].append((to_id, status))
 
         asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout()))
-
         return adj_list
     print('tasks.json does not exist')
     return {}
