@@ -1,5 +1,9 @@
 import type { Item } from "../constants";
-import { ALL_ITEM_TYPES, DISPLAY_ITEM_KEYS } from "../constants";
+import {
+  ALL_ITEM_TYPES,
+  BACKEND_ADDRESS,
+  DISPLAY_ITEM_KEYS,
+} from "../constants";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -41,7 +45,6 @@ function DisplayItems() {
     });
   };
 
-  const BACKEND_ADDRESS: string = import.meta.env.VITE_BACKEND_SERVER as string;
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(queryParams)) {
     // offset gets skipped for use effect grab since it creates dependency hell and best to add it for scrolling

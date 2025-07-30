@@ -134,3 +134,6 @@ export const ALL_TASK_OBJECTIVE_TYPES = {
   experience: "Experience",
   skill: "Skill",
 };
+
+export const BACKEND_ADDRESS: string = import.meta.env
+  .VITE_BACKEND_SERVER as string;

@@ -1,6 +1,10 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { ALL_TASK_OBJECTIVE_TYPES, type Task } from "../constants";
+import {
+  ALL_TASK_OBJECTIVE_TYPES,
+  BACKEND_ADDRESS,
+  type Task,
+} from "../constants";
 import TaskComponent from "../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
 
@@ -26,7 +30,6 @@ function DisplayTasks() {
     offset: 50,
   });
   const [hasMore, setHasMore] = useState(false);
-  const BACKEND_ADDRESS: string = import.meta.env.VITE_BACKEND_SERVER as string;
 
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(queryParams)) {
@@ -34,6 +37,7 @@ function DisplayTasks() {
     params.append(key, value.toString());
   }
 
+  // grab all of the tasks that were marked completed
   for (const key of Object.keys(localStorage)) {
     const [page, _id] = key.split("-");
     if (page === "task") params.append("ids", _id);
@@ -160,17 +164,9 @@ function DisplayTasks() {
         hasMore={hasMore}
         loader={<></>}
       >
-        {allTasks
-          ?.filter(
-            (task) => localStorage.getItem("task-" + task._id) !== "Completed"
-          )
-          .map((task) => (
-            <TaskComponent
-              key={task._id}
-              task={task}
-              onClick={onClickComplete}
-            />
-          ))}
+        {allTasks?.map((task) => (
+          <TaskComponent key={task._id} task={task} onClick={onClickComplete} />
+        ))}
       </InfiniteScroll>
     </>
   );

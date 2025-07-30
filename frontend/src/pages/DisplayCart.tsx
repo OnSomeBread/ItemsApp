@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Item } from "../constants";
+import { BACKEND_ADDRESS, type Item } from "../constants";
 import { useEffect, useState } from "react";
 import ItemComponent from "../components/ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
@@ -13,7 +13,6 @@ function DisplayCart() {
     const [page, _id] = key.split("-");
     if (page === "item") params.append("ids", _id);
   });
-  const BACKEND_ADDRESS: string = import.meta.env.VITE_BACKEND_SERVER as string;
 
   const query = BACKEND_ADDRESS + "/api/cart?" + params.toString();
 
