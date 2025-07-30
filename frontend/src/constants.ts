@@ -5,7 +5,7 @@ export type Sell = {
   itemid: string;
 };
 
-export type Type = {
+export type ItemType = {
   id: number;
   name: string;
 };
@@ -13,7 +13,7 @@ export type Type = {
 export type Item = {
   _id: string;
   sells: Sell[];
-  types: Type[];
+  types: ItemType[];
   name: string;
   shortName: string;
   avg24hPrice: number;
@@ -23,45 +23,6 @@ export type Item = {
   height: number;
   link: string;
   count: number;
-};
-
-export type TaskRequirement = {
-  // this isnt a game id which is why its named differently
-  id: number;
-  status: string;
-  reqTaskId: string;
-};
-
-export type Map = {
-  _id: string;
-  name: string;
-  normalizedName: string;
-  players: string;
-  description: string;
-  wiki: string;
-};
-
-export type Objective = {
-  _id: string;
-  status: string;
-  reqTaskId: string;
-  objType: string;
-  description: string;
-};
-
-export type Task = {
-  _id: string;
-  name: string;
-  normalizedName: string;
-  experience: number;
-  minPlayerLevel: number;
-  trader: string;
-  factionName: string;
-  kappaRequired: boolean;
-  lightkeeperRequired: boolean;
-  wiki: string;
-  taskRequirements: TaskRequirement[];
-  objectives: Objective[];
 };
 
 export const DISPLAY_ITEM_KEYS = [
@@ -98,6 +59,45 @@ export const ALL_ITEM_TYPES = {
   mods: "Weapon Mod",
   preset: "Weapon Preset",
   wearable: "Wearable",
+};
+
+export type TaskRequirement = {
+  // this isnt a game id which is why its named differently
+  id: number;
+  status: string;
+  reqTaskId: string;
+};
+
+export type Map = {
+  _id: string;
+  name: string;
+  normalizedName: string;
+  players: string;
+  description: string;
+  wiki: string;
+};
+
+export type Objective = {
+  _id: string;
+  reqTaskId: string;
+  objType: string;
+  description: string;
+  maps: Map[];
+};
+
+export type Task = {
+  _id: string;
+  name: string;
+  normalizedName: string;
+  experience: number;
+  minPlayerLevel: number;
+  trader: string;
+  factionName: string;
+  kappaRequired: boolean;
+  lightkeeperRequired: boolean;
+  wiki: string;
+  taskRequirements: TaskRequirement[];
+  objectives: Objective[];
 };
 
 export const ALL_TRADERS = [
