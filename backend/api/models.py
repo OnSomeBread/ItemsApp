@@ -35,11 +35,17 @@ class SavedItemData(models.Model):
 
     # this should match up exactly with the related Item class id
     # could instead use reference with item but not needed here
-    item_id = models.CharField(max_length=24, primary_key=True, db_index=True)
+    item_id = models.CharField(max_length=24, db_index=True)
 
     avg24hPrice = models.IntegerField(default=0, null=True)
     changeLast48hPercent = models.DecimalField(max_digits=8, decimal_places=2, null=True)
     fleaMarket = models.IntegerField(default=0)
+
+# saving task data does not need to happen not nearly as often as saving item data
+# since its not actively changing but also all of the data needs to be saved in order to restore
+class SavedTaskData(models.Model):
+    past_api_call = models.ForeignKey(PastApiCalls, on_delete=models.CASCADE, related_name='past_tasks')
+    task_data = models.JSONField(default=dict)
 
 class Task(models.Model):
     _id = models.CharField(max_length=24, primary_key=True, db_index=True)

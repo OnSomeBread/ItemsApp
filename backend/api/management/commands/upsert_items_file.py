@@ -7,6 +7,7 @@ def upsert_items_from_json(file_name):
     with open(file_name, 'r') as f:
         result = json.load(f)
         with transaction.atomic():
+            print('upsert items via file ' + file_name)
             upsert_items(result['data']['items'])
 
 

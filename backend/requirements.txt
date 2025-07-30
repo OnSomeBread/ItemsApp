@@ -11,3 +11,4 @@ uvicorn[standard]
 httpx
 pytest
 pytest-asyncio
+apscheduler

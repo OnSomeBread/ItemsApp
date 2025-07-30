@@ -38,6 +38,7 @@ def upsert_items_from_query():
 
     result = run_query(new_query)
     with transaction.atomic():
+        print('upsert tasks via api')
         upsert_items(result['data']['items'])
 
         with open('most_recent_items.json', 'w') as f:

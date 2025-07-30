@@ -2,22 +2,66 @@
 # but also run fastapi for uvicorn and django settings has to come before every other import
 import os
 from django.core.asgi import get_asgi_application
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from django.core.management import call_command
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import asyncio
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backendDjango.settings')
-application = get_asgi_application()
+django_app = get_asgi_application()
+
+scheduler = AsyncIOScheduler()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from api.models import Item, Task
+
+    print('django performing migrations')
+    await sync_to_async(call_command)('makemigrations', 'api')
+    await sync_to_async(call_command)('migrate', 'api')
+
+    if await sync_to_async(Item.objects.count)() == 0:
+        print('init items')
+        asyncio.create_task(sync_to_async(call_command)('upsert_items_file', 'most_recent_items.json'))
+
+    if await sync_to_async(Task.objects.count)() == 0:
+        print('init tasks')
+        asyncio.create_task(sync_to_async(call_command)('upsert_tasks_file', 'most_recent_tasks.json'))
+
+    scheduler.add_job(
+        lambda: call_command('upsert_items_file', 'most_recent_items.json'),
+        trigger="interval",
+        seconds=300,
+        id="repeat-upsert-items"
+    )
+
+    scheduler.add_job(
+        lambda: call_command('upsert_tasks_file', 'most_recent_tasks.json'),
+        trigger="interval",
+        seconds=300,
+        id="repeat-upsert-tasks"
+    )
+
+    scheduler.start()
+
+    yield
+
+    scheduler.shutdown()
+
+app = FastAPI(lifespan=lifespan)
+
+app.mount("/django", django_app)
 
 from api.models import Item, SellFor, PastApiCalls, Task
 from django.contrib.auth.models import User
 from django.db.models import Subquery, OuterRef
 from django.core.cache import cache
 from .serializers import ItemSerializer, UserSerializers, PastApiCallsSerializer, TaskSerializer
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from django.core.cache import cache
 from asgiref.sync import sync_to_async
-import asyncio
 import json
-
-app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -140,6 +184,9 @@ async def get_tasks(request: Request):
 
     tasks = await sync_to_async(Task.objects.exclude)(_id__in=completedTasks)
     tasks = await sync_to_async(tasks.filter)(name__icontains=search, minPlayerLevel__lte=playerLvl)
+
+    if objType != 'any':
+        tasks = await sync_to_async((await sync_to_async(tasks.filter)(objectives__objType=objType)).distinct)()
     
     # the == True is needed here otherwise always its always True
     if isKappa == True:

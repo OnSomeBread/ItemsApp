@@ -135,6 +135,9 @@ def upsert_items(result):
 }
 """
 def upsert_tasks(result):
+    curr_api_call = PastApiCalls.objects.create(api_name='tasks', time=datetime.now())
+    SavedTaskData.objects.create(past_api_call=curr_api_call, task_data=result)
+
     # create a maps cache
     existing_maps = {m._id: m for m in Map.objects.all()}
 

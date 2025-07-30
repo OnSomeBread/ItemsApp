@@ -7,6 +7,7 @@ def upsert_tasks_from_json(file_name):
     with open(file_name, 'r') as f:
         result = json.load(f)
         with transaction.atomic():
+            print('upsert tasks via file ' + file_name)
             upsert_tasks(result['data']['tasks'])
 
 
