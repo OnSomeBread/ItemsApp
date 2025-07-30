@@ -29,15 +29,13 @@ function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
 
-  // TODO add ability to change limit in the page or remove this
-  const limitPerPage = 50;
   const [queryParams, setQueryParams] = useState<QueryParams>({
     search: "",
     asc: "-",
     sortBy: "fleaMarket",
     type: "any",
-    limit: limitPerPage,
-    offset: limitPerPage,
+    limit: 50,
+    offset: 50,
   });
   const changeQueryParams = (key: string, value: string | number) => {
     setQueryParams((prev) => {

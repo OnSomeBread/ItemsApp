@@ -142,7 +142,7 @@ function DisplayTasks() {
           onChange={(e) => changeQueryParams("playerLvl", e.target.value)}
         >
           {[...Array(100).keys()].map((num) => (
-            <option>{num}</option>
+            <option key={num}>{num}</option>
           ))}
         </select>
         <select
@@ -151,7 +151,9 @@ function DisplayTasks() {
           onChange={(e) => changeQueryParams("objType", e.target.value)}
         >
           {Object.entries(ALL_TASK_OBJECTIVE_TYPES).map(([key, value]) => (
-            <option value={key}>{value}</option>
+            <option key={key} value={key}>
+              {value}
+            </option>
           ))}
         </select>
         <button className="stepper-btn" onClick={setClear}>

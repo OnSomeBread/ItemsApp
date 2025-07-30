@@ -24,7 +24,6 @@ function DisplayCart() {
         response.data.sort((itema, itemb) =>
           itema._id.localeCompare(itemb._id)
         );
-        console.log(response.data);
         setAllItems(response.data);
       })
       .catch((err) => console.log(err));
