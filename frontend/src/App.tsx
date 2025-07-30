@@ -22,8 +22,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/items" element={<DisplayItems />} />
-        <Route path="*" element={<DisplayTasks />} />
+        <Route path="*" element={<DisplayItems />} />
+        <Route path="/tasks" element={<DisplayTasks />} />
         {/* <Route
           path="/"
           element={
