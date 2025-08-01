@@ -267,6 +267,6 @@ async def get_item_history(request: Request):
         return await cache.aget('history' + item_id)
 
     data = await get_item_history_db_operations(item_id)
-    asyncio.create_task(cache.aset('history' + item_id, data))
+    asyncio.create_task(cache.aset('history' + item_id, data, timeout=get_redis_timeout('items')))
 
     return data
