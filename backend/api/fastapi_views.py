@@ -56,11 +56,11 @@ app = FastAPI(lifespan=lifespan)
 
 app.mount("/django", django_app)
 
-from api.models import Item, SellFor, PastApiCalls, Task
+from api.models import Item, SellFor, PastApiCalls, Task, SavedItemData
 from django.contrib.auth.models import User
 from django.db.models import Subquery, OuterRef
 from django.core.cache import cache
-from .serializers import ItemSerializer, UserSerializers, PastApiCallsSerializer, TaskSerializer
+from .serializers import ItemSerializer, UserSerializers, SavedItemDataSerializer, PastApiCallsSerializer, TaskSerializer
 from django.core.cache import cache
 from asgiref.sync import sync_to_async
 import json
@@ -174,7 +174,7 @@ def get_tasks_db_operations(search:str, isKappa:bool, isLightKeeper:bool, player
     tasks = tasks.filter(name__icontains=search, minPlayerLevel__lte=playerLvl)
 
     if objType != 'any':
-        tasks = (tasks.filter)(objectives__objType=objType).distinct()
+        tasks = tasks.filter(objectives__objType=objType).distinct()
     
     # the == True is needed here otherwise always its always True
     if isKappa == True:
@@ -247,3 +247,26 @@ async def get_adj_list(request: Request):
         return adj_list
     print('tasks.json does not exist')
     return {}
+
+@sync_to_async(thread_sensitive=True)
+def get_item_history_db_operations(item_id:str):
+    item_data = SavedItemData.objects.filter(item_id=item_id)
+
+    serializer = SavedItemDataSerializer(item_data, many=True)
+    return serializer.data
+
+# grabs past item flea market prices for a specific item id
+@app.get('/api/item_history')
+async def get_item_history(request: Request):
+    item_id = request.query_params.get('item_id')
+
+    if item_id == None:
+        return 'no given item id'
+    
+    if await cache.ahas_key('history' + item_id):
+        return await cache.aget('history' + item_id)
+
+    data = await get_item_history_db_operations(item_id)
+    asyncio.create_task(cache.aset('history' + item_id, data))
+
+    return data
