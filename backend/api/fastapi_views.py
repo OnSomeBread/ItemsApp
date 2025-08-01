@@ -1,4 +1,4 @@
-# TODO find a better way to do this it's required for fastapi to have django settings
+# it's required for fastapi to have django settings
 # but also run fastapi for uvicorn and django settings has to come before every other import
 import os
 from django.core.asgi import get_asgi_application
@@ -136,7 +136,7 @@ async def get_items(request: Request):
 def get_items_by_ids_db_operations(ids, found_count:int):
     # find all the items that weren't cached
     items = Item.objects.filter(_id__in=ids)
-    serializer = ItemSerializer(items[:30 - found_count], many=True)
+    serializer = ItemSerializer(items[:len(ids) - found_count], many=True)
     return serializer.data
 
 # returns json array of each item in the list of given ids
@@ -221,7 +221,7 @@ async def get_tasks(request: Request):
 # since each task has its requirements we can send over an adjacency list to handle 
 # completing a task and its required tasks in the same button
 @app.get("/api/adj_list")
-async def get_adj_list(request: Request):
+async def get_adj_list():
     # dont build it again if its already cached
     if await cache.ahas_key('adj_list'):
         return await cache.aget('adj_list')
@@ -250,6 +250,7 @@ async def get_adj_list(request: Request):
 
 @sync_to_async(thread_sensitive=True)
 def get_item_history_db_operations(item_id:str):
+    # TODO THIS ALSO NEEDS TO GRAB TIMESTAMP OF API CALL
     item_data = SavedItemData.objects.filter(item_id=item_id)
 
     serializer = SavedItemDataSerializer(item_data, many=True)
