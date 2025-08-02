@@ -136,7 +136,7 @@ async def get_items(request: Request):
 def get_items_by_ids_db_operations(ids, found_count:int):
     # find all the items that weren't cached
     items = Item.objects.filter(_id__in=ids)
-    serializer = ItemSerializer(items[:len(ids) - found_count], many=True)
+    serializer = ItemSerializer(items[:max(len(ids) - found_count, 0)], many=True)
     return serializer.data
 
 # returns json array of each item in the list of given ids

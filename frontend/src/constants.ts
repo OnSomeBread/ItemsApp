@@ -10,6 +10,14 @@ export type ItemType = {
   name: string;
 };
 
+export type ItemHistory = {
+  _id: string;
+  avg24hPrice: number;
+  changeLast48hPercent: number;
+  fleaMarket: number;
+  time: Date;
+};
+
 export type Item = {
   _id: string;
   sells: Sell[];
