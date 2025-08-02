@@ -32,25 +32,25 @@ async def lifespan(app: FastAPI):
     # call_command('upsert_items_api')
     # call_command('upsert_tasks_api')
 
-    scheduler.add_job(
-        lambda: call_command('upsert_items_file', 'most_recent_items.json'),
-        trigger="interval",
-        seconds=300,
-        id="repeat-upsert-items"
-    )
+    # scheduler.add_job(
+    #     lambda: call_command('upsert_items_file', 'most_recent_items.json'),
+    #     trigger="interval",
+    #     seconds=300,
+    #     id="repeat-upsert-items"
+    # )
 
-    scheduler.add_job(
-        lambda: call_command('upsert_tasks_file', 'most_recent_tasks.json'),
-        trigger="interval",
-        seconds=300,
-        id="repeat-upsert-tasks"
-    )
+    # scheduler.add_job(
+    #     lambda: call_command('upsert_tasks_file', 'most_recent_tasks.json'),
+    #     trigger="interval",
+    #     seconds=300,
+    #     id="repeat-upsert-tasks"
+    # )
 
-    scheduler.start()
+    # scheduler.start()
 
     yield
 
-    scheduler.shutdown()
+    # scheduler.shutdown()
 
 app = FastAPI(lifespan=lifespan)
 
@@ -60,7 +60,7 @@ from api.models import Item, SellFor, PastApiCalls, Task, SavedItemData
 from django.contrib.auth.models import User
 from django.db.models import Subquery, OuterRef
 from django.core.cache import cache
-from .serializers import ItemSerializer, UserSerializers, SavedItemDataSerializer, PastApiCallsSerializer, TaskSerializer
+from .serializers import ItemSerializer, UserSerializers, SavedItemHistorySerializer, PastApiCallsSerializer, TaskSerializer
 from django.core.cache import cache
 from asgiref.sync import sync_to_async
 import json
@@ -250,10 +250,9 @@ async def get_adj_list():
 
 @sync_to_async(thread_sensitive=True)
 def get_item_history_db_operations(item_id:str):
-    # TODO THIS ALSO NEEDS TO GRAB TIMESTAMP OF API CALL
-    item_data = SavedItemData.objects.filter(item_id=item_id)
+    item_data = SavedItemData.objects.filter(item_id=item_id).values('item_id', 'avg24hPrice', 'changeLast48hPercent', 'fleaMarket', 'past_api_call__time')
 
-    serializer = SavedItemDataSerializer(item_data, many=True)
+    serializer = SavedItemHistorySerializer(item_data, many=True)
     return serializer.data
 
 # grabs past item flea market prices for a specific item id

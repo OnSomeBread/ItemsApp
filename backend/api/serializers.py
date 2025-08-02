@@ -21,11 +21,6 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = '__all__'
 
-class SavedItemDataSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SavedItemData
-        fields = '__all__'
-
 # task related serializers
 class TaskRequirementSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,11 +47,21 @@ class TaskSerializer(serializers.ModelSerializer):
 
 # past api calls serializer
 class PastApiCallsSerializer(serializers.ModelSerializer):
-    past_items = SavedItemDataSerializer(many=True, read_only=True)
-
     class Meta:
         model = PastApiCalls
         fields = '__all__'
+
+class SavedItemDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedItemData
+        fields = '__all__'
+
+class SavedItemHistorySerializer(serializers.Serializer):
+    item_id = serializers.CharField()
+    avg24hPrice = serializers.IntegerField()
+    changeLast48hPercent = serializers.FloatField()
+    fleaMarket = serializers.IntegerField()
+    time = serializers.TimeField(source='past_api_call__time')
 
 # serializer for users
 class UserSerializers(serializers.ModelSerializer):
