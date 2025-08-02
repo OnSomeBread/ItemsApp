@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 # every item can have many types
 class ItemTypes(models.Model):
@@ -85,3 +86,26 @@ class Objective(models.Model):
     objType = models.CharField(max_length=100)
     description = models.TextField()
     maps = models.ManyToManyField(Map, blank=True)
+
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None):
+        user = self.model(email=self.normalize_email(email))
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+# auth users model
+class User(AbstractBaseUser):
+    email = models.EmailField(unique=True)
+    # is_active = models.BooleanField(default=True)
+    # is_staff = models.BooleanField(default=False)
+    # is_superuser = models.BooleanField(default=False)
+
+    # this stores the users site interations
+    preferences_tasks = models.JSONField(default=dict, null=True)
+    preferences_items = models.JSONField(default=dict, null=True)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'email'

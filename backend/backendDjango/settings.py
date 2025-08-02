@@ -46,6 +46,8 @@ ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 #     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 # }
 
+AUTH_USER_MODEL = 'api.User'
+
 # Application definition
 
 INSTALLED_APPS = [

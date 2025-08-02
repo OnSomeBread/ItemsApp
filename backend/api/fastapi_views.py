@@ -2,7 +2,7 @@
 # but also run fastapi for uvicorn and django settings has to come before every other import
 import os
 from django.core.asgi import get_asgi_application
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from django.core.management import call_command
@@ -58,6 +58,8 @@ app.mount("/django", django_app)
 
 from api.models import Item, SellFor, PastApiCalls, Task, SavedItemData
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from .auth import create_access_token, get_user_data
 from django.db.models import Subquery, OuterRef
 from django.core.cache import cache
 from .serializers import ItemSerializer, UserSerializers, SavedItemHistorySerializer, PastApiCallsSerializer, TaskSerializer
@@ -80,6 +82,49 @@ def get_redis_timeout(api: str):
     if job: 
         return (job.next_run_time - datetime.now(timezone.utc)).total_seconds()
     return 3600
+
+@app.post('/token/signup')
+async def signup(user_data: dict):
+    email = user_data['email']
+    password = user_data.get('password')
+
+    # check if email already in the db
+    if await sync_to_async(User.objects.filter(email=email).exists)():
+        raise HTTPException(status_code=400, detail='Email already registered')
+
+    user = User(email=email, preferences_tasks=user_data.get('preferences_tasks'), preferences_items=user_data.get('preferences_items'))
+    user.set_password(password=password)
+    await sync_to_async(user.save)()
+
+    token = create_access_token(data={'userid': str(user.id)})
+    return {
+        'access_token': token, 
+        'token_type':'bearer'
+    }
+
+
+@app.post('/token/login')
+async def login(user_data:dict):
+    email = user_data['email']
+    password = user_data['password']
+    user = await sync_to_async(authenticate)(username=email, password=password)
+    if not user:
+        raise HTTPException(status_code=400, detail='Incorrect email or password')
+    token = create_access_token(data={'userid': str(user.id)})
+    return {'access_token': token, 'token_type':'bearer'}
+
+@app.get('/token/me')
+async def get_user_me(current_user=Depends(get_user_data)):
+    return {'id':current_user.id, 'email':current_user.email}
+
+@app.get('/token/pref_tasks')
+async def get_user_pref_tasks(current_user=Depends(get_user_data)):
+    return {'preferences_tasks':current_user.preferences_tasks}
+
+@app.get('/token/pref_items')
+async def get_user_pref_items(current_user=Depends(get_user_data)):
+    return {'preferences_items':current_user.preferences_items}
+
 
 @sync_to_async(thread_sensitive=True)
 def get_items_db_operations(search:str, sortBy:str, asc:str, item_type:str, limit:int, offset:int):
