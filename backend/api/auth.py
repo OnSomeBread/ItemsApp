@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from django.contrib.auth import get_user_model
@@ -12,16 +12,17 @@ EXPIRE_TIME_MINUTES = 30
 
 def create_access_token(data:dict):
     to_encode = data.copy()
-    to_encode['expire'] = datetime.now(datetime.timezone.utc) + (EXPIRE_TIME_MINUTES * 60)
+    to_encode['expire'] = (datetime.now(timezone.utc) + timedelta(minutes=EXPIRE_TIME_MINUTES * 60)).isoformat()
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def decode_token(token:str):
     try:
-        decoded = jwt.decode(token, JWT_SECRET, algorithm=JWT_ALGORITHM)
-        if decoded['expire'] < datetime.now(datetime.timezone.utc):
+        decoded = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if decoded['expire'].fromisoformat() < datetime.now(timezone.utc):
             return None
         return decoded
-    except Exception:
+    except Exception as e:
+        print(e)
         return None
     
 oauth2_schema = OAuth2PasswordBearer(tokenUrl='token')

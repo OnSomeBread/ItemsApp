@@ -57,8 +57,8 @@ app = FastAPI(lifespan=lifespan)
 app.mount("/django", django_app)
 
 from api.models import Item, SellFor, PastApiCalls, Task, SavedItemData
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
+#from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, get_user_model
 from .auth import create_access_token, get_user_data
 from django.db.models import Subquery, OuterRef
 from django.core.cache import cache
@@ -67,6 +67,8 @@ from django.core.cache import cache
 from asgiref.sync import sync_to_async
 import json
 from datetime import datetime, timezone
+
+User = get_user_model()
 
 app.add_middleware(
     CORSMiddleware,
@@ -93,7 +95,7 @@ async def signup(user_data: dict):
         raise HTTPException(status_code=400, detail='Email already registered')
 
     user = User(email=email, preferences_tasks=user_data.get('preferences_tasks'), preferences_items=user_data.get('preferences_items'))
-    user.set_password(password=password)
+    user.set_password(password)
     await sync_to_async(user.save)()
 
     token = create_access_token(data={'userid': str(user.id)})
@@ -115,6 +117,8 @@ async def login(user_data:dict):
 
 @app.get('/token/me')
 async def get_user_me(current_user=Depends(get_user_data)):
+    if type(current_user) == HTTPException:
+        return current_user
     return {'id':current_user.id, 'email':current_user.email}
 
 @app.get('/token/pref_tasks')

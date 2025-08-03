@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import ProtectedRoute from "./components/ProtectedRoute";
 import DisplayItems from "./pages/DisplayItems";
 import DisplayTasks from "./pages/DisplayTasks";
+import SignupLogin from "./pages/SignupLogin";
 
 // function LogOut() {
 //   localStorage.clear();
@@ -24,6 +25,7 @@ function App() {
       <Routes>
         <Route path="*" element={<DisplayItems />} />
         <Route path="/tasks" element={<DisplayTasks />} />
+        <Route path="/signup" element={<SignupLogin />} />
         {/* <Route
           path="/"
           element={
@@ -32,11 +34,7 @@ function App() {
             </ProtectedRoute>
           }
         ></Route>
-        <Route path="/login" element={<Login />} />
-        <Route path="/logout" element={<LogOut />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/registerLogout" element={<RegisterAndLogout />} />
-        <Route path="*" element={<NotFound />} /> */}
+        <Route path="/login" element={<Login />} /> */}
       </Routes>
     </BrowserRouter>
   );
