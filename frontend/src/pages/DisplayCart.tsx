@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import ItemComponent from "../components/ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
 
+// goes through all items and finds its count in localstorage which is set in DisplayItems changeCount used in buttons
+// returns both the current flea price and the previous flea price
 const getTotalFleaPrice = (allItems: Item[]) => {
   const prevTotal = parseInt(localStorage.getItem("prevFleaMarket") || "0");
   let totalFleaPrice = 0;
@@ -20,6 +22,7 @@ const getTotalFleaPrice = (allItems: Item[]) => {
   });
 
   localStorage.setItem("prevFleaMarket", totalFleaPrice.toString());
+
   return [totalFleaPrice, prevTotal];
 };
 
@@ -29,8 +32,7 @@ function DisplayCart() {
   const [priceDelta, setPriceDelta] = useState<number | null>(null);
 
   const params = new URLSearchParams();
-  const keys = Object.keys(localStorage);
-  keys.forEach((key: string) => {
+  Object.keys(localStorage).forEach((key: string) => {
     const [page, _id] = key.split("-");
     if (page === "item") params.append("ids", _id);
   });
@@ -41,6 +43,9 @@ function DisplayCart() {
     axios
       .get<Item[]>(query)
       .then((response) => {
+        // the caching system can sometimes change the order of which ids are passed in and this helps to normalize it
+        // in theory this should sort by the main page sortBy query param however that complicates the page too much
+        // for how little it changes
         response.data.sort((itema, itemb) =>
           itema._id.localeCompare(itemb._id)
         );
@@ -48,9 +53,9 @@ function DisplayCart() {
         const [currPrice, prevPrice] = getTotalFleaPrice(response.data);
         setCurrFleaPrice(currPrice);
 
+        // the +money animation will be only for positive changes
         if (currPrice > prevPrice) {
           setPriceDelta(currPrice - prevPrice);
-          //setTimeout(() => setPriceDelta(null), 1000);
         }
       })
       .catch((err) => console.log(err));
@@ -68,7 +73,7 @@ function DisplayCart() {
             opacity: [0, 1, 1, 0],
           }}
           transition={{
-            duration: 1.6,
+            duration: 1.2,
             times: [0, 0.1, 0.9, 1],
           }}
           style={{ color: "green" }}
