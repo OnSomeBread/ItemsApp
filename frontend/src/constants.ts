@@ -33,6 +33,26 @@ export type Item = {
   count: number;
 };
 
+export type ItemQueryParams = {
+  search: string;
+  asc: string;
+  sortBy: string;
+  type: string;
+  limit: number;
+  offset: number;
+};
+
+export type TaskQueryParams = {
+  search: string;
+  isKappa: boolean;
+  isLightKeeper: boolean;
+  playerLvl: number;
+  objType: string;
+  limit: number;
+  offset: number;
+};
+
+// this is for ItemComponent to specifiy which item details should be listed
 export const DISPLAY_ITEM_KEYS = [
   "name",
   "shortName",
@@ -67,6 +87,15 @@ export const ALL_ITEM_TYPES = {
   mods: "Weapon Mod",
   preset: "Weapon Preset",
   wearable: "Wearable",
+};
+
+export const ALL_ITEM_SORTBY = {
+  name: "Name",
+  shortName: "Short Name",
+  basePrice: "Base Price",
+  avg24hPrice: "Average Price 24 hours",
+  changeLast48hPercent: "Change Last 48 hours Percent",
+  fleaMarket: "Flea Market Price",
 };
 
 export type TaskRequirement = {

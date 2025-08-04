@@ -4,23 +4,14 @@ import {
   ALL_TASK_OBJECTIVE_TYPES,
   BACKEND_ADDRESS,
   type Task,
+  type TaskQueryParams,
 } from "../constants";
 import TaskComponent from "../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
 
-type QueryParams = {
-  search: string;
-  isKappa: boolean;
-  isLightKeeper: boolean;
-  playerLvl: number;
-  objType: string;
-  limit: number;
-  offset: number;
-};
-
 function DisplayTasks() {
   const [allTasks, setAllTasks] = useState<Task[] | null>(null);
-  const [queryParams, setQueryParams] = useState<QueryParams>({
+  const [queryParams, setQueryParams] = useState<TaskQueryParams>({
     search: "",
     isKappa: false,
     isLightKeeper: false,
