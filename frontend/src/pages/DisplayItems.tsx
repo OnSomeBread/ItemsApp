@@ -1,9 +1,5 @@
-import type { Item } from "../constants";
-import {
-  ALL_ITEM_TYPES,
-  BACKEND_ADDRESS,
-  DISPLAY_ITEM_KEYS,
-} from "../constants";
+import type { Item, ItemQueryParams } from "../constants";
+import { BACKEND_ADDRESS, DISPLAY_ITEM_KEYS } from "../constants";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -11,25 +7,17 @@ import Buttons from "../components/Buttons";
 import { lazy } from "react";
 import DisplayCart from "./DisplayCart";
 import { AnimatePresence, motion } from "framer-motion";
+import ItemSearchBarComponent from "../components/ItemSearchBarComponent.tsx";
 
 const ItemComponentPreview = lazy(
   () => import("../components/ItemComponent.tsx")
 );
 
-type QueryParams = {
-  search: string;
-  asc: string;
-  sortBy: string;
-  type: string;
-  limit: number;
-  offset: number;
-};
-
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
 
-  const [queryParams, setQueryParams] = useState<QueryParams>({
+  const [queryParams, setQueryParams] = useState<ItemQueryParams>({
     search: "",
     asc: "-",
     sortBy: "fleaMarket",
@@ -46,9 +34,7 @@ function DisplayItems() {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(queryParams)) {
     // offset gets skipped for use effect grab since it creates dependency hell and best to add it for scrolling
-    if (key === "offset") {
-      continue;
-    }
+    if (key === "offset") continue;
     params.append(key, value.toString());
   }
   const query = BACKEND_ADDRESS + "/api/items?" + params.toString();
@@ -122,66 +108,21 @@ function DisplayItems() {
   };
 
   const containerVariants = {
-    show: {
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+    show: { transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants = {
-    hidden: {
-      opacity: 0,
-    },
-    show: {
-      opacity: 1,
-    },
+    hidden: { opacity: 0 },
+    show: { opacity: 1 },
   };
 
   return (
     <>
-      <div className="search-options">
-        <input
-          className="search-bar"
-          onChange={(e) => changeQueryParams("search", e.target.value)}
-        ></input>
-        <button
-          className="stepper-btn"
-          onClick={() => {
-            changeQueryParams("asc", queryParams.asc == "" ? "-" : "");
-          }}
-        >
-          {queryParams.asc == "" ? "Ascending" : "Descending"}
-        </button>
-        <select
-          className="dropdown"
-          defaultValue="fleaMarket"
-          onChange={(e) => changeQueryParams("sortBy", e.target.value)}
-        >
-          <option value="name">Name</option>
-          <option value="shortName">Short Name</option>
-          <option value="basePrice">Base Price</option>
-          <option value="avg24hPrice">Average Price 24 hours</option>
-          <option value="changeLast48hPercent">
-            Change Last 48 hours Percent
-          </option>
-          <option value="fleaMarket">Flea Market Price</option>
-        </select>
-        <select
-          className="dropdown"
-          defaultValue="any"
-          onChange={(e) => changeQueryParams("type", e.target.value)}
-        >
-          {Object.entries(ALL_ITEM_TYPES).map(([key, value]) => (
-            <option key={key} value={key}>
-              {value}
-            </option>
-          ))}
-        </select>
-        <button className="stepper-btn" onClick={clearCounts}>
-          Clear
-        </button>
-      </div>
+      <ItemSearchBarComponent
+        queryParams={queryParams}
+        changeQueryParams={changeQueryParams}
+        clearCounts={clearCounts}
+      />
       <div className="items-container">
         <InfiniteScroll
           dataLength={allItems?.length ?? 0}
