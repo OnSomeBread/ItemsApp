@@ -78,42 +78,39 @@ function DisplayItems() {
   const changeCount = (idx: number, newNumber: number) => {
     setAllItems(
       allItems?.map((item, index) => {
-        if (index === idx) {
-          if (newNumber === 0) {
-            localStorage.removeItem("item-" + item._id);
-          } else {
-            localStorage.setItem("item-" + item._id, newNumber.toString());
-          }
-          return { ...item, count: newNumber };
+        if (index !== idx) return item;
+
+        if (newNumber === 0) {
+          localStorage.removeItem("item-" + item._id);
         } else {
-          return item;
+          localStorage.setItem("item-" + item._id, newNumber.toString());
         }
+        return { ...item, count: newNumber };
       }) || null
     );
   };
 
+  // only deletes the keys for this page
   const clearCounts = () => {
     for (const key of Object.keys(localStorage)) {
       const [page, _id] = key.split("-");
       if (page === "item") localStorage.removeItem(page + "-" + _id);
     }
-    if (allItems === null) {
-      return;
-    }
     setAllItems(
-      allItems.map((item) => {
+      allItems?.map((item) => {
         return { ...item, count: 0 };
-      })
+      }) || null
     );
   };
 
-  const containerVariants = {
-    show: { transition: { staggerChildren: 0.1 } },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1 },
+  const containerVarients = {
+    show: {
+      transition: {
+        staggerChildren:
+          // first load has a stagger animation but when infinite scrolling its turned off
+          allItems && allItems.length > queryParams.limit ? 0 : 0.04,
+      },
+    },
   };
 
   return (
@@ -130,18 +127,22 @@ function DisplayItems() {
           hasMore={hasMore}
           loader={<></>}
         >
-          <motion.ul
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="list-item"
-          >
-            <AnimatePresence>
+          <AnimatePresence>
+            <motion.ul
+              key={allItems?.length}
+              variants={containerVarients}
+              initial="hidden"
+              animate="show"
+              className="list-item"
+            >
               {allItems?.map((x, i) => (
                 <motion.li
                   key={x._id}
                   transition={{ duration: 0.8 }}
-                  variants={itemVariants}
+                  variants={{
+                    hidden: { opacity: 0 },
+                    show: { opacity: 1 },
+                  }}
                 >
                   <ItemComponentPreview
                     item={x}
@@ -156,8 +157,8 @@ function DisplayItems() {
                   </ItemComponentPreview>
                 </motion.li>
               ))}
-            </AnimatePresence>
-          </motion.ul>
+            </motion.ul>
+          </AnimatePresence>
         </InfiniteScroll>
         <div>
           <DisplayCart />
