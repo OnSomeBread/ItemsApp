@@ -58,7 +58,7 @@ function DisplayCart() {
   const [currPrice, prevPrice] = getTotalFleaPrice();
 
   useEffect(() => {
-    localStorage.setItem("prevFleaMarket", currPrice.toString());
+    localStorage.setItem("item-prevFleaMarket", currPrice.toString());
   }, [currPrice]);
 
   return (
