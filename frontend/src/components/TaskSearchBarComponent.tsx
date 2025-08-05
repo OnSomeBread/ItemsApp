@@ -1,17 +1,32 @@
+import { useEffect, useState } from "react";
 import { ALL_TASK_OBJECTIVE_TYPES, type TaskQueryParams } from "../constants";
-import { clearPageLocalStorage } from "../utils";
 
 interface Props {
   changeQueryParams: (arg0: string, arg1: string | number | boolean) => void;
   queryParams: TaskQueryParams;
+  onClear: () => void;
 }
 
-function TaskSearchBarComponent({ changeQueryParams, queryParams }: Props) {
+function TaskSearchBarComponent({
+  changeQueryParams,
+  queryParams,
+  onClear,
+}: Props) {
+  const [searchInput, setSearchInput] = useState("");
+
+  useEffect(() => {
+    const delayTimer = setTimeout(() => {
+      changeQueryParams("search", searchInput);
+    }, 500);
+
+    return () => clearTimeout(delayTimer);
+  }, [searchInput, changeQueryParams]);
+
   return (
     <div className="search-options">
       <input
         className="search-bar"
-        onChange={(e) => changeQueryParams("search", e.target.value)}
+        onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
         className="stepper-btn"
@@ -55,10 +70,7 @@ function TaskSearchBarComponent({ changeQueryParams, queryParams }: Props) {
           </option>
         ))}
       </select>
-      <button
-        className="stepper-btn"
-        onClick={() => clearPageLocalStorage("task")}
-      >
+      <button className="stepper-btn" onClick={onClear}>
         Clear
       </button>
     </div>

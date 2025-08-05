@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   ALL_ITEM_SORTBY,
   ALL_ITEM_TYPES,
@@ -15,11 +16,21 @@ function ItemSearchBarComponent({
   changeQueryParams,
   clearCounts,
 }: Props) {
+  const [searchInput, setSearchInput] = useState("");
+
+  useEffect(() => {
+    const delayTimer = setTimeout(() => {
+      changeQueryParams("search", searchInput);
+    }, 500);
+
+    return () => clearTimeout(delayTimer);
+  }, [searchInput, changeQueryParams]);
+
   return (
     <div className="search-options">
       <input
         className="search-bar"
-        onChange={(e) => changeQueryParams("search", e.target.value)}
+        onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
         className="stepper-btn"
