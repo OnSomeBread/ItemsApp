@@ -8,6 +8,7 @@ import { lazy } from "react";
 import DisplayCart from "./DisplayCart";
 import { AnimatePresence, motion } from "framer-motion";
 import ItemSearchBarComponent from "../components/ItemSearchBarComponent.tsx";
+import { clearPageLocalStorage } from "../utils.ts";
 
 const ItemComponentPreview = lazy(
   () => import("../components/ItemComponent.tsx")
@@ -92,10 +93,7 @@ function DisplayItems() {
 
   // only deletes the keys for this page
   const clearCounts = () => {
-    for (const key of Object.keys(localStorage)) {
-      const [page, _id] = key.split("-");
-      if (page === "item") localStorage.removeItem(page + "-" + _id);
-    }
+    clearPageLocalStorage("item");
     setAllItems(
       allItems?.map((item) => {
         return { ...item, count: 0 };
