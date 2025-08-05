@@ -254,7 +254,7 @@ async def get_tasks(request: Request):
     except:
         offset = 0
     
-    completedTasks:list[str] = request.query_params.get('ids', [])
+    completedTasks:list[str] = request.query_params.getlist('ids')
 
     # check if this is a repeated query and if so return it
     cache_key:str = search + isKappa + isLightKeeper + playerLvl + objType + str(limit) + str(offset) + ''.join(completedTasks)
