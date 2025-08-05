@@ -9,8 +9,7 @@ function DisplayCart() {
 
   const params = new URLSearchParams();
   Object.keys(localStorage).forEach((key: string) => {
-    const [page, _id] = key.split("-");
-    if (page === "item") params.append("ids", _id);
+    if (key.startsWith("item")) params.append("ids", key.slice("item-".length));
   });
 
   const query = BACKEND_ADDRESS + "/api/cart?" + params.toString();
