@@ -4,6 +4,8 @@ import { BACKEND_ADDRESS, type Task, type TaskQueryParams } from "../constants";
 import TaskComponent from "../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
 import TaskSearchBarComponent from "../components/TaskSearchBarComponent";
+import { motion } from "framer-motion";
+import { clearPageLocalStorage } from "../utils";
 
 function DisplayTasks() {
   const [allTasks, setAllTasks] = useState<Task[] | null>(null);
@@ -17,6 +19,9 @@ function DisplayTasks() {
     offset: 50,
   });
   const [hasMore, setHasMore] = useState(false);
+
+  // the actual value here doesn't matter its for the useEffect so that it can account for changed task list
+  const [changedTasksToggle, setChangedTasksToggle] = useState(false);
 
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(queryParams)) {
@@ -40,7 +45,7 @@ function DisplayTasks() {
         setHasMore(response.data.length === queryParams.limit);
       })
       .catch((err) => console.log(err));
-  }, [query, queryParams.limit]);
+  }, [query, queryParams.limit, changedTasksToggle]);
 
   // used for the infinite scroll to grab more tasks
   const getMoreTasks = () => {
@@ -85,6 +90,7 @@ function DisplayTasks() {
             }
           }
         }
+        setChangedTasksToggle((prev) => !prev);
       })
       .catch((err) => console.log(err));
   };
@@ -94,6 +100,10 @@ function DisplayTasks() {
       <TaskSearchBarComponent
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}
+        onClear={() => {
+          setChangedTasksToggle((prev) => !prev);
+          clearPageLocalStorage("task");
+        }}
       />
       <InfiniteScroll
         dataLength={allTasks?.length ?? 0}
@@ -101,9 +111,21 @@ function DisplayTasks() {
         hasMore={hasMore}
         loader={<></>}
       >
-        {allTasks?.map((task) => (
-          <TaskComponent key={task._id} task={task} onClick={onClickComplete} />
-        ))}
+        <motion.ul>
+          {allTasks?.map((task) => (
+            <motion.li
+              initial={{ x: -20 }}
+              animate={{ x: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <TaskComponent
+                key={task._id}
+                task={task}
+                onClick={onClickComplete}
+              />
+            </motion.li>
+          ))}
+        </motion.ul>
       </InfiniteScroll>
     </>
   );

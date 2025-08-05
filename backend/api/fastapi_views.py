@@ -159,17 +159,11 @@ async def get_items(request: Request):
     asc:str = request.query_params.get('asc', '-')
     item_type:str = request.query_params.get('type', 'any')
 
-    limit:str = request.query_params.get('limit')
-    try:
-        limit = min(int(limit), 100)
-    except:
-        limit = 30
+    limit:str = request.query_params.get('limit', '30')
+    limit:int = min(int(limit), 100) if limit.isdigit() else 30
 
-    offset:str = request.query_params.get('offset')
-    try:
-        offset = int(offset)
-    except:
-        offset = 0
+    offset:str = request.query_params.get('offset', '0')
+    offset:int = int(offset) if offset.isdigit() else 0
     
     # check if current query has already been done and if so just return it 
     cache_key:str = search + sortBy + asc + item_type + str(limit) + str(offset)
@@ -225,39 +219,36 @@ def get_tasks_db_operations(search:str, isKappa:bool, isLightKeeper:bool, player
     if objType != 'any':
         tasks = tasks.filter(objectives__objType=objType).distinct()
     
-    # the == True is needed here otherwise always its always True
-    if isKappa == True:
+    if isKappa:
         tasks = tasks.filter(kappaRequired=True)
-    if isLightKeeper == True:
+    if isLightKeeper:
         tasks = tasks.filter(lightkeeperRequired=True)
 
-    serializer = TaskSerializer(tasks[offset:offset + limit], many=True)
+    serializer = TaskSerializer(tasks.order_by('_id')[offset:offset + limit], many=True)
     return serializer.data
 
 # returns json array of tasks that match the query params
 @app.get("/api/tasks")
 async def get_tasks(request: Request):
+    # grab all of the query params
     search:str = request.query_params.get('search', '')
-    isKappa: bool = request.query_params.get('isKappa', False)
-    isLightKeeper: bool = request.query_params.get('isLightKeeper', False)
-    playerLvl: int = request.query_params.get('playerLvl', 99)
-    objType: str = request.query_params.get('objType', 'any')
-    limit: str = request.query_params.get('limit')
-    try:
-        limit = min(int(limit), 100)
-    except Exception:
-        limit = 30
+    isKappa:bool = request.query_params.get('isKappa', 'false').lower() == 'true'
+    isLightKeeper:bool = request.query_params.get('isLightKeeper', 'false').lower() == 'true'
+    objType:str = request.query_params.get('objType', 'any')
+    
+    playerLvl:str = request.query_params.get('playerLvl', '99')
+    playerLvl:int = int(playerLvl) if playerLvl.isdigit() else 99
 
-    offset:str = request.query_params.get('offset')
-    try:
-        offset = int(offset)
-    except:
-        offset = 0
+    limit:str = request.query_params.get('limit', '30')
+    limit:int = min(int(limit), 100) if limit.isdigit() else 30
+
+    offset:str = request.query_params.get('offset', '0')
+    offset:int = int(offset) if offset.isdigit() else 0
     
     completedTasks:list[str] = request.query_params.getlist('ids')
 
     # check if this is a repeated query and if so return it
-    cache_key:str = search + isKappa + isLightKeeper + playerLvl + objType + str(limit) + str(offset) + ''.join(completedTasks)
+    cache_key:str = search + str(isKappa) + str(isLightKeeper) + objType + str(playerLvl) + str(limit) + str(offset) + ''.join(completedTasks)
     if await cache.ahas_key(cache_key):
         return await cache.aget(cache_key)
 
