@@ -13,7 +13,7 @@ function TaskComponent({ task, onClick }: Props) {
     <div>
       <p>{task.name}</p>
       {task.objectives.map((obj, index) => (
-        <p>
+        <p key={obj._id}>
           {index + 1}. {obj.description}
         </p>
       ))}
