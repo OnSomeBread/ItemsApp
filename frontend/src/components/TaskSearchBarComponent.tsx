@@ -17,7 +17,7 @@ function TaskSearchBarComponent({
   useEffect(() => {
     const delayTimer = setTimeout(() => {
       changeQueryParams("search", searchInput);
-    }, 500);
+    }, 250);
 
     return () => clearTimeout(delayTimer);
   }, [searchInput, changeQueryParams]);
