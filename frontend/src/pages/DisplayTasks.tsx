@@ -95,6 +95,16 @@ function DisplayTasks() {
       .catch((err) => console.log(err));
   };
 
+  const containerVarients = {
+    show: {
+      transition: {
+        staggerChildren:
+          // first load has a stagger animation but when infinite scrolling its turned off
+          allTasks && allTasks.length > queryParams.limit ? 0 : 0.04,
+      },
+    },
+  };
+
   return (
     <>
       <TaskSearchBarComponent
@@ -111,18 +121,22 @@ function DisplayTasks() {
         hasMore={hasMore}
         loader={<></>}
       >
-        <motion.ul>
+        <motion.ul
+          key={allTasks?.length}
+          variants={containerVarients}
+          initial="hidden"
+          animate="show"
+        >
           {allTasks?.map((task) => (
             <motion.li
-              initial={{ x: -20 }}
-              animate={{ x: 0 }}
+              key={task._id}
               transition={{ duration: 0.8 }}
+              variants={{
+                hidden: { opacity: 0 },
+                show: { opacity: 1 },
+              }}
             >
-              <TaskComponent
-                key={task._id}
-                task={task}
-                onClick={onClickComplete}
-              />
+              <TaskComponent task={task} onClick={onClickComplete} />
             </motion.li>
           ))}
         </motion.ul>
