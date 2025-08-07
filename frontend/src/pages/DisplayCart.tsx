@@ -15,7 +15,7 @@ function DisplayCart() {
     }
   });
 
-  const query = BACKEND_ADDRESS + "/api/cart?" + params.toString();
+  const query = BACKEND_ADDRESS + "/api/item_ids?" + params.toString();
   const count = params.getAll("ids").length;
 
   useEffect(() => {
