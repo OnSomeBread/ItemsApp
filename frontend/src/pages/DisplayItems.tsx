@@ -24,7 +24,7 @@ function DisplayItems() {
     sortBy: "fleaMarket",
     type: "any",
     limit: 50,
-    offset: 50,
+    offset: 0,
   });
   const changeQueryParams = (key: string, value: string | number) => {
     setQueryParams((prev) => {
@@ -40,10 +40,9 @@ function DisplayItems() {
   }
   const query = BACKEND_ADDRESS + "/api/items?" + params.toString();
 
-  // grabs the first page of items based on the search params
-  useEffect(() => {
+  const fetchItems = (offset: number) => {
     axios
-      .get<Item[]>(query)
+      .get<Item[]>(query + "&offset=" + offset)
       .then((response) => {
         const newItems = response.data.map((item) => {
           return {
@@ -51,28 +50,27 @@ function DisplayItems() {
             count: parseInt(localStorage.getItem("item-" + item._id) || "0"),
           };
         });
-        setAllItems(newItems);
-        setHasMore(newItems.length === queryParams.limit);
+        if (offset === 0) {
+          setAllItems(newItems);
+        } else {
+          setAllItems((prev) => [...(prev ?? []), ...newItems]);
+        }
+
+        setHasMore(newItems.length == queryParams.limit);
+        changeQueryParams("offset", offset + queryParams.limit);
       })
       .catch((err) => console.log(err));
+  };
+
+  // grabs the first page of items based on the search params
+  useEffect(() => {
+    fetchItems(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, queryParams.limit]);
 
   // used for the infinite scroll to grab more items
   const getMoreItems = () => {
-    axios
-      .get<Item[]>(query + "&offset=" + queryParams.offset)
-      .then((response) => {
-        const newItems = response.data.map((item) => {
-          return {
-            ...item,
-            count: parseInt(localStorage.getItem("item-" + item._id) || "0"),
-          };
-        });
-        setAllItems((prev) => [...(prev ?? []), ...newItems]);
-        setHasMore(newItems.length == queryParams.limit);
-        changeQueryParams("offset", queryParams.offset + queryParams.limit);
-      })
-      .catch((err) => console.log(err));
+    fetchItems(queryParams.offset);
   };
 
   // this function is called when the buttons are pressed to change the value of a specific item in local storage

@@ -16,7 +16,7 @@ function DisplayTasks() {
     playerLvl: 99,
     objType: "any",
     limit: 50,
-    offset: 50,
+    offset: 0,
   });
   const [hasMore, setHasMore] = useState(false);
 
@@ -36,27 +36,31 @@ function DisplayTasks() {
 
   const query = BACKEND_ADDRESS + "/api/tasks?" + params.toString();
 
-  // grab the inital tasks
-  useEffect(() => {
+  const fetchTasks = (offset: number) => {
     axios
-      .get<Task[]>(query)
+      .get<Task[]>(query + "&offset=" + offset)
       .then((response) => {
-        setAllTasks(response.data);
-        setHasMore(response.data.length === queryParams.limit);
+        if (offset == 0) {
+          setAllTasks(response.data);
+        } else {
+          setAllTasks((prev) => [...(prev ?? []), ...response.data]);
+        }
+
+        setHasMore(response.data.length == queryParams.limit);
+        changeQueryParams("offset", offset + queryParams.limit);
       })
       .catch((err) => console.log(err));
+  };
+
+  // grab the inital tasks
+  useEffect(() => {
+    fetchTasks(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, queryParams.limit, changedTasksToggle]);
 
   // used for the infinite scroll to grab more tasks
   const getMoreTasks = () => {
-    axios
-      .get<Task[]>(query + "&offset=" + queryParams.offset)
-      .then((response) => {
-        setAllTasks((prev) => [...(prev ?? []), ...response.data]);
-        setHasMore(response.data.length == queryParams.limit);
-        changeQueryParams("offset", queryParams.offset + queryParams.limit);
-      })
-      .catch((err) => console.log(err));
+    fetchTasks(queryParams.offset);
   };
 
   const changeQueryParams = (key: string, value: string | number | boolean) => {
