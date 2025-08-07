@@ -1,5 +1,6 @@
 import type { Task } from "../constants";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 //import type { ReactNode } from "react";
 
 interface Props {
@@ -9,9 +10,15 @@ interface Props {
 }
 
 function TaskComponent({ task, onClick }: Props) {
+  const navigate = useNavigate();
   return (
-    <div>
-      <p>{task.name}</p>
+    <motion.div
+      initial={{ x: -20 }}
+      animate={{ x: 0 }}
+      transition={{ duration: 0.8 }}
+    >
+      <a onClick={() => navigate("/task_view", { state: task })}>{task.name}</a>
+
       {task.objectives.map((obj, index) => (
         <p key={obj._id}>
           {index + 1}. {obj.description}
@@ -20,13 +27,13 @@ function TaskComponent({ task, onClick }: Props) {
       <motion.button
         value={task._id}
         onClick={() => onClick(task._id)}
-        initial={{ x: 0 }}
-        animate={{ x: 0 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.4 }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
       >
         Completed
       </motion.button>
-    </div>
+    </motion.div>
   );
 }
 

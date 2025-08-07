@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DisplayItems from "./pages/DisplayItems";
 import DisplayTasks from "./pages/DisplayTasks";
 import SignupLogin from "./pages/SignupLogin";
+import TaskView from "./pages/TaskView";
 
 // function LogOut() {
 //   localStorage.clear();
@@ -25,6 +26,7 @@ function App() {
       <Routes>
         <Route path="*" element={<DisplayItems />} />
         <Route path="/tasks" element={<DisplayTasks />} />
+        <Route path="/task_view" element={<TaskView />} />
         <Route path="/signup" element={<SignupLogin />} />
         {/* <Route
           path="/"
