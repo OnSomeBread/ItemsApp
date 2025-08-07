@@ -175,34 +175,6 @@ async def get_items(request: Request):
     asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout('items')))
     return data
 
-@sync_to_async(thread_sensitive=True)
-def get_items_by_ids_db_operations(ids, found_count:int):
-    # find all the items that weren't cached
-    items = Item.objects.filter(_id__in=ids)
-    serializer = ItemSerializer(items[:max(len(ids) - found_count, 0)], many=True)
-    return serializer.data
-
-# returns json array of each item in the list of given ids
-@app.get("/api/cart")
-async def get_items_by_ids(request: Request):
-    # a set is more appropriate here as fast remove opperations are needed here
-    ids = set(request.query_params.getlist('ids'))
-
-    # get all cached item ids
-    found_items = []
-    for item_id in ids.copy():
-        if await cache.ahas_key(item_id):
-            found_items.append(await cache.aget(item_id))
-            ids.remove(item_id)
-
-    data = await get_items_by_ids_db_operations(ids, len(found_items))
-
-    # store all new ids
-    for itm in data:
-        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
-
-    return data + found_items
-
 # should not be async as this should not be called often
 # returns data from pastApiCalls not meant for user use but its here for development
 @app.get("/api/apiCalls")
@@ -310,3 +282,59 @@ async def get_item_history(request: Request):
     asyncio.create_task(cache.aset('history' + item_id, data, timeout=get_redis_timeout('items')))
 
     return data
+
+@sync_to_async(thread_sensitive=True)
+def get_items_by_ids_db_operations(ids, found_count:int):
+    # find all the items that weren't cached
+    items = Item.objects.filter(_id__in=ids)
+    serializer = ItemSerializer(items[:max(len(ids) - found_count, 0)], many=True)
+    return serializer.data
+
+# returns json array of each item in the list of given ids
+@app.get("/api/item_ids")
+async def get_items_by_ids(request: Request):
+    # a set is more appropriate here as fast remove opperations are needed here
+    ids = set(request.query_params.getlist('ids'))
+
+    # get all cached item ids
+    found_items = []
+    for item_id in ids.copy():
+        if await cache.ahas_key(item_id):
+            found_items.append(await cache.aget(item_id))
+            ids.remove(item_id)
+
+    data = await get_items_by_ids_db_operations(ids, len(found_items))
+
+    # store all new ids
+    for itm in data:
+        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
+
+    return data + found_items
+
+@sync_to_async(thread_sensitive=True)
+def get_tasks_by_ids_db_operations(ids, found_count:int):
+    # find all the tasks that weren't cached
+    tasks = Task.objects.filter(_id__in=ids)
+    serializer = TaskSerializer(tasks[:max(len(ids) - found_count, 0)], many=True)
+    return serializer.data
+
+# returns json array of each task in the list of given ids
+@app.get("/api/task_ids")
+async def get_tasks_by_ids(request: Request):
+    # a set is more appropriate here as fast remove opperations are needed here
+    ids = set(request.query_params.getlist('ids'))
+
+    # get all cached task ids
+    found_tasks = []
+    for task_id in ids.copy():
+        if await cache.ahas_key(task_id):
+            found_tasks.append(await cache.aget(task_id))
+            ids.remove(task_id)
+
+    data = await get_tasks_by_ids_db_operations(ids, len(found_tasks))
+
+    # store all new ids
+    for itm in data:
+        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('tasks')))
+
+    return data + found_tasks
