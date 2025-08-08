@@ -81,8 +81,13 @@ function DisplayItems() {
 
         if (newNumber === 0) {
           localStorage.removeItem("item-" + item._id);
+          localStorage.removeItem("date-added-item-" + item._id);
         } else {
           localStorage.setItem("item-" + item._id, newNumber.toString());
+          localStorage.setItem(
+            "date-added-item-" + item._id,
+            Date.now().toString()
+          );
         }
         return { ...item, count: newNumber };
       }) || null
@@ -92,6 +97,7 @@ function DisplayItems() {
   // only deletes the keys for this page
   const clearCounts = () => {
     clearPageLocalStorage("item");
+    clearPageLocalStorage("date-added-item");
     setAllItems(
       allItems?.map((item) => {
         return { ...item, count: 0 };

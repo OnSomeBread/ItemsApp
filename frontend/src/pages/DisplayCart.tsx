@@ -26,12 +26,16 @@ function DisplayCart() {
     axios
       .get<Item[]>(query)
       .then((response) => {
-        // the caching system can sometimes change the order of which ids are passed in and this helps to normalize it
-        // in theory this should sort by the main page sortBy query param however that complicates the page too much
-        // for how little it changes
-        response.data.sort((itema, itemb) =>
-          itema._id.localeCompare(itemb._id)
-        );
+        // sort all of the items by when they where added to the cart ascending
+        response.data.sort((itema, itemb) => {
+          const timea = parseInt(
+            localStorage.getItem("date-added-item-" + itema._id) || "0"
+          );
+          const timeb = parseInt(
+            localStorage.getItem("date-added-item-" + itemb._id) || "0"
+          );
+          return timea - timeb;
+        });
         setAllItems(response.data);
       })
       .catch((err) => console.log(err));

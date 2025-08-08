@@ -284,10 +284,10 @@ async def get_item_history(request: Request):
     return data
 
 @sync_to_async(thread_sensitive=True)
-def get_items_by_ids_db_operations(ids, found_count:int):
+def get_items_by_ids_db_operations(ids):
     # find all the items that weren't cached
     items = Item.objects.filter(_id__in=ids)
-    serializer = ItemSerializer(items[:max(len(ids) - found_count, 0)], many=True)
+    serializer = ItemSerializer(items, many=True)
     return serializer.data
 
 # returns json array of each item in the list of given ids
@@ -303,7 +303,7 @@ async def get_items_by_ids(request: Request):
             found_items.append(await cache.aget(item_id))
             ids.remove(item_id)
 
-    data = await get_items_by_ids_db_operations(ids, len(found_items))
+    data = await get_items_by_ids_db_operations(ids)
 
     # store all new ids
     for itm in data:
