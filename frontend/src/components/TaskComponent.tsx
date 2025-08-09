@@ -18,7 +18,8 @@ function TaskComponent({ task, onClick }: Props) {
       transition={{ duration: 0.8 }}
     >
       <a onClick={() => navigate("/task_view", { state: task })}>{task.name}</a>
-
+      <p>Minimum Player Level: {task.minPlayerLevel}</p>
+      <p>given by: {task.trader}</p>
       {task.objectives.map((obj, index) => (
         <p key={obj._id}>
           {index + 1}. {obj.description}

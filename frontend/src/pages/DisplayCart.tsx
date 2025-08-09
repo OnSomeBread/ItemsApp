@@ -44,7 +44,9 @@ function DisplayCart() {
   // goes through all items and finds its count in localstorage which is set in DisplayItems changeCount used in buttons
   // returns both the current flea price and the previous flea price
   const getTotalFleaPrice = () => {
-    const prevTotal = parseInt(localStorage.getItem("prevFleaMarket") || "0");
+    const prevTotal = parseInt(
+      localStorage.getItem("item-prevFleaMarket") || "0"
+    );
     let totalFleaPrice = 0;
 
     allItems?.forEach((item) => {
