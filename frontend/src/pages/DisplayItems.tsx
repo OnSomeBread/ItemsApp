@@ -145,6 +145,7 @@ function DisplayItems() {
                     hidden: { opacity: 0 },
                     show: { opacity: 1 },
                   }}
+                  style={{ listStyleType: "none" }}
                 >
                   <ItemComponentPreview
                     item={x}

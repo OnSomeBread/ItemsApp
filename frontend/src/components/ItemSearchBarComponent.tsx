@@ -29,11 +29,14 @@ function ItemSearchBarComponent({
   return (
     <div className="search-options">
       <input
-        className="search-bar"
+        className="search search-bar"
+        type="search"
+        name="search"
+        placeholder="search"
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
-        className="stepper-btn"
+        className="outline contrast main-btn"
         onClick={() => {
           changeQueryParams("asc", queryParams.asc == "" ? "-" : "");
         }}
@@ -62,7 +65,7 @@ function ItemSearchBarComponent({
           </option>
         ))}
       </select>
-      <button className="stepper-btn" onClick={clearCounts}>
+      <button className="outline contrast main-btn" onClick={clearCounts}>
         Clear
       </button>
     </div>

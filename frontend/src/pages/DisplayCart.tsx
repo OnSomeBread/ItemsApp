@@ -106,6 +106,7 @@ function DisplayCart() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
+              style={{ listStyleType: "none", padding: 2 }}
             >
               <ItemComponent item={x} idx={i} fields={["name", "fleaMarket"]}>
                 <p>count: {localStorage.getItem("item-" + x._id)}</p>

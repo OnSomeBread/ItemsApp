@@ -12,7 +12,7 @@ function Buttons({ item, idx, onChangeCount }: Props) {
   return (
     <div className="div-align">
       <motion.button
-        className="stepper-btn"
+        className="outline contrast main-btn"
         onClick={() => {
           onChangeCount(idx, Math.max(item.count - 1, 0));
         }}
@@ -35,7 +35,7 @@ function Buttons({ item, idx, onChangeCount }: Props) {
         }}
       />
       <motion.button
-        className="stepper-btn"
+        className="outline contrast main-btn"
         onClick={() => {
           onChangeCount(idx, item.count + 1);
         }}

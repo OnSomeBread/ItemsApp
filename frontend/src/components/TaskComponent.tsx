@@ -1,12 +1,10 @@
 import type { Task } from "../constants";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-//import type { ReactNode } from "react";
 
 interface Props {
   task: Task;
   onClick: (arg0: string) => void;
-  //children: ReactNode;
 }
 
 function TaskComponent({ task, onClick }: Props) {
@@ -31,6 +29,7 @@ function TaskComponent({ task, onClick }: Props) {
         transition={{ duration: 0.4 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
+        className="outline contrast main-btn"
       >
         Completed
       </motion.button>

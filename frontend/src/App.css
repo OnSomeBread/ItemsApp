@@ -1,8 +1,11 @@
+:root {
+  --pico-font-size: .93rem;
+}
 .item {
     border: 1px solid #ccc;
     padding: 1rem;
     border-radius: 10px;
-    width: 250px;
+    width: 285px;
     box-shadow: 0 2px 8px rgba(0 0 0 0.1);
     display: flex;
     flex-direction: column;
@@ -11,6 +14,8 @@
 }
 
 .list-item {
+    list-style-type: none;
+    margin: 0px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
     gap: 10px;
@@ -18,73 +23,67 @@
 }
 
 .search-bar {
-  padding: 10px 15px;
   border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 16px;
-  width: 100%;
-  max-width: 400px;
-  outline: none;
-  transition: border-color 0.2s ease;
 }
 
-.search-bar:focus {
-  border-color: #007bff;
-}
+/* .search-bar:hover {
+  border: none
+} */
 
 .search-options {
+  padding: 12px;
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
 }
 
-.dropdown {
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  min-width: 140px;
-  background-color: white;
-  transition: border-color 0.2s ease;
+/* overrides the default pico behavior of setting all elements to max width for search options */
+.search-options > * {
+  flex: 1;
+  max-width: unset;
+  width: auto;
 }
 
-.dropdown:focus {
+.dropdown {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+/* .dropdown:focus {
   outline: none;
   border-color: #007bff;
-}
+} */
 
-.stepper-btn {
-  background: #ffffff;
-  border: 1px solid #ddd;
+.main-btn {
   border-radius: 8px;
-  width: 96px; 
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   padding: 6px 14px;
   transition: background 0.2s;
-}
-.stepper-btn:hover {
-  background: #f5f5f5;
 }
 
 .stepper-input {
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 6px 10px;
-  width: 50px;
   text-align: center;
 }
 
+/* overrides the default pico behavior of setting all elements to max width for search options */
 .div-align {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 5px;
+}
+
+.div-align > * {
+  flex: 1;
+  max-width: unset;
+  width: auto;
 }
 
 .items-container {
   display:grid;
   grid-template-columns: 1fr 300px;
   width:100%;
-}
-
-li {
-  list-style-type: none;
 }

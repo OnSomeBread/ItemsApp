@@ -25,11 +25,14 @@ function TaskSearchBarComponent({
   return (
     <div className="search-options">
       <input
-        className="search-bar"
+        className="search search-bar"
+        type="search"
+        name="search"
+        placeholder="search"
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
-        className="stepper-btn"
+        className="outline contrast main-btn"
         onClick={() => {
           changeQueryParams("isKappa", queryParams.isKappa ? false : true);
         }}
@@ -37,7 +40,7 @@ function TaskSearchBarComponent({
         {queryParams.isKappa ? "Is Kappa Required" : "is Not Kappa Required"}
       </button>
       <button
-        className="stepper-btn"
+        className="outline contrast main-btn"
         onClick={() => {
           changeQueryParams(
             "isLightKeeper",
@@ -49,14 +52,15 @@ function TaskSearchBarComponent({
           ? "Is LightKeeper Required"
           : "is Not LightKeeper Required"}
       </button>
-      <p>Player Level</p>
       <select
         className="dropdown"
         defaultValue={99}
         onChange={(e) => changeQueryParams("playerLvl", e.target.value)}
       >
         {[...Array(100).keys()].map((num) => (
-          <option key={num}>{num}</option>
+          <option key={num} value={num}>
+            Player Level {num}
+          </option>
         ))}
       </select>
       <select
@@ -70,7 +74,7 @@ function TaskSearchBarComponent({
           </option>
         ))}
       </select>
-      <button className="stepper-btn" onClick={onClear}>
+      <button className="outline contrast main-btn" onClick={onClear}>
         Clear
       </button>
     </div>

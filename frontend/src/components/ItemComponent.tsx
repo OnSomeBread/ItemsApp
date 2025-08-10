@@ -33,7 +33,8 @@ function getBestTrader(allTraders: Sell[]) {
   return (
     <>
       Highest Trader Sell Price:{" "}
-      {bestTrader.charAt(0).toUpperCase() + bestTrader.slice(1)} {bestPrice} RUB
+      {bestTrader.charAt(0).toUpperCase() + bestTrader.slice(1)}{" "}
+      {bestPrice.toLocaleString("en-us")} RUB
     </>
   );
 }
