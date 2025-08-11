@@ -32,15 +32,15 @@ function TaskSearchBarComponent({
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
-        className="outline contrast main-btn"
+        className="outline contrast main-btn search-btn"
         onClick={() => {
           changeQueryParams("isKappa", queryParams.isKappa ? false : true);
         }}
       >
-        {queryParams.isKappa ? "Is Kappa Required" : "is Not Kappa Required"}
+        {queryParams.isKappa ? "Kappa Required" : "Not Kappa Required"}
       </button>
       <button
-        className="outline contrast main-btn"
+        className="outline contrast main-btn search-btn"
         onClick={() => {
           changeQueryParams(
             "isLightKeeper",
@@ -49,8 +49,8 @@ function TaskSearchBarComponent({
         }}
       >
         {queryParams.isLightKeeper
-          ? "Is LightKeeper Required"
-          : "is Not LightKeeper Required"}
+          ? "LightKeeper Required"
+          : "Not LightKeeper Required"}
       </button>
       <select
         className="dropdown"
@@ -74,7 +74,10 @@ function TaskSearchBarComponent({
           </option>
         ))}
       </select>
-      <button className="outline contrast main-btn" onClick={onClear}>
+      <button
+        className="outline contrast main-btn search-btn"
+        onClick={onClear}
+      >
         Clear
       </button>
     </div>

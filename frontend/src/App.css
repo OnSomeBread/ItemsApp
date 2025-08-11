@@ -1,34 +1,38 @@
 :root {
-  --pico-font-size: .93rem;
+  --pico-font-size: 0.93rem;
 }
+
+.items-container {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  width: 100%;
+}
+
 .item {
-    border: 1px solid #ccc;
-    padding: 1rem;
-    border-radius: 10px;
-    width: 285px;
-    box-shadow: 0 2px 8px rgba(0 0 0 0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 10px;
+  /* width: 285px; */
+  width: 92%;
+  box-shadow: 0 2px 8px rgba(0 0 0 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .list-item {
-    list-style-type: none;
-    margin: 0px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
-    gap: 10px;
-    padding: 20px;
+  list-style-type: none;
+  margin: 0px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+  gap: 10px;
+  padding: 20px;
 }
 
 .search-bar {
   border: 1px solid #ccc;
 }
-
-/* .search-bar:hover {
-  border: none
-} */
 
 .search-options {
   padding: 12px;
@@ -49,16 +53,16 @@
   border-radius: 8px;
 }
 
-/* .dropdown:focus {
-  outline: none;
-  border-color: #007bff;
-} */
-
 .main-btn {
   border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   padding: 6px 14px;
   transition: background 0.2s;
+}
+
+/* this height adjustment is to make it the same height as the dropdowns and search bar */
+.search-btn {
+  height: 47px;
 }
 
 .stepper-input {
@@ -68,22 +72,16 @@
   text-align: center;
 }
 
-/* overrides the default pico behavior of setting all elements to max width for search options */
 .div-align {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
+/* overrides the default pico behavior of setting all elements to max width for search options */
 .div-align > * {
   flex: 1;
   max-width: unset;
   width: auto;
-}
-
-.items-container {
-  display:grid;
-  grid-template-columns: 1fr 300px;
-  width:100%;
 }

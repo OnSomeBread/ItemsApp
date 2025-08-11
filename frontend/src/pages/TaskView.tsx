@@ -29,14 +29,16 @@ function TaskView() {
   if (!task) return <p>no task passed in</p>;
 
   return (
-    <>
+    <div style={{ padding: 20 }}>
       <p>{task.name}</p>
       <p>Minimum player Level: {task.minPlayerLevel}</p>
       <p>Task Giver: {task.trader}</p>
       <p>Faction Name: {task.factionName}</p>
       <p>Kappa Required: {task.kappaRequired ? "Yes" : "No"}</p>
       <p>Lightkeeper Required: {task.kappaRequired ? "Yes" : "No"}</p>
-      <a href={task.wiki}>wiki page</a>
+      <p>
+        <a href={task.wiki}>wiki page</a>
+      </p>
       <p>Objectives</p>
       <ul>
         {task.objectives.map((obj) => (
@@ -67,7 +69,7 @@ function TaskView() {
           </ul>
         </>
       )}
-    </>
+    </div>
   );
 }
 

@@ -83,11 +83,13 @@ function DisplayItems() {
           localStorage.removeItem("item-" + item._id);
           localStorage.removeItem("date-added-item-" + item._id);
         } else {
+          if (localStorage.getItem("item-" + item._id) === null) {
+            localStorage.setItem(
+              "date-added-item-" + item._id,
+              Date.now().toString()
+            );
+          }
           localStorage.setItem("item-" + item._id, newNumber.toString());
-          localStorage.setItem(
-            "date-added-item-" + item._id,
-            Date.now().toString()
-          );
         }
         return { ...item, count: newNumber };
       }) || null
@@ -127,7 +129,7 @@ function DisplayItems() {
           dataLength={allItems?.length ?? 0}
           next={getMoreItems}
           hasMore={hasMore}
-          loader={<></>}
+          loader={<article aria-busy="true"></article>}
         >
           <AnimatePresence>
             <motion.ul

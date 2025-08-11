@@ -123,7 +123,7 @@ function DisplayTasks() {
         dataLength={allTasks?.length ?? 0}
         next={getMoreTasks}
         hasMore={hasMore}
-        loader={<></>}
+        loader={<article aria-busy="true"></article>}
       >
         <motion.ul
           key={allTasks?.length}
