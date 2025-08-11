@@ -65,8 +65,12 @@ function DisplayCart() {
 
   const [currPrice, prevPrice] = getTotalFleaPrice();
 
+  // this allows the user to stack +money that resets after timeout period
   useEffect(() => {
-    localStorage.setItem("item-prevFleaMarket", currPrice.toString());
+    const prevTimeout = setTimeout(() => {
+      localStorage.setItem("item-prevFleaMarket", currPrice.toString());
+    }, 800);
+    return () => clearTimeout(prevTimeout);
   }, [currPrice]);
 
   return (
