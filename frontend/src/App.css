@@ -35,23 +35,6 @@
   padding: 18px;
 }
 
-/* this makes the ItemsComponent display items vertically */
-@media only screen and (max-width: 767px) {
-  .items-container {
-    grid-template-columns: 1fr;
-  }
-
-  .list-item {
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
-
-  .item {
-    width: auto;
-    max-width: 275px;
-  }
-}
-
 .search-bar {
   border: 1px solid #ccc;
 }
@@ -61,13 +44,6 @@
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
-}
-
-/* overrides the default pico behavior of setting all elements to max width for search options */
-.search-options > * {
-  flex: 1;
-  max-width: unset;
-  width: auto;
 }
 
 .dropdown {
@@ -101,9 +77,39 @@
   gap: 4px;
 }
 
-/* overrides the default pico behavior of setting all elements to max width for search options */
-.div-align > * {
-  flex: 1;
-  max-width: unset;
-  width: auto;
+/* this makes the ItemsComponent display items vertically */
+/* mobile only styling */
+@media only screen and (max-width: 767px) {
+  .items-container {
+    grid-template-columns: 1fr;
+  }
+
+  .list-item {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .item {
+    width: auto;
+    max-width: 275px;
+  }
+
+  .search-btn {
+    height: auto;
+  }
+}
+
+/* desktop only styling */
+@media only screen and (min-width: 768px) {
+  /* overrides the default pico behavior of setting all elements to max width for search-options and div-align */
+  .search-options > * {
+    flex: 1;
+    max-width: unset;
+    width: auto;
+  }
+  .div-align > * {
+    flex: 1;
+    max-width: unset;
+    width: auto;
+  }
 }
