@@ -1,10 +1,10 @@
 import axios from "axios";
 import { BACKEND_ADDRESS, type Item } from "../constants";
 import { useEffect, useState } from "react";
-import ItemComponent from "../components/ItemComponent";
+import ItemComponent from "./ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
 
-function DisplayCart() {
+function ItemCartComponent() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
 
   const params = new URLSearchParams();
@@ -74,7 +74,7 @@ function DisplayCart() {
   }, [currPrice]);
 
   return (
-    <>
+    <div className="item-cart">
       <p>Total Flea Market Price</p>
       <div className="div-align">
         <p>{currPrice.toLocaleString("en-us")} RUB</p>
@@ -119,8 +119,8 @@ function DisplayCart() {
           ))}
         </AnimatePresence>
       </motion.div>
-    </>
+    </div>
   );
 }
 
-export default DisplayCart;
+export default ItemCartComponent;

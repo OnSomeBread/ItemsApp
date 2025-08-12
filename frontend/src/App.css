@@ -2,10 +2,20 @@
   --pico-font-size: 0.93rem;
 }
 
+/* this encompasses both the ItemScrollComponent and ItemCartComponent */
 .items-container {
   display: grid;
   grid-template-columns: 1fr 300px;
   width: 100%;
+}
+
+.list-item {
+  list-style-type: none;
+  margin: 0px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+  gap: 10px;
+  padding: 20px;
 }
 
 .item {
@@ -21,13 +31,25 @@
   text-align: center;
 }
 
-.list-item {
-  list-style-type: none;
-  margin: 0px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
-  gap: 10px;
-  padding: 20px;
+.item-cart {
+  padding: 18px;
+}
+
+/* this makes the ItemsComponent display items vertically */
+@media only screen and (max-width: 767px) {
+  .items-container {
+    grid-template-columns: 1fr;
+  }
+
+  .list-item {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .item {
+    width: auto;
+    max-width: 275px;
+  }
 }
 
 .search-bar {

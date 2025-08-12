@@ -1,29 +1,24 @@
-import type { Item, ItemQueryParams } from "../constants";
-import { BACKEND_ADDRESS, DISPLAY_ITEM_KEYS } from "../constants";
+import { BACKEND_ADDRESS, type Item, type ItemQueryParams } from "../constants";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import InfiniteScroll from "react-infinite-scroll-component";
-import Buttons from "../components/Buttons";
-import { lazy } from "react";
-import DisplayCart from "./DisplayCart";
-import { AnimatePresence, motion } from "framer-motion";
-import ItemSearchBarComponent from "../components/ItemSearchBarComponent.tsx";
 import { clearPageLocalStorage } from "../utils.ts";
-
-const ItemComponentPreview = lazy(
-  () => import("../components/ItemComponent.tsx")
-);
+import ItemSearchBarComponent from "../components/ItemSearchBarComponent.tsx";
+import ItemScrollComponent from "../components/ItemScrollComponent.tsx";
+import ItemCartComponent from "../components/ItemCartComponent.tsx";
 
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const onMobile: boolean = window.matchMedia("(max-width: 767px)").matches;
+  // right now its used to switch between 2 interfaces strictly on mobile
+  const [interfaceToggle, setInterfaceToggle] = useState<boolean>(false);
 
   const [queryParams, setQueryParams] = useState<ItemQueryParams>({
     search: "",
     asc: "-",
     sortBy: "fleaMarket",
     type: "any",
-    limit: 50,
+    limit: onMobile ? 10 : 50,
     offset: 0,
   });
   const changeQueryParams = (key: string, value: string | number) => {
@@ -107,16 +102,6 @@ function DisplayItems() {
     );
   };
 
-  const containerVarients = {
-    show: {
-      transition: {
-        staggerChildren:
-          // first load has a stagger animation but when infinite scrolling its turned off
-          allItems && allItems.length > queryParams.limit ? 0 : 0.04,
-      },
-    },
-  };
-
   return (
     <>
       <ItemSearchBarComponent
@@ -125,49 +110,23 @@ function DisplayItems() {
         clearCounts={clearCounts}
       />
       <div className="items-container">
-        <InfiniteScroll
-          dataLength={allItems?.length ?? 0}
-          next={getMoreItems}
-          hasMore={hasMore}
-          loader={<article aria-busy="true"></article>}
-        >
-          <AnimatePresence>
-            <motion.ul
-              key={allItems?.length}
-              variants={containerVarients}
-              initial="hidden"
-              animate="show"
-              className="list-item"
-            >
-              {allItems?.map((x, i) => (
-                <motion.li
-                  key={x._id}
-                  transition={{ duration: 0.8 }}
-                  variants={{
-                    hidden: { opacity: 0 },
-                    show: { opacity: 1 },
-                  }}
-                  style={{ listStyleType: "none" }}
-                >
-                  <ItemComponentPreview
-                    item={x}
-                    idx={i}
-                    fields={DISPLAY_ITEM_KEYS}
-                  >
-                    <Buttons
-                      item={x}
-                      idx={i}
-                      onChangeCount={changeCount}
-                    ></Buttons>
-                  </ItemComponentPreview>
-                </motion.li>
-              ))}
-            </motion.ul>
-          </AnimatePresence>
-        </InfiniteScroll>
-        <div>
-          <DisplayCart />
-        </div>
+        {onMobile && (
+          <input
+            type="checkbox"
+            role="switch"
+            onClick={() => setInterfaceToggle((prev) => !prev)}
+          ></input>
+        )}
+        {(!interfaceToggle || !onMobile) && (
+          <ItemScrollComponent
+            allItems={allItems}
+            getMoreItems={getMoreItems}
+            changeCount={changeCount}
+            hasMore={hasMore}
+            queryParams={queryParams}
+          />
+        )}
+        {(interfaceToggle || !onMobile) && <ItemCartComponent />}
       </div>
     </>
   );
