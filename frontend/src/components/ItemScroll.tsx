@@ -1,5 +1,5 @@
 import InfiniteScroll from "react-infinite-scroll-component";
-import Buttons from "../components/Buttons";
+import ItemComponentButtons from "./ItemComponentButtons.tsx";
 import { lazy } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -8,9 +8,7 @@ import {
   type ItemQueryParams,
 } from "../constants.ts";
 
-const ItemComponentPreview = lazy(
-  () => import("../components/ItemComponent.tsx")
-);
+const ItemComponentPreview = lazy(() => import("./ItemComponent.tsx"));
 
 interface Props {
   allItems: Item[] | null;
@@ -20,7 +18,7 @@ interface Props {
   changeCount: (arg0: number, arg1: number) => void;
 }
 
-function ItemScrollComponent({
+function ItemScroll({
   allItems,
   getMoreItems,
   hasMore,
@@ -63,7 +61,11 @@ function ItemScrollComponent({
               style={{ listStyleType: "none" }}
             >
               <ItemComponentPreview item={x} idx={i} fields={DISPLAY_ITEM_KEYS}>
-                <Buttons item={x} idx={i} onChangeCount={changeCount}></Buttons>
+                <ItemComponentButtons
+                  item={x}
+                  idx={i}
+                  onChangeCount={changeCount}
+                ></ItemComponentButtons>
               </ItemComponentPreview>
             </motion.li>
           ))}
@@ -73,4 +75,4 @@ function ItemScrollComponent({
   );
 }
 
-export default ItemScrollComponent;
+export default ItemScroll;

@@ -2,9 +2,9 @@ import { BACKEND_ADDRESS, type Item, type ItemQueryParams } from "../constants";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { clearPageLocalStorage } from "../utils.ts";
-import ItemSearchBarComponent from "../components/ItemSearchBarComponent.tsx";
-import ItemScrollComponent from "../components/ItemScrollComponent.tsx";
-import ItemCartComponent from "../components/ItemCartComponent.tsx";
+import ItemSearchBar from "../components/ItemSearchBar.tsx";
+import ItemScroll from "../components/ItemScroll.tsx";
+import ItemCart from "../components/ItemCart.tsx";
 
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
@@ -104,7 +104,7 @@ function DisplayItems() {
 
   return (
     <>
-      <ItemSearchBarComponent
+      <ItemSearchBar
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}
         clearCounts={clearCounts}
@@ -118,7 +118,7 @@ function DisplayItems() {
           ></input>
         )}
         {(!interfaceToggle || !onMobile) && (
-          <ItemScrollComponent
+          <ItemScroll
             allItems={allItems}
             getMoreItems={getMoreItems}
             changeCount={changeCount}
@@ -126,7 +126,7 @@ function DisplayItems() {
             queryParams={queryParams}
           />
         )}
-        {(interfaceToggle || !onMobile) && <ItemCartComponent />}
+        {(interfaceToggle || !onMobile) && <ItemCart />}
       </div>
     </>
   );

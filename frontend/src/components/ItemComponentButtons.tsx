@@ -8,11 +8,11 @@ interface Props {
 }
 
 // creates 2 buttons and text input for modifying how many of that item the user wants
-function Buttons({ item, idx, onChangeCount }: Props) {
+function ItemComponentButtons({ item, idx, onChangeCount }: Props) {
   return (
     <div className="div-align">
       <motion.button
-        className="outline contrast main-btn"
+        className="outline contrast main-btn stepper-btn"
         onClick={() => {
           onChangeCount(idx, Math.max(item.count - 1, 0));
         }}
@@ -35,7 +35,7 @@ function Buttons({ item, idx, onChangeCount }: Props) {
         }}
       />
       <motion.button
-        className="outline contrast main-btn"
+        className="outline contrast main-btn stepper-btn"
         onClick={() => {
           onChangeCount(idx, item.count + 1);
         }}
@@ -49,4 +49,4 @@ function Buttons({ item, idx, onChangeCount }: Props) {
   );
 }
 
-export default Buttons;
+export default ItemComponentButtons;

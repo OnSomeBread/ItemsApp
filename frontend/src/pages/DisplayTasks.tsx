@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { BACKEND_ADDRESS, type Task, type TaskQueryParams } from "../constants";
 import TaskComponent from "../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
-import TaskSearchBarComponent from "../components/TaskSearchBarComponent";
+import TaskSearchBar from "../components/TaskSearchBar";
 import { motion } from "framer-motion";
 import { clearPageLocalStorage } from "../utils";
 
@@ -111,7 +111,7 @@ function DisplayTasks() {
 
   return (
     <>
-      <TaskSearchBarComponent
+      <TaskSearchBar
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}
         onClear={() => {

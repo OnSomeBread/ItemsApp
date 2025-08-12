@@ -7,11 +7,7 @@ interface Props {
   onClear: () => void;
 }
 
-function TaskSearchBarComponent({
-  changeQueryParams,
-  queryParams,
-  onClear,
-}: Props) {
+function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
   const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
@@ -84,4 +80,4 @@ function TaskSearchBarComponent({
   );
 }
 
-export default TaskSearchBarComponent;
+export default TaskSearchBar;

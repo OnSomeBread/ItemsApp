@@ -11,11 +11,7 @@ interface Props {
   clearCounts: () => void;
 }
 
-function ItemSearchBarComponent({
-  queryParams,
-  changeQueryParams,
-  clearCounts,
-}: Props) {
+function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
   const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
@@ -75,4 +71,4 @@ function ItemSearchBarComponent({
   );
 }
 
-export default ItemSearchBarComponent;
+export default ItemSearchBar;

@@ -2,7 +2,7 @@
   --pico-font-size: 0.93rem;
 }
 
-/* this encompasses both the ItemScrollComponent and ItemCartComponent */
+/* this encompasses both the ItemScroll and ItemCart */
 .items-container {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -68,6 +68,12 @@
   border-radius: 8px;
   padding: 6px 10px;
   text-align: center;
+}
+
+/* for whatever reason the ItemComponentButtons buttons are just a tiny bit below the text input which this corrects for */
+.stepper-btn {
+  position: relative;
+  bottom: 3px;
 }
 
 .div-align {

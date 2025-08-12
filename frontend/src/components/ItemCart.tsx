@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import ItemComponent from "./ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
 
-function ItemCartComponent() {
+function ItemCart() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
 
   const params = new URLSearchParams();
@@ -123,4 +123,4 @@ function ItemCartComponent() {
   );
 }
 
-export default ItemCartComponent;
+export default ItemCart;
