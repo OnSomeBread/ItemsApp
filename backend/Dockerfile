@@ -6,6 +6,8 @@ WORKDIR /ItemsApp
 COPY backend/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+ENV TZ=UTC
+
 COPY backend/ .
 RUN chmod +x wait-for-it.sh
 
