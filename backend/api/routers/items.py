@@ -85,7 +85,7 @@ def get_items_by_ids_db_operations(ids):
     return serializer.data
 
 # returns json array of each item in the list of given ids
-@router.get('/api/item_ids')
+@router.get('/item_ids')
 async def get_items_by_ids(request: Request):
     # a set is more appropriate here as fast remove opperations are needed here
     ids = set(request.query_params.getlist('ids'))
