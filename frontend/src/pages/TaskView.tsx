@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { BACKEND_ADDRESS, type Task } from "../constants";
+import { type Task } from "../constants";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 function TaskView() {
   const location = useLocation();
@@ -15,9 +15,9 @@ function TaskView() {
     statusMap.set(taskReq.reqTaskId, taskReq.status);
   });
 
-  const query = BACKEND_ADDRESS + "/api/task_ids?" + params.toString();
+  const query = "/api/task_ids?" + params.toString();
   useEffect(() => {
-    axios
+    api
       .get<Task[]>(query)
       .then((response) => {
         setTaskReqs(response.data);

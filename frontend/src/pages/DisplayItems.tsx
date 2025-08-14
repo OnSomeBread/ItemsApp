@@ -1,10 +1,10 @@
-import { BACKEND_ADDRESS, type Item, type ItemQueryParams } from "../constants";
+import { type Item, type ItemQueryParams } from "../constants";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { clearPageLocalStorage } from "../utils.ts";
 import ItemSearchBar from "../components/ItemSearchBar.tsx";
 import ItemScroll from "../components/ItemScroll.tsx";
 import ItemCart from "../components/ItemCart.tsx";
+import api from "../api.ts";
 
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
@@ -33,10 +33,10 @@ function DisplayItems() {
     if (key === "offset") continue;
     params.append(key, value.toString());
   }
-  const query = BACKEND_ADDRESS + "/api/items?" + params.toString();
+  const query = "/api/items?" + params.toString();
 
   const fetchItems = (offset: number) => {
-    axios
+    api
       .get<Item[]>(query + "&offset=" + offset)
       .then((response) => {
         const newItems = response.data.map((item) => {

@@ -1,11 +1,11 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { BACKEND_ADDRESS, type Task, type TaskQueryParams } from "../constants";
+import { type Task, type TaskQueryParams } from "../constants";
 import TaskComponent from "../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
 import TaskSearchBar from "../components/TaskSearchBar";
 import { motion } from "framer-motion";
 import { clearPageLocalStorage } from "../utils";
+import api from "../api";
 
 function DisplayTasks() {
   const [allTasks, setAllTasks] = useState<Task[] | null>(null);
@@ -34,10 +34,10 @@ function DisplayTasks() {
     if (key.startsWith("task")) params.append("ids", key.slice("task-".length));
   }
 
-  const query = BACKEND_ADDRESS + "/api/tasks?" + params.toString();
+  const query = "/api/tasks?" + params.toString();
 
   const fetchTasks = (offset: number) => {
-    axios
+    api
       .get<Task[]>(query + "&offset=" + offset)
       .then((response) => {
         if (offset == 0) {
@@ -71,8 +71,8 @@ function DisplayTasks() {
 
   // perform dfs starting from start_id
   const onClickComplete = (start_id: string) => {
-    axios
-      .get(BACKEND_ADDRESS + "/api/adj_list")
+    api
+      .get("/api/adj_list")
       .then((response) => {
         const adj_list = response.data;
 

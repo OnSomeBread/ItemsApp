@@ -18,7 +18,7 @@ def create_access_token(data:dict):
 def decode_token(token:str):
     try:
         decoded = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        if decoded['expire'].fromisoformat() < datetime.now(timezone.utc):
+        if datetime.fromisoformat(decoded['expire']) < datetime.now(timezone.utc):
             return None
         return decoded
     except Exception as e:

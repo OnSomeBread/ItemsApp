@@ -1,8 +1,8 @@
 import { useLocation } from "react-router-dom";
-import { BACKEND_ADDRESS, type Item, type ItemHistory } from "../constants";
-import axios from "axios";
+import { type Item, type ItemHistory } from "../constants";
 import { useEffect, useState } from "react";
 import ItemChartComponent from "../components/ItemChartComponent";
+import api from "../api";
 
 function ItemView() {
   const location = useLocation();
@@ -11,10 +11,8 @@ function ItemView() {
 
   // go to api endpoint item_history and grab prev flea market data
   useEffect(() => {
-    axios
-      .get<ItemHistory[]>(
-        BACKEND_ADDRESS + "/api/item_history?item_id=" + item._id
-      )
+    api
+      .get<ItemHistory[]>("/api/item_history?item_id=" + item._id)
       .then((response) => {
         if (response.data === undefined || response.data.length === 0) return;
 

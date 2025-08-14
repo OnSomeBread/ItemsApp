@@ -104,7 +104,6 @@ async def signup(user_data: dict):
         'token_type':'bearer'
     }
 
-
 @app.post('/token/login')
 async def login(user_data:dict):
     email = user_data['email']
@@ -127,6 +126,18 @@ async def get_user_pref_tasks(current_user=Depends(get_user_data)):
 
 @app.get('/token/pref_items')
 async def get_user_pref_items(current_user=Depends(get_user_data)):
+    return {'preferences_items':current_user.preferences_items}
+
+@app.post('/token/pref_tasks')
+async def change_user_pref_tasks(preferences:dict, current_user=Depends(get_user_data)):
+    current_user.preferences_tasks = preferences
+    await sync_to_async(current_user.save)()
+    return {'preferences_tasks':current_user.preferences_tasks}
+
+@app.post('/token/pref_items')
+async def change_user_pref_items(preferences:dict, current_user=Depends(get_user_data)):
+    current_user.preferences_items = preferences
+    await sync_to_async(current_user.save)()
     return {'preferences_items':current_user.preferences_items}
 
 
