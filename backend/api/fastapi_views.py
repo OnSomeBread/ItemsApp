@@ -1,6 +1,6 @@
 import os
 from django.core.asgi import get_asgi_application
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api_scheduler import lifespan
 
@@ -8,9 +8,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backendDjango.settings')
 django_app = get_asgi_application()
 
 app = FastAPI(lifespan=lifespan)
-
-app.mount("/django", django_app)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ['ALLOWED_ORIGINS'].split(','),
@@ -18,6 +15,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/django", django_app)
 
 # this import needs to be after django gets mounted otherwise creates uninitalized settings error
 from api.routers import token, items, tasks, pastApi
