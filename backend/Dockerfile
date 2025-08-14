@@ -1,4 +1,6 @@
-FROM python:slim
+FROM python:alpine
+RUN apk add --no-cache bash
+
 WORKDIR /ItemsApp
 
 COPY backend/requirements.txt requirements.txt
