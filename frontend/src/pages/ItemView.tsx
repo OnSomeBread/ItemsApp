@@ -8,6 +8,7 @@ function ItemView() {
   const location = useLocation();
   const item = location.state as Item;
   const [itemHistory, setItemHistory] = useState<ItemHistory[] | null>(null);
+  const onMobile: boolean = window.matchMedia("(max-width: 767px)").matches;
 
   // go to api endpoint item_history and grab prev flea market data
   useEffect(() => {
@@ -29,38 +30,51 @@ function ItemView() {
   }, [item._id]);
 
   return (
-    <div style={{ padding: 30 }}>
-      <p>{item.name}</p>
-      <p>item short name: {item.shortName}</p>
-      {item.types && (
-        <p>item types: {item.types.map((t) => t.name).join(", ")}</p>
-      )}
-      <p>item average 24 hour price: {item.avg24hPrice}</p>
-      <p>item base price: {item.basePrice}</p>
-      <p>change last 48 hours: {item.changeLast48hPercent}%</p>
-      <p>item width: {item.width}</p>
-      <p>item height: {item.height}</p>
-      <a href={item.link}>
-        <p>{item.name} wiki page</p>
-      </a>
+    <div
+      className={onMobile ? "" : "div-align"}
+      style={onMobile ? {} : { display: "flex" }}
+    >
+      <div style={{ flex: 1, padding: 30 }}>
+        <p>{item.name}</p>
+        <p>item short name: {item.shortName}</p>
+        {item.types && (
+          <p>item types: {item.types.map((t) => t.name).join(", ")}</p>
+        )}
+        {item.avg24hPrice && (
+          <p>
+            item average 24 hour price:{" "}
+            {item.avg24hPrice.toLocaleString("en-us")}
+          </p>
+        )}
+        <p>item base price: {item.basePrice.toLocaleString("en-us")}</p>
+        <p>change last 48 hours: {item.changeLast48hPercent}%</p>
+        <p>item width: {item.width}</p>
+        <p>item height: {item.height}</p>
+        <a href={item.link}>
+          <p>{item.name} wiki page</p>
+        </a>
 
-      {item.sells && (
+        {item.sells && (
+          <>
+            <p>Sell Prices:</p>
+            {item.sells.map((sellFor) => (
+              <p key={sellFor.source}>
+                {sellFor.source + ": " + sellFor.price.toLocaleString("en-us")}
+              </p>
+            ))}
+          </>
+        )}
+      </div>
+      <div style={{ flex: 3, padding: 10 }}>
         <p>
-          Sell Prices:{" "}
-          {item.sells
-            .map((sellFor) => sellFor.source + ": " + sellFor.price.toString())
-            .join(", ")}
+          Item Price History Chart{" "}
+          <mark>
+            WARNING CURRENT WIPE DOES NOT HAVE FLEA SO IT ALWAYS DISPLAYS AT A
+            CONSTANT PRICE
+          </mark>
         </p>
-      )}
-
-      <p>Item Price History Chart</p>
-      <p>
-        <mark>
-          WARNING CURRENT WIPE DOES NOT HAVE FLEA SO IT ALWAYS DISPLAYS AT A
-          CONSTANT PRICE
-        </mark>
-      </p>
-      <ItemChartComponent itemHistory={itemHistory ?? []} />
+        <ItemChartComponent itemHistory={itemHistory ?? []} />
+      </div>
     </div>
   );
 }
