@@ -4,16 +4,23 @@ from fastapi.security import OAuth2PasswordBearer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
 import jwt
-import os
+import os 
 
 JWT_SECRET = os.environ['SECRET_KEY']
 JWT_ALGORITHM = os.environ['ALGORITHM']
-EXPIRE_TIME_MINUTES = 30
+ACCESS_EXPIRE_MINUTES = 30
+REFRESH_EXPIRE_DAYS = 7
+
+def create_token(data:dict, expire_minutes):
+    to_encode = data.copy()
+    to_encode['expire'] = (datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)).isoformat()
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def create_access_token(data:dict):
-    to_encode = data.copy()
-    to_encode['expire'] = (datetime.now(timezone.utc) + timedelta(minutes=EXPIRE_TIME_MINUTES * 60)).isoformat()
-    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return create_token(data, ACCESS_EXPIRE_MINUTES)
+
+def create_refresh_token(data:dict):
+    return create_token(data, REFRESH_EXPIRE_DAYS * 60 * 24)
 
 def decode_token(token:str):
     try:
