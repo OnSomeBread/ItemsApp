@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-from datetime import timedelta
 from dotenv import load_dotenv
 import os
 
@@ -28,23 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get('DEBUG', False))
+DEBUG = True if os.environ.get('DEBUG', False).lower() == 'true' else False
 
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
-
-# REST_FRAMEWORK = {
-#     "DEFAULT_AUTHENTICATION_CLASSES": (
-#         "rest_framework_simplejwt.authentication.JWTAuthentication",
-#     ),
-#     "DEFAULT_PERMISSION_CLASSES": [
-#         "rest_framework.permissions.IsAuthenticated",
-#     ],
-# }
-
-# SIMPLE_JWT = {
-#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-#     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-# }
 
 AUTH_USER_MODEL = 'api.User'
 
@@ -91,18 +76,8 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'backendDjango.asgi.application'
-
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 DATABASES = {
     'default': {
@@ -114,16 +89,6 @@ DATABASES = {
         'PORT': os.environ['POSTGRES_PORT'],
     }
 }
-
-# CACHES = {
-#     'default': {
-#         'BACKEND':'django_redis.cache.RedisCache',
-#         'LOCATION': os.environ['REDIS_URL'],
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#         }
-#     }
-# }
 
 CACHES = {
     'default': {
