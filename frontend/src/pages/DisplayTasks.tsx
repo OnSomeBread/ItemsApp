@@ -9,6 +9,7 @@ import api from "../api";
 
 function DisplayTasks() {
   const [allTasks, setAllTasks] = useState<Task[] | null>(null);
+  const [completedTasks, setCompletedTasks] = useState<Task[] | null>(null);
   const [queryParams, setQueryParams] = useState<TaskQueryParams>({
     search: "",
     isKappa: false,
@@ -63,6 +64,21 @@ function DisplayTasks() {
     fetchTasks(queryParams.offset);
   };
 
+  useEffect(() => {
+    if (params.getAll("ids").length === 0) {
+      setCompletedTasks(null);
+      return;
+    }
+    api
+      .get("/api/task_ids?ids=" + params.getAll("ids").join("&ids="))
+      .then((response) => {
+        setCompletedTasks(response.data);
+        console.log(response.data);
+      })
+      .catch((err) => console.log(err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [changedTasksToggle]);
+
   const changeQueryParams = (key: string, value: string | number | boolean) => {
     setQueryParams((prev) => {
       return { ...prev, [key]: value };
@@ -70,7 +86,7 @@ function DisplayTasks() {
   };
 
   // perform dfs starting from start_id
-  const onClickComplete = (start_id: string) => {
+  const onClickComplete = (start_id: string, relation: string) => {
     api
       .get("/api/adj_list")
       .then((response) => {
@@ -84,12 +100,16 @@ function DisplayTasks() {
           if (top_id === undefined) continue;
 
           visited.add(top_id);
-          localStorage.setItem("task-" + top_id, "Completed");
+          if (relation === "requirement") {
+            localStorage.setItem("task-" + top_id, "Completed");
+          } else if (relation === "predecessor") {
+            localStorage.removeItem("task-" + top_id);
+          }
 
           // if top_id has no requirements continue
           if (!(top_id in adj_list)) continue;
           for (const req of adj_list[top_id]) {
-            if (!visited.has(req[0])) {
+            if (!visited.has(req[0]) && req[1] == relation) {
               st.push(req[0]);
             }
           }
@@ -119,32 +139,66 @@ function DisplayTasks() {
           clearPageLocalStorage("task");
         }}
       />
-      <InfiniteScroll
-        dataLength={allTasks?.length ?? 0}
-        next={getMoreTasks}
-        hasMore={hasMore}
-        loader={<article aria-busy="true"></article>}
-      >
-        <motion.ul
-          key={allTasks?.length}
-          variants={containerVarients}
-          initial="hidden"
-          animate="show"
-        >
-          {allTasks?.map((task) => (
-            <motion.li
-              key={task._id}
-              transition={{ duration: 0.8 }}
-              variants={{
-                hidden: { opacity: 0 },
-                show: { opacity: 1 },
-              }}
+      <div style={{ width: "100%", display: "flex" }}>
+        <div style={{ flex: 1 }}>
+          <InfiniteScroll
+            dataLength={allTasks?.length ?? 0}
+            next={getMoreTasks}
+            hasMore={hasMore}
+            loader={<article aria-busy="true"></article>}
+          >
+            <motion.ul
+              key={allTasks?.length}
+              variants={containerVarients}
+              initial="hidden"
+              animate="show"
             >
-              <TaskComponent task={task} onClick={onClickComplete} />
-            </motion.li>
-          ))}
-        </motion.ul>
-      </InfiniteScroll>
+              {allTasks?.map((task) => (
+                <motion.li
+                  key={task._id}
+                  transition={{ duration: 0.8 }}
+                  variants={{
+                    hidden: { opacity: 0 },
+                    show: { opacity: 1 },
+                  }}
+                >
+                  <TaskComponent task={task} onClickButton={onClickComplete} />
+                </motion.li>
+              ))}
+            </motion.ul>
+          </InfiniteScroll>
+        </div>
+        <div style={{ display: "flex", flex: 1 }}>
+          {completedTasks && (
+            <div>
+              <p>All Completed Tasks</p>
+              <p>(click on a task to set not completed)</p>
+            </div>
+          )}
+          <motion.ul
+            key={completedTasks?.length}
+            variants={containerVarients}
+            initial="hidden"
+            animate="show"
+          >
+            {completedTasks?.map((task) => (
+              <motion.li
+                key={task._id}
+                transition={{ duration: 0.8 }}
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: { opacity: 1 },
+                }}
+                onClick={() => {
+                  onClickComplete(task._id, "predecessor");
+                }}
+              >
+                {task.name}
+              </motion.li>
+            ))}
+          </motion.ul>
+        </div>
+      </div>
     </>
   );
 }

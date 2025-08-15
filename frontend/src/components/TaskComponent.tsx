@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 
 interface Props {
   task: Task;
-  onClick: (arg0: string) => void;
+  onClickButton: (arg0: string, arg1: string) => void;
 }
 
-function TaskComponent({ task, onClick }: Props) {
+function TaskComponent({ task, onClickButton }: Props) {
   const navigate = useNavigate();
   return (
     <motion.div
@@ -25,7 +25,7 @@ function TaskComponent({ task, onClick }: Props) {
       ))}
       <motion.button
         value={task._id}
-        onClick={() => onClick(task._id)}
+        onClick={() => onClickButton(task._id, "requirement")}
         transition={{ duration: 0.4 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}

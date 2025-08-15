@@ -57,10 +57,10 @@ async def get_tasks(request: Request):
     return data
 
 @sync_to_async(thread_sensitive=True)
-def get_tasks_by_ids_db_operations(ids, found_count:int):
+def get_tasks_by_ids_db_operations(ids):
     # find all the tasks that weren't cached
     tasks = Task.objects.filter(_id__in=ids)
-    serializer = TaskSerializer(tasks[:max(len(ids) - found_count, 0)], many=True)
+    serializer = TaskSerializer(tasks, many=True)
     return serializer.data
 
 # returns json array of each task in the list of given ids
@@ -76,11 +76,11 @@ async def get_tasks_by_ids(request: Request):
             found_tasks.append(await cache.aget(task_id))
             ids.remove(task_id)
 
-    data = await get_tasks_by_ids_db_operations(ids, len(found_tasks))
+    data = await get_tasks_by_ids_db_operations(ids)
 
     # store all new ids
-    for itm in data:
-        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('tasks')))
+    for tsk in data:
+        asyncio.create_task(cache.aset(tsk['_id'], tsk, timeout=get_redis_timeout('tasks')))
 
     return data + found_tasks
 
@@ -100,14 +100,18 @@ async def get_adj_list():
 
         for task in result:
             for req in task['taskRequirements']:
-                status = ', '.join(req['status'])
+                #status = ', '.join(req['status'])
                 from_id = task['id']
                 to_id = req['task']['id']
 
                 if from_id not in adj_list:
                     adj_list[from_id] = []
+                adj_list[from_id].append((to_id, 'requirement'))
 
-                adj_list[from_id].append((to_id, status))
+                # make this a double ended adj_list
+                if to_id not in adj_list:
+                    adj_list[to_id] = []
+                adj_list[to_id].append((from_id, 'predecessor'))
 
         asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks')))
         return adj_list
