@@ -73,7 +73,6 @@ function DisplayTasks() {
       .get("/api/task_ids?ids=" + params.getAll("ids").join("&ids="))
       .then((response) => {
         setCompletedTasks(response.data);
-        console.log(response.data);
       })
       .catch((err) => console.log(err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
