@@ -5,6 +5,7 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       - DEBUG=False
+    volumes: []
   frontend:
     build:
       context: .
