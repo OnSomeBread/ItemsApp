@@ -52,22 +52,66 @@ async def get_user_me(current_user=Depends(get_user_data)):
         return current_user
     return {'id':current_user.id, 'email':current_user.email}
 
-@router.get('/pref_tasks')
-async def get_user_pref_tasks(current_user=Depends(get_user_data)):
-    return {'preferences_tasks':current_user.preferences_tasks}
+# get preferences for a page
+@router.get('/pref')
+async def get_user_pref(preferences:dict, current_user=Depends(get_user_data)):
+    page = preferences['page'].pop()
+    if page == 'tasks':
+        {'preferences_tasks':current_user.preferences_tasks}
+    elif page == 'items':
+        {'preferences_items':current_user.preferences_items}
+    return {}
 
-@router.get('/pref_items')
-async def get_user_pref_items(current_user=Depends(get_user_data)):
-    return {'preferences_items':current_user.preferences_items}
+# replaces preferences
+@router.post('/change_pref')
+async def change_user_pref(preferences:dict, current_user=Depends(get_user_data)):
+    page = preferences['page'].pop()
+    if page == 'tasks':
+        current_user.preferences_tasks = preferences
+    elif page == 'items':
+        current_user.preferences_items = preferences
 
-@router.post('/pref_tasks')
-async def change_user_pref_tasks(preferences:dict, current_user=Depends(get_user_data)):
-    current_user.preferences_tasks = preferences
     await sync_to_async(current_user.save)()
-    return {'preferences_tasks':current_user.preferences_tasks}
+    return {}
 
-@router.post('/pref_items')
+# only creates keys
+@router.post('/add_pref')
+async def add_user_pref(preferences:dict, current_user=Depends(get_user_data)):
+    page = preferences['page'].pop()
+    if page == 'tasks':
+        prefs = current_user.preferences_tasks
+    elif page == 'items':
+        prefs = current_user.preferences_items
+
+    for key, value in preferences.items():
+        prefs[key] = value
+
+    await sync_to_async(current_user.save)()
+    return {}
+
+# only removes keys
+@router.post('/remove_pref')
+async def remove_user_pref(preferences:dict, current_user=Depends(get_user_data)):
+    page = preferences['page'].pop()
+    if page == 'tasks':
+        prefs = current_user.preferences_tasks
+    elif page == 'items':
+        prefs = current_user.preferences_items
+
+    for key, value in preferences.items():
+        del prefs[key]
+
+    await sync_to_async(current_user.save)()
+    return {}
+
+# deletes preferences for the select page
+@router.post('/clear_preferences')
 async def change_user_pref_items(preferences:dict, current_user=Depends(get_user_data)):
-    current_user.preferences_items = preferences
+    page = preferences['page'].pop()
+    if page == 'tasks':
+        current_user.preferences_tasks = {}
+    elif page == 'items':
+        current_user.preferences_items = {}
     await sync_to_async(current_user.save)()
-    return {'preferences_items':current_user.preferences_items}
+
+    return {}
