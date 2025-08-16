@@ -1,0 +1,62 @@
+services:
+  backend:
+    image: itemsapp_backend_stack:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      - DEBUG=False
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  frontend:
+    image: itemsapp_frontend_stack:latest
+    ports:
+      - "5172:80"
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: any
+      update_config:
+        parallelism: 1
+        delay: 5s
+
+  # both postgres and redis cannot be scaled for them to be accessed by multiple backend properly
+  db:
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+volumes:
+  pgdata:
