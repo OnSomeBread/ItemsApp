@@ -8,7 +8,7 @@
 <p>then go to localhost:5172</p><br>
 
 <p>there is also a fully working docker swarm implementation that will start with the command make</p>
-<p>the swarm implementation currently is 2 frontend containers, 3 backend containers, 1 postgreSQL db container, and 1 redis container</p>
+<p>the swarm implementation using the production server setup currently is 2 frontend containers, 3 backend containers, 1 postgreSQL db container, and 1 redis container</p>
 all data is pulled using a GraphQL api from [`tarkov-api`](https://github.com/the-hideout/tarkov-api)
 
 <h2>DisplayItems Page</h2>
