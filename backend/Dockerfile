@@ -13,4 +13,4 @@ RUN chmod +x wait-for-it.sh
 ENV TZ=UTC
 EXPOSE 8000
 
-CMD ["./wait-for-it.sh", "db:5432", "--", "./wait-for-it.sh", "redis:6379", "--", "uvicorn", "api.fastapi_views:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["./wait-for-it.sh", "db:5432", "--", "./wait-for-it.sh", "redis:6379", "--", "uvicorn", "api.fastapi_views:app", "--host", "0.0.0.0", "--port", "8000"]
