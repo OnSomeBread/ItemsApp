@@ -73,6 +73,8 @@ function ItemCart() {
     return () => clearTimeout(prevTimeout);
   }, [currPrice]);
 
+  if (currPrice === 0) return <p>add items to show here</p>;
+
   return (
     <div className="item-cart">
       <p>Total Flea Market Price</p>
