@@ -11,6 +11,7 @@ with open('backend/most_recent_tasks.json') as f:
 
 class WebsiteUser(HttpUser):
     wait_time = between(1, 5)
+    host = "http://localhost:8000"
 
     def on_start(self):
         self.client.headers.update({"Connection": "close"})
@@ -58,9 +59,10 @@ class WebsiteUser(HttpUser):
         # example query /api/tasks?search=&isKappa=false&isLightKeeper=false&playerLvl=99&objType=any&limit=50&offset=0
         self.client.get(f'/api/tasks?search={random_search}&isKappa={random_isKappa}&isLightKeeper={random_isLightkeeper}&playerLvl={random_lvl}&objType={random_objtype}&limit={random_limit}&offset={random_offset}' + random_completed_tasks, timeout=10)
 
-    @task
-    def get_task_adj_list(self):
-        self.client.get('/api/adj_list', timeout=10)
+    # this gets cached after the first time which doesn't really make for a good stress test
+    # @task
+    # def get_task_adj_list(self):
+    #     self.client.get('/api/adj_list', timeout=10)
 
     @task
     def get_task_ids(self):
