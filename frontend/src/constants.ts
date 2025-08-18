@@ -48,6 +48,7 @@ export type TaskQueryParams = {
   isLightKeeper: boolean;
   playerLvl: number;
   objType: string;
+  trader: string;
   limit: number;
   offset: number;
 };
@@ -137,18 +138,18 @@ export type Task = {
   objectives: Objective[];
 };
 
-export const ALL_TRADERS = [
-  "fence",
-  "fleaMarket",
-  "jaeger",
-  "mechanic",
-  "peacekeeper",
-  "prapor",
-  "ragman",
-  "ref",
-  "skier",
-  "therapist",
-];
+export const ALL_TRADERS = {
+  any: "Any",
+  fence: "Fence",
+  jaeger: "Jaeger",
+  mechanic: "Mechanic",
+  peacekeeper: "Peacekeeper",
+  prapor: "Prapor",
+  ragman: "Ragman",
+  ref: "Ref",
+  skier: "Skier",
+  therapist: "Therapist",
+};
 
 export const ALL_TASK_OBJECTIVE_TYPES = {
   any: "Any",

@@ -10,12 +10,15 @@ import json
 router = APIRouter(prefix='/api', tags=['tasks'])
 
 @sync_to_async(thread_sensitive=True)
-def get_tasks_db_operations(search:str, isKappa:bool, isLightKeeper:bool, playerLvl:int, objType:str, limit:int, offset:int, completedTasks: list[str]):
+def get_tasks_db_operations(search:str, isKappa:bool, isLightKeeper:bool, playerLvl:int, objType:str, trader:str, limit:int, offset:int, completedTasks: list[str]):
     tasks = Task.objects.exclude(_id__in=completedTasks)
     tasks = tasks.filter(name__icontains=search, minPlayerLevel__lte=playerLvl)
 
-    if objType != 'any':
-        tasks = tasks.filter(objectives__objType=objType).distinct()
+    if trader.lower() != 'any':
+        tasks = tasks.filter(trader__iexact=trader)
+
+    if objType.lower() != 'any':
+        tasks = tasks.filter(objectives__objType__iexact=objType).distinct()
     
     if isKappa:
         tasks = tasks.filter(kappaRequired=True)
@@ -33,6 +36,7 @@ async def get_tasks(request: Request):
     isKappa:bool = request.query_params.get('isKappa', 'false').lower() == 'true'
     isLightKeeper:bool = request.query_params.get('isLightKeeper', 'false').lower() == 'true'
     objType:str = request.query_params.get('objType', 'any')
+    trader:str = request.query_params.get('trader', 'any')
     
     playerLvl:str = request.query_params.get('playerLvl', '99')
     playerLvl:int = int(playerLvl) if playerLvl.isdigit() else 99
@@ -46,11 +50,11 @@ async def get_tasks(request: Request):
     completedTasks:list[str] = request.query_params.getlist('ids')
 
     # check if this is a repeated query and if so return it
-    cache_key:str = search + str(isKappa) + str(isLightKeeper) + objType + str(playerLvl) + str(limit) + str(offset) + ''.join(completedTasks)
+    cache_key:str = search + str(isKappa) + str(isLightKeeper) + objType + trader + str(playerLvl) + str(limit) + str(offset) + ''.join(completedTasks)
     if await cache.ahas_key(cache_key):
         return await cache.aget(cache_key)
 
-    data = await get_tasks_db_operations(search, isKappa, isLightKeeper, playerLvl, objType, limit, offset, completedTasks)
+    data = await get_tasks_db_operations(search, isKappa, isLightKeeper, playerLvl, objType, trader, limit, offset, completedTasks)
 
     # save this query in the background
     asyncio.create_task(cache.aset(cache_key, data))

@@ -16,6 +16,7 @@ function DisplayTasks() {
     isLightKeeper: false,
     playerLvl: 99,
     objType: "any",
+    trader: "any",
     limit: 50,
     offset: 0,
   });

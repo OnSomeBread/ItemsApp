@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { ALL_TASK_OBJECTIVE_TYPES, type TaskQueryParams } from "../constants";
+import {
+  ALL_TASK_OBJECTIVE_TYPES,
+  ALL_TRADERS,
+  type TaskQueryParams,
+} from "../constants";
 
 interface Props {
   changeQueryParams: (arg0: string, arg1: string | number | boolean) => void;
@@ -66,7 +70,18 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       >
         {Object.entries(ALL_TASK_OBJECTIVE_TYPES).map(([key, value]) => (
           <option key={key} value={key}>
-            {value}
+            Objective Type: {value}
+          </option>
+        ))}
+      </select>
+      <select
+        className="dropdown"
+        defaultValue="any"
+        onChange={(e) => changeQueryParams("trader", e.target.value)}
+      >
+        {Object.entries(ALL_TRADERS).map(([key, value]) => (
+          <option key={key} value={key}>
+            Trader: {value}
           </option>
         ))}
       </select>
