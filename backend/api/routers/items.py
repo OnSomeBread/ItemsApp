@@ -12,11 +12,10 @@ router = APIRouter(prefix='/api', tags=['items'])
 @sync_to_async(thread_sensitive=True)
 def get_items_db_operations(search:str, sortBy:str, asc:str, item_type:str, limit:int, offset:int):
     # do a different search if asking for flea price since not all items have flea
+    items = Item.objects
     if item_type != 'any':
-        items = Item.objects.filter(itemtypes__name=item_type)
-    else:
-        items = Item.objects
-
+        items = items.filter(itemtypes__name__iexact=item_type)
+        
     # id is needed for order_by to make it consistant because it normally varys 
     # leading to duplicates given to user if using pagination
     if sortBy == 'fleaMarket': 
@@ -57,8 +56,8 @@ async def get_items(request: Request):
 @sync_to_async(thread_sensitive=True)
 def get_item_history_db_operations(item_id:str):
     item_data = SavedItemData.objects.filter(item_id=item_id).values('item_id', 'avg24hPrice', 'changeLast48hPercent', 'fleaMarket', 'past_api_call__time')
-
-    serializer = SavedItemHistorySerializer(item_data, many=True)
+    
+    serializer = SavedItemHistorySerializer(item_data.order_by('past_api_call__time'), many=True)
     return serializer.data
 
 # grabs past item flea market prices for a specific item id
