@@ -6,8 +6,10 @@ from django.core.cache import cache
 from api.api_scheduler import get_redis_timeout
 import asyncio
 import json
+import os
 
 router = APIRouter(prefix='/api', tags=['tasks'])
+REDIS_CACHE_ENABLED = 'REDIS_URL' in os.environ
 
 @sync_to_async(thread_sensitive=True)
 def get_tasks_db_operations(search:str, isKappa:bool, isLightKeeper:bool, playerLvl:int, objType:str, trader:str, limit:int, offset:int, completedTasks: list[str]):
@@ -51,13 +53,13 @@ async def get_tasks(request: Request):
 
     # check if this is a repeated query and if so return it
     cache_key:str = search + str(isKappa) + str(isLightKeeper) + objType + trader + str(playerLvl) + str(limit) + str(offset) + ''.join(completedTasks)
-    if await cache.ahas_key(cache_key):
+    if REDIS_CACHE_ENABLED and await cache.ahas_key(cache_key):
         return await cache.aget(cache_key)
 
     data = await get_tasks_db_operations(search, isKappa, isLightKeeper, playerLvl, objType, trader, limit, offset, completedTasks)
 
     # save this query in the background
-    asyncio.create_task(cache.aset(cache_key, data))
+    asyncio.create_task(cache.aset(cache_key, data)) if REDIS_CACHE_ENABLED else None
     return data
 
 @sync_to_async(thread_sensitive=True)
@@ -72,6 +74,8 @@ def get_tasks_by_ids_db_operations(ids):
 async def get_tasks_by_ids(request: Request):
     # a set is more appropriate here as fast remove opperations are needed here
     ids = set(request.query_params.getlist('ids'))
+    if not REDIS_CACHE_ENABLED:
+        return await get_tasks_by_ids_db_operations(ids)
 
     # get all cached task ids
     found_tasks = []
@@ -93,7 +97,7 @@ async def get_tasks_by_ids(request: Request):
 @router.get("/adj_list")
 async def get_adj_list():
     # dont build it again if its already cached
-    if await cache.ahas_key('adj_list'):
+    if REDIS_CACHE_ENABLED and await cache.ahas_key('adj_list'):
         return await cache.aget('adj_list')
     
     # if the most_recent_tasks.json file does not exist it likely means the db
@@ -117,7 +121,7 @@ async def get_adj_list():
                     adj_list[to_id] = []
                 adj_list[to_id].append((from_id, 'predecessor'))
 
-        asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks')))
+        asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks'))) if REDIS_CACHE_ENABLED else None
         return adj_list
     print('tasks.json does not exist')
     return {}

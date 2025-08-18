@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from dotenv import load_dotenv
+from urllib.parse import urlparse, parse_qsl
 import os
 
 load_dotenv()
@@ -79,26 +80,44 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE' : 'django.db.backends.postgresql',
-        'NAME': os.environ['POSTGRES_DB'],
-        'USER': os.environ['POSTGRES_USER'],
-        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
-        'HOST': os.environ['POSTGRES_HOST'],
-        'PORT': os.environ['POSTGRES_PORT'],
-    }
-}
-
-CACHES = {
-    'default': {
-        'BACKEND':'django_async_redis.cache.RedisCache',
-        'LOCATION': os.environ['REDIS_URL'],
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_async_redis.client.DefaultClient',
+DEPLOYED = True if os.environ.get('DEPLOYED', False).lower() == 'true' else False
+DATABASES = {}
+if DEPLOYED:
+    tmpPostgres = urlparse(os.getenv('POSTGRES_DB_URL'))
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': tmpPostgres.path.replace('/', ''),
+            'USER': tmpPostgres.username,
+            'PASSWORD': tmpPostgres.password,
+            'HOST': tmpPostgres.hostname,
+            'PORT': 5432,
+            'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
         }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE' : 'django.db.backends.postgresql',
+            'NAME': os.environ['POSTGRES_DB'],
+            'USER': os.environ['POSTGRES_USER'],
+            'PASSWORD': os.environ['POSTGRES_PASSWORD'],
+            'HOST': os.environ['POSTGRES_HOST'],
+            'PORT': os.environ['POSTGRES_PORT'],
+        }
+    }
+
+CACHES = {}
+if 'REDIS_URL' in os.environ:
+    CACHES = {
+        'default': {
+            'BACKEND':'django_async_redis.cache.RedisCache',
+            'LOCATION': os.environ['REDIS_URL'],
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_async_redis.client.DefaultClient',
+            }
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

@@ -6,8 +6,10 @@ from asgiref.sync import sync_to_async
 from django.core.cache import cache
 from api.api_scheduler import get_redis_timeout
 import asyncio
+import os
 
 router = APIRouter(prefix='/api', tags=['items'])
+REDIS_CACHE_ENABLED = 'REDIS_URL' in os.environ
 
 @sync_to_async(thread_sensitive=True)
 def get_items_db_operations(search:str, sortBy:str, asc:str, item_type:str, limit:int, offset:int):
@@ -45,12 +47,12 @@ async def get_items(request: Request):
     
     # check if current query has already been done and if so just return it 
     cache_key:str = search + sortBy + asc + item_type + str(limit) + str(offset)
-    if await cache.ahas_key(cache_key):
+    if REDIS_CACHE_ENABLED and await cache.ahas_key(cache_key):
         return await cache.aget(cache_key)
 
     data = await get_items_db_operations(search, sortBy, asc, item_type, limit, offset)
 
-    asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout('items')))
+    asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout('items'))) if REDIS_CACHE_ENABLED else None
     return data
 
 @sync_to_async(thread_sensitive=True)
@@ -68,11 +70,11 @@ async def get_item_history(request: Request):
     if item_id == None:
         return 'no given item id'
     
-    if await cache.ahas_key('history' + item_id):
+    if REDIS_CACHE_ENABLED and await cache.ahas_key('history' + item_id):
         return await cache.aget('history' + item_id)
 
     data = await get_item_history_db_operations(item_id)
-    asyncio.create_task(cache.aset('history' + item_id, data, timeout=get_redis_timeout('items')))
+    asyncio.create_task(cache.aset('history' + item_id, data, timeout=get_redis_timeout('items'))) if REDIS_CACHE_ENABLED else None
 
     return data
 
@@ -88,6 +90,8 @@ def get_items_by_ids_db_operations(ids):
 async def get_items_by_ids(request: Request):
     # a set is more appropriate here as fast remove opperations are needed here
     ids = set(request.query_params.getlist('ids'))
+    if not REDIS_CACHE_ENABLED:
+        return await get_items_by_ids_db_operations(ids)
 
     # get all cached item ids
     found_items = []
