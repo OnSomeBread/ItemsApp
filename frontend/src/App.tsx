@@ -9,6 +9,7 @@ import DisplayTasks from "./pages/DisplayTasks";
 import SignupLogin from "./pages/SignupLogin";
 import TaskView from "./pages/TaskView";
 import ItemView from "./pages/ItemView";
+import TaskTree from "./pages/TaskTree";
 
 // function LogOut() {
 //   localStorage.clear();
@@ -30,6 +31,7 @@ function App() {
         <Route path="/task_view" element={<TaskView />} />
         <Route path="/item_view" element={<ItemView />} />
         <Route path="/signup" element={<SignupLogin />} />
+        <Route path="/task_tree" element={<TaskTree />} />
         {/* <Route
           path="/"
           element={
