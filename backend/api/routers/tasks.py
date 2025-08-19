@@ -114,12 +114,12 @@ async def get_adj_list():
 
                 if from_id not in adj_list:
                     adj_list[from_id] = []
-                adj_list[from_id].append((to_id, 'requirement'))
+                adj_list[from_id].append((to_id, 'prerequisite'))
 
                 # make this a double ended adj_list
                 if to_id not in adj_list:
                     adj_list[to_id] = []
-                adj_list[to_id].append((from_id, 'predecessor'))
+                adj_list[to_id].append((from_id, 'unlocks'))
 
         asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks'))) if REDIS_CACHE_ENABLED else None
         return adj_list

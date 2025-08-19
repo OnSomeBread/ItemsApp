@@ -190,7 +190,7 @@ function DisplayTasks() {
                   show: { opacity: 1 },
                 }}
                 onClick={() => {
-                  onClickComplete(task._id, "predecessor");
+                  onClickComplete(task._id, "unlocks");
                 }}
               >
                 {task.name}

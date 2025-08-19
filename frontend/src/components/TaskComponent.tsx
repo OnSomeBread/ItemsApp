@@ -25,7 +25,7 @@ function TaskComponent({ task, onClickButton }: Props) {
       ))}
       <motion.button
         value={task._id}
-        onClick={() => onClickButton(task._id, "requirement")}
+        onClick={() => onClickButton(task._id, "prerequisite")}
         transition={{ duration: 0.4 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
