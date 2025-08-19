@@ -36,7 +36,7 @@ services:
 
   # both postgres and redis cannot be scaled for them to be accessed by multiple backend properly
   db:
-    image: postgres:alpine
+    image: postgres:17-alpine
     ports:
       - "5432:5432"
     env_file:
@@ -50,7 +50,7 @@ services:
           - node.role == manager
 
   redis:
-    image: redis:alpine
+    image: redis:alpine3.22
     ports:
       - "6379:6379"
     deploy:
