@@ -11,8 +11,6 @@ function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
 
-  console.log("render", DisplayItems);
-
   // right now its used to switch between 2 interfaces strictly on mobile
   const [interfaceToggle, setInterfaceToggle] = useState<boolean>(false);
   const [queryParams, setQueryParams] = useState(DEFAULT_ITEM_QUERY_PARAMS);
