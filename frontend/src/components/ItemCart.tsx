@@ -1,8 +1,9 @@
 import axios from "axios";
-import { BACKEND_ADDRESS, type Item } from "../constants";
+import { BACKEND_ADDRESS } from "../constants";
 import { useEffect, useState } from "react";
 import ItemComponent from "./ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
+import type { Item } from "../types";
 
 function ItemCart() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);

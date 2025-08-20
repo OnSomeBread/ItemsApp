@@ -1,10 +1,11 @@
-import { DEFAULT_ITEM_QUERY_PARAMS, ON_MOBILE, type Item } from "../constants";
+import { DEFAULT_ITEM_QUERY_PARAMS, ON_MOBILE } from "../constants";
 import { useState, useEffect } from "react";
 import { clearPageLocalStorage } from "../utils.ts";
 import ItemSearchBar from "../components/ItemSearchBar.tsx";
 import ItemScroll from "../components/ItemScroll.tsx";
 import ItemCart from "../components/ItemCart.tsx";
 import api from "../api.ts";
+import type { Item } from "../types.ts";
 
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);

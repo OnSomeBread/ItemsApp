@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { type Task } from "../constants";
 import { useEffect, useState } from "react";
 import api from "../api";
+import type { Task } from "../types";
 
 function TaskView() {
   const location = useLocation();

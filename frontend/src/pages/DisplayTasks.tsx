@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { DEFAULT_TASK_QUERY_PARAMS, type Task } from "../constants";
+import { DEFAULT_TASK_QUERY_PARAMS } from "../constants";
 import TaskComponent from "../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
 import TaskSearchBar from "../components/TaskSearchBar";
 import { motion } from "framer-motion";
 import { clearPageLocalStorage } from "../utils";
 import api from "../api";
+import type { Task } from "../types";
 
 function DisplayTasks() {
   const [allTasks, setAllTasks] = useState<Task[] | null>(null);

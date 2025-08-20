@@ -2,11 +2,8 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import ItemComponentButtons from "./ItemComponentButtons.tsx";
 import { lazy } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  DISPLAY_ITEM_KEYS,
-  type Item,
-  type ItemQueryParams,
-} from "../constants.ts";
+import { DISPLAY_ITEM_KEYS } from "../constants.ts";
+import type { Item, ItemQueryParams } from "../types.ts";
 
 const ItemComponentPreview = lazy(() => import("./ItemComponent.tsx"));
 

@@ -7,7 +7,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { ItemHistory } from "../constants";
+import type { ItemHistory } from "../types";
 
 interface Props {
   itemHistory: ItemHistory[];

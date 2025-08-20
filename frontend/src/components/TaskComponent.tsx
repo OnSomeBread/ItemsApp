@@ -1,4 +1,4 @@
-import type { Task } from "../constants";
+import type { Task } from "../types";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 

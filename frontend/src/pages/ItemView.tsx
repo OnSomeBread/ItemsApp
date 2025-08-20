@@ -1,8 +1,9 @@
 import { useLocation } from "react-router-dom";
-import { ON_MOBILE, type Item, type ItemHistory } from "../constants";
+import { ON_MOBILE } from "../constants";
 import { useEffect, useState } from "react";
 import ItemChartComponent from "../components/ItemChartComponent";
 import api from "../api";
+import type { Item, ItemHistory } from "../types";
 
 function ItemView() {
   const location = useLocation();

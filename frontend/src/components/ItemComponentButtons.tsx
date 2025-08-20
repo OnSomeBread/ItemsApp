@@ -1,4 +1,4 @@
-import type { Item } from "../constants";
+import type { Item } from "../types";
 import { motion } from "framer-motion";
 
 interface Props {

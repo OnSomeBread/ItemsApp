@@ -1,4 +1,4 @@
-import { type Item, type Sell } from "../constants";
+import { type Item, type Sell } from "../types";
 import "../App.css";
 import { type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
