@@ -140,15 +140,15 @@ export type Task = {
 
 export const ALL_TRADERS = {
   any: "Any",
-  fence: "Fence",
-  jaeger: "Jaeger",
-  mechanic: "Mechanic",
-  peacekeeper: "Peacekeeper",
   prapor: "Prapor",
-  ragman: "Ragman",
-  ref: "Ref",
-  skier: "Skier",
   therapist: "Therapist",
+  fence: "Fence",
+  skier: "Skier",
+  peacekeeper: "Peacekeeper",
+  mechanic: "Mechanic",
+  ragman: "Ragman",
+  jaeger: "Jaeger",
+  ref: "Ref",
 };
 
 export const ALL_TASK_OBJECTIVE_TYPES = {
