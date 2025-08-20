@@ -44,10 +44,10 @@ function DisplayTasks() {
           setAllTasks(response.data);
         } else {
           setAllTasks((prev) => [...(prev ?? []), ...response.data]);
+          changeQueryParams("offset", offset + queryParams.limit);
         }
 
         setHasMore(response.data.length == queryParams.limit);
-        changeQueryParams("offset", offset + queryParams.limit);
       })
       .catch((err) => console.log(err));
   };
@@ -56,7 +56,7 @@ function DisplayTasks() {
   useEffect(() => {
     fetchTasks(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, queryParams.limit, changedTasksToggle]);
+  }, [query, changedTasksToggle]);
 
   // used for the infinite scroll to grab more tasks
   const getMoreTasks = () => {

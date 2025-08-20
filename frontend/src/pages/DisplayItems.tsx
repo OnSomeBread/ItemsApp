@@ -11,6 +11,8 @@ function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
 
+  console.log("render", DisplayItems);
+
   // right now its used to switch between 2 interfaces strictly on mobile
   const [interfaceToggle, setInterfaceToggle] = useState<boolean>(false);
   const [queryParams, setQueryParams] = useState(DEFAULT_ITEM_QUERY_PARAMS);
@@ -42,10 +44,10 @@ function DisplayItems() {
           setAllItems(newItems);
         } else {
           setAllItems((prev) => [...(prev ?? []), ...newItems]);
+          changeQueryParams("offset", offset + queryParams.limit);
         }
 
         setHasMore(newItems.length == queryParams.limit);
-        changeQueryParams("offset", offset + queryParams.limit);
       })
       .catch((err) => console.log(err));
   };
@@ -54,7 +56,7 @@ function DisplayItems() {
   useEffect(() => {
     fetchItems(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, queryParams.limit]);
+  }, [query]);
 
   // used for the infinite scroll to grab more items
   const getMoreItems = () => {

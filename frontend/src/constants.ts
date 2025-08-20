@@ -7,7 +7,7 @@ export const DEFAULT_ITEM_QUERY_PARAMS = {
   sortBy: "fleaMarket",
   type: "any",
   limit: ON_MOBILE ? 10 : 50,
-  offset: 0,
+  offset: ON_MOBILE ? 10 : 50,
 };
 
 export const DEFAULT_TASK_QUERY_PARAMS = {
@@ -18,7 +18,7 @@ export const DEFAULT_TASK_QUERY_PARAMS = {
   objType: "any",
   trader: "any",
   limit: ON_MOBILE ? 10 : 50,
-  offset: 0,
+  offset: ON_MOBILE ? 10 : 50,
 };
 
 // this is for ItemComponent to specifiy which item details should be listed
