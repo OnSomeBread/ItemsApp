@@ -92,9 +92,9 @@ function DisplayTasks() {
           if (top_id === undefined) continue;
 
           visited.add(top_id);
-          if (relation === "requirement") {
+          if (relation === "prerequisite") {
             localStorage.setItem("task-" + top_id, "Completed");
-          } else if (relation === "predecessor") {
+          } else if (relation === "unlocks") {
             localStorage.removeItem("task-" + top_id);
           }
 
