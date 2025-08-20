@@ -17,7 +17,7 @@ export const DEFAULT_TASK_QUERY_PARAMS = {
   playerLvl: 99,
   objType: "any",
   trader: "any",
-  limit: 50,
+  limit: ON_MOBILE ? 10 : 50,
   offset: 0,
 };
 
