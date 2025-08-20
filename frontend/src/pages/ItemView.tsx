@@ -73,7 +73,7 @@ function ItemView() {
             CONSTANT PRICE
           </mark>
         </p>
-        <ItemChartComponent itemHistory={itemHistory ?? []} />
+        {itemHistory && <ItemChartComponent itemHistory={itemHistory} />}
       </div>
     </div>
   );
