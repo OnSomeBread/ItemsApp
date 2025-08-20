@@ -1,4 +1,4 @@
-import { type Item, type ItemQueryParams } from "../constants";
+import { DEFAULT_ITEM_QUERY_PARAMS, ON_MOBILE, type Item } from "../constants";
 import { useState, useEffect } from "react";
 import { clearPageLocalStorage } from "../utils.ts";
 import ItemSearchBar from "../components/ItemSearchBar.tsx";
@@ -9,18 +9,10 @@ import api from "../api.ts";
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
-  const onMobile: boolean = window.matchMedia("(max-width: 767px)").matches;
+
   // right now its used to switch between 2 interfaces strictly on mobile
   const [interfaceToggle, setInterfaceToggle] = useState<boolean>(false);
-
-  const [queryParams, setQueryParams] = useState<ItemQueryParams>({
-    search: "",
-    asc: "-",
-    sortBy: "fleaMarket",
-    type: "any",
-    limit: onMobile ? 10 : 50,
-    offset: 0,
-  });
+  const [queryParams, setQueryParams] = useState(DEFAULT_ITEM_QUERY_PARAMS);
   const changeQueryParams = (key: string, value: string | number) => {
     setQueryParams((prev) => {
       return { ...prev, [key]: value };
@@ -110,14 +102,14 @@ function DisplayItems() {
         clearCounts={clearCounts}
       />
       <div className="items-container">
-        {onMobile && (
+        {ON_MOBILE && (
           <input
             type="checkbox"
             role="switch"
             onClick={() => setInterfaceToggle((prev) => !prev)}
           ></input>
         )}
-        {(!interfaceToggle || !onMobile) && (
+        {(!interfaceToggle || !ON_MOBILE) && (
           <ItemScroll
             allItems={allItems}
             getMoreItems={getMoreItems}
@@ -126,7 +118,7 @@ function DisplayItems() {
             queryParams={queryParams}
           />
         )}
-        {(interfaceToggle || !onMobile) && <ItemCart />}
+        {(interfaceToggle || !ON_MOBILE) && <ItemCart />}
       </div>
     </>
   );

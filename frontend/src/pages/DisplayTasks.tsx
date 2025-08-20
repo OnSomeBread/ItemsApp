@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { type Task, type TaskQueryParams } from "../constants";
+import { DEFAULT_TASK_QUERY_PARAMS, type Task } from "../constants";
 import TaskComponent from "../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
 import TaskSearchBar from "../components/TaskSearchBar";
@@ -10,20 +10,17 @@ import api from "../api";
 function DisplayTasks() {
   const [allTasks, setAllTasks] = useState<Task[] | null>(null);
   const [completedTasks, setCompletedTasks] = useState<Task[] | null>(null);
-  const [queryParams, setQueryParams] = useState<TaskQueryParams>({
-    search: "",
-    isKappa: false,
-    isLightKeeper: false,
-    playerLvl: 99,
-    objType: "any",
-    trader: "any",
-    limit: 50,
-    offset: 0,
-  });
+  const [queryParams, setQueryParams] = useState(DEFAULT_TASK_QUERY_PARAMS);
   const [hasMore, setHasMore] = useState(false);
 
   // the actual value here doesn't matter its for the useEffect so that it can account for changed task list
   const [changedTasksToggle, setChangedTasksToggle] = useState(false);
+
+  const changeQueryParams = (key: string, value: string | number | boolean) => {
+    setQueryParams((prev) => {
+      return { ...prev, [key]: value };
+    });
+  };
 
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(queryParams)) {
@@ -78,12 +75,6 @@ function DisplayTasks() {
       .catch((err) => console.log(err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changedTasksToggle]);
-
-  const changeQueryParams = (key: string, value: string | number | boolean) => {
-    setQueryParams((prev) => {
-      return { ...prev, [key]: value };
-    });
-  };
 
   // perform dfs starting from start_id
   const onClickComplete = (start_id: string, relation: string) => {

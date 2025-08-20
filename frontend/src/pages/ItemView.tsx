@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { type Item, type ItemHistory } from "../constants";
+import { ON_MOBILE, type Item, type ItemHistory } from "../constants";
 import { useEffect, useState } from "react";
 import ItemChartComponent from "../components/ItemChartComponent";
 import api from "../api";
@@ -8,7 +8,6 @@ function ItemView() {
   const location = useLocation();
   const item = location.state as Item;
   const [itemHistory, setItemHistory] = useState<ItemHistory[] | null>(null);
-  const onMobile: boolean = window.matchMedia("(max-width: 767px)").matches;
 
   // go to api endpoint item_history and grab prev flea market data
   useEffect(() => {
@@ -31,8 +30,8 @@ function ItemView() {
 
   return (
     <div
-      className={onMobile ? "" : "div-align"}
-      style={onMobile ? {} : { display: "flex" }}
+      className={ON_MOBILE ? "" : "div-align"}
+      style={ON_MOBILE ? {} : { display: "flex" }}
     >
       <div style={{ flex: 1, padding: 30 }}>
         <p>{item.name}</p>

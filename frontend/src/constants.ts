@@ -1,3 +1,6 @@
+export const ON_MOBILE: boolean =
+  window.matchMedia("(max-width: 767px)").matches;
+
 export type Sell = {
   id: number;
   price: number;
@@ -42,6 +45,15 @@ export type ItemQueryParams = {
   offset: number;
 };
 
+export const DEFAULT_ITEM_QUERY_PARAMS = {
+  search: "",
+  asc: "-",
+  sortBy: "fleaMarket",
+  type: "any",
+  limit: ON_MOBILE ? 10 : 50,
+  offset: 0,
+};
+
 export type TaskQueryParams = {
   search: string;
   isKappa: boolean;
@@ -51,6 +63,17 @@ export type TaskQueryParams = {
   trader: string;
   limit: number;
   offset: number;
+};
+
+export const DEFAULT_TASK_QUERY_PARAMS = {
+  search: "",
+  isKappa: false,
+  isLightKeeper: false,
+  playerLvl: 99,
+  objType: "any",
+  trader: "any",
+  limit: 50,
+  offset: 0,
 };
 
 // this is for ItemComponent to specifiy which item details should be listed
