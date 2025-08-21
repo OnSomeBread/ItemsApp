@@ -1,4 +1,6 @@
-all: backend frontend deploy
+.PHONY: all backend frontend deploy
+
+all: deploy
 
 backend:
 	docker build -t itemsapp_backend_stack -f backend/Dockerfile .
@@ -6,5 +8,5 @@ backend:
 frontend:
 	docker build -t itemsapp_frontend_stack -f frontend/Dockerfile .
 
-deploy:
+deploy: backend frontend
 	docker stack deploy -c docker-stack.yml itemsapp_swarm --detach=false
