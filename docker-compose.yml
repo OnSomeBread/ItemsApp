@@ -24,6 +24,7 @@ services:
       - /ItemsApp/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - VITE_BACKEND_SERVER=${VITE_BACKEND_SERVER}
 
   db:
     image: postgres:17-alpine

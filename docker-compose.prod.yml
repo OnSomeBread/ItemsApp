@@ -14,5 +14,7 @@ services:
     ports:
       - "5172:80"
     volumes: []
-    environment: []
+    environment:
+      - CHOKIDAR_USEPOLLING=false
+      - VITE_BACKEND_SERVER=${VITE_BACKEND_SERVER}
     restart: unless-stopped
