@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { clearPageLocalStorage } from "../utils";
 import api from "../api";
 import type { Task } from "../types";
+import PageSwitch from "../components/PageSwitch";
 
 function DisplayTasks() {
   const [allTasks, setAllTasks] = useState<Task[] | null>(null);
@@ -123,6 +124,7 @@ function DisplayTasks() {
 
   return (
     <>
+      <PageSwitch />
       <TaskSearchBar
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}

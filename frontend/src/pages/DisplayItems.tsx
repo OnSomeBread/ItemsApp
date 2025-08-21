@@ -6,6 +6,7 @@ import ItemScroll from "../components/ItemScroll.tsx";
 import ItemCart from "../components/ItemCart.tsx";
 import api from "../api.ts";
 import type { Item } from "../types.ts";
+import PageSwitch from "../components/PageSwitch.tsx";
 
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
@@ -97,6 +98,7 @@ function DisplayItems() {
 
   return (
     <>
+      <PageSwitch />
       <ItemSearchBar
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}

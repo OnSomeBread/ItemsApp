@@ -5,6 +5,7 @@ import "reactflow/dist/style.css";
 import { ALL_TRADERS } from "../constants";
 import type { Task } from "../types";
 import TaskTreeComponent from "../components/TaskTreeComponent";
+import PageSwitch from "../components/PageSwitch";
 
 // adjlist is defined as an object with all task ids mapped to an array of tasks that precede or succeed the key
 // in graph theory its defined as a double ended adjacency list since at any point in the object can move forward or backwords if exists
@@ -90,7 +91,11 @@ function TaskTree() {
 
   return (
     <div>
-      <select onChange={(e) => changeQueryParams("trader", e.target.value)}>
+      <PageSwitch />
+      <select
+        onChange={(e) => changeQueryParams("trader", e.target.value)}
+        style={{ margin: "auto", width: "300px" }}
+      >
         {Object.entries(ALL_TRADERS)
           .filter((trader) => trader[0] !== "any")
           .map(([key, value]) => (
