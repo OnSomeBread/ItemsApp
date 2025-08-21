@@ -10,3 +10,6 @@ frontend:
 
 deploy: backend frontend
 	docker stack deploy -c docker-stack.yml itemsapp_swarm --detach=false
+
+down:
+	docker stack rm itemsapp_swarm
