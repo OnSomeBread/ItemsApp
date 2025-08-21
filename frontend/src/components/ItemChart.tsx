@@ -13,7 +13,7 @@ interface Props {
   itemHistory: ItemHistory[];
 }
 
-function ItemChartComponent({ itemHistory }: Props) {
+function ItemChart({ itemHistory }: Props) {
   return (
     <ResponsiveContainer width="100%" height={400}>
       <LineChart
@@ -45,4 +45,4 @@ function ItemChartComponent({ itemHistory }: Props) {
   );
 }
 
-export default ItemChartComponent;
+export default ItemChart;

@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { ON_MOBILE } from "../constants";
 import { useEffect, useState } from "react";
-import ItemChartComponent from "../components/ItemChartComponent";
+import ItemChart from "../components/ItemChart";
 import api from "../api";
 import type { Item, ItemHistory } from "../types";
 
@@ -73,7 +73,7 @@ function ItemView() {
             CONSTANT PRICE
           </mark>
         </p>
-        {itemHistory && <ItemChartComponent itemHistory={itemHistory} />}
+        {itemHistory && <ItemChart itemHistory={itemHistory} />}
       </div>
     </div>
   );
