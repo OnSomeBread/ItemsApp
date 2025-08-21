@@ -40,6 +40,7 @@ services:
 
   redis:
     image: redis:alpine3.22
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--hz", "1"]
     restart: always
     ports:
       - "6379:6379"
