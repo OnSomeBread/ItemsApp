@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import type { Task } from "../types";
 import PageSwitch from "../components/PageSwitch";
+import { ALL_TASK_OBJECTIVE_TYPES } from "../constants";
 
 function TaskView() {
   const location = useLocation();
@@ -46,7 +47,14 @@ function TaskView() {
         <ul>
           {task.objectives.map((obj) => (
             <li key={obj._id}>
-              <p>Objective Type: {obj.objType}</p>
+              <p>
+                Objective Type:{" "}
+                {
+                  ALL_TASK_OBJECTIVE_TYPES[
+                    obj.objType as keyof typeof ALL_TASK_OBJECTIVE_TYPES
+                  ]
+                }
+              </p>
               <p>{obj.description}</p>
               {obj.maps.length > 0 && (
                 <p>
