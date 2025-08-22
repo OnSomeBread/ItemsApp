@@ -1,13 +1,9 @@
 <p>first with docker installed</p>
-<p>run for the dev server</p>
-<p>docker compose up --build</p>
+<p>'make dev' for the dev server</p>
+<p>'make prod' for the production server</p>
+<p>'make' for the docker swarm config</p>
 <p>then go to localhost:5173</p><br>
 
-<p>for the production server run</p>
-<p>docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build</p>
-<p>then go to localhost:5172</p><br>
-
-<p>there is also a fully working docker swarm implementation that will start with the command make</p>
 <p>the swarm implementation using the production server setup currently is 2 frontend containers, 3 backend containers, 1 postgreSQL db container, and 1 redis container</p>
 <p>all data is pulled using a GraphQL api from <a href='https://github.com/the-hideout/tarkov-api'>tarkov-api</a></p>
 <p>grabbed icons from <a href="https://github.com/RatScanner/RatScannerData">RatScannerData</a></p>
