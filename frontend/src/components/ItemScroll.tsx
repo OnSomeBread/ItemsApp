@@ -57,7 +57,11 @@ function ItemScroll({
               }}
               style={{ listStyleType: "none" }}
             >
-              <ItemComponentPreview item={x} idx={i} fields={DISPLAY_ITEM_KEYS}>
+              <ItemComponentPreview
+                item={x}
+                idx={i}
+                fields={["name", "shortName", "icon", "traders", "fleaMarket"]}
+              >
                 <ItemComponentButtons
                   item={x}
                   idx={i}

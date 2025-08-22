@@ -74,6 +74,7 @@ function ItemComponent({ item, idx, children, fields }: Props) {
       {fields.includes("basePrice") && (
         <p>Base Price: {item.basePrice.toLocaleString("en-us")} RUB</p>
       )}
+      {fields.includes("icon") && <img src={"/icons/" + item._id + ".png"} />}
 
       {item.sells.length > 0 ? (
         <>

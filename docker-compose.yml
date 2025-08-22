@@ -24,6 +24,7 @@ services:
     volumes:
       - ./frontend:/ItemsApp
       - /ItemsApp/node_modules
+      - ./icons:/ItemsApp/public/icons
     environment:
       - CHOKIDAR_USEPOLLING=true
       - VITE_BACKEND_SERVER=${VITE_BACKEND_SERVER}

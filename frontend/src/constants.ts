@@ -26,6 +26,7 @@ export const DISPLAY_ITEM_KEYS = [
   "name",
   "shortName",
   "basePrice",
+  "icon",
   "traders",
   "fleaMarket",
 ];

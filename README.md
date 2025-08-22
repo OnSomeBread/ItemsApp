@@ -10,6 +10,7 @@
 <p>there is also a fully working docker swarm implementation that will start with the command make</p>
 <p>the swarm implementation using the production server setup currently is 2 frontend containers, 3 backend containers, 1 postgreSQL db container, and 1 redis container</p>
 <p>all data is pulled using a GraphQL api from <a href='https://github.com/the-hideout/tarkov-api'>tarkov-api</a></p>
+<p>grabbed icons from <a href="https://github.com/RatScanner/RatScannerData">RatScannerData</a></p>
 
 <h2>DisplayItems Page</h2>
 <img src=".\image previews\DisplayItems_example.png">

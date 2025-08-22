@@ -13,7 +13,7 @@ services:
       dockerfile: frontend/Dockerfile
     ports:
       - "5172:80"
-    volumes: []
+    volumes: [./icons:/usr/share/nginx/html/icons:ro]
     environment:
       - CHOKIDAR_USEPOLLING=false
       - VITE_BACKEND_SERVER=${VITE_BACKEND_SERVER}
