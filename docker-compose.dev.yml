@@ -1,0 +1,21 @@
+services:
+  backend:
+    container_name: "backend-dev"
+    build:
+      dockerfile: backend/Dockerfile
+    environment:
+      - DEBUG=True
+    volumes:
+      - ./backend:/ItemsApp
+
+  frontend:
+    container_name: "frontend-dev"
+    build:
+      dockerfile: frontend/Dockerfile.dev
+    ports: 
+      - "5173:5173"
+    volumes:
+      - ./frontend:/ItemsApp
+      - /ItemsApp/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true

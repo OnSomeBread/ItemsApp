@@ -1,20 +1,18 @@
 services:
   backend:
     build:
-      context: .
       dockerfile: backend/Dockerfile
     environment:
       - DEBUG=False
-    volumes: []
     restart: unless-stopped
+
   frontend:
     build:
-      context: .
       dockerfile: frontend/Dockerfile
     ports:
-      - "5172:80"
-    volumes: [./icons:/usr/share/nginx/html/icons:ro]
+      - "5173:80"
+    volumes:
+      - ./icons:/usr/share/nginx/html/icons:ro
     environment:
       - CHOKIDAR_USEPOLLING=false
-      - VITE_BACKEND_SERVER=${VITE_BACKEND_SERVER}
     restart: unless-stopped

@@ -2,9 +2,6 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
-    volumes:
-      - ./backend:/ItemsApp
     ports:
       - "8000:8000"
     depends_on:
@@ -12,20 +9,11 @@ services:
       - redis
     env_file:
       - .env
-    environment:
-      - DEBUG=True
-
+    
   frontend:
     build:
-      dockerfile: frontend/Dockerfile.dev
       context: .
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/ItemsApp
-      - /ItemsApp/node_modules
     environment:
-      - CHOKIDAR_USEPOLLING=true
       - VITE_BACKEND_SERVER=${VITE_BACKEND_SERVER}
 
   db:

@@ -1,5 +1,5 @@
 services:
-  backend:
+  backend-stack:
     image: itemsapp_backend_stack:latest
     ports:
       - "8000:8000"
@@ -22,10 +22,15 @@ services:
           cpus: "0.5"
           memory: 512M
 
-  frontend:
+  frontend-stack:
     image: itemsapp_frontend_stack:latest
     ports:
-      - "5172:80"
+      - "5173:80"
+    volumes:
+      - ./icons:/usr/share/nginx/html/icons:ro
+    environment:
+      - CHOKIDAR_USEPOLLING=false
+
     deploy:
       replicas: 2
       restart_policy:

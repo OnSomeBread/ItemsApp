@@ -1,22 +1,22 @@
-.PHONY: all backend frontend deploy
+.PHONY: all backend_stack frontend_stack deploy
 
 all: deploy
 
 dev:
-	docker compose up --build
+	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up --build
 
 prod:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up --build
 
-backend:
+backend_stack:
 	docker build -t itemsapp_backend_stack -f backend/Dockerfile .
 
-frontend:
+frontend_stack:
 	docker build -t itemsapp_frontend_stack -f frontend/Dockerfile .
 
-deploy: backend frontend
-	docker stack deploy -c docker-stack.yml itemsapp_swarm --detach=false
+deploy: backend_stack frontend_stack
+	docker stack deploy -c docker-stack.yml itemsapp_stack --detach=false
 
 down:
-	docker stack rm itemsapp_swarm
+	docker stack rm itemsapp_stack
 	docker compose down
