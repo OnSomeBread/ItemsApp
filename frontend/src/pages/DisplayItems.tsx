@@ -11,6 +11,7 @@ import PageSwitch from "../components/PageSwitch.tsx";
 function DisplayItems() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
   // right now its used to switch between 2 interfaces strictly on mobile
   const [interfaceToggle, setInterfaceToggle] = useState<boolean>(false);
@@ -30,6 +31,9 @@ function DisplayItems() {
   const query = "/api/items?" + params.toString();
 
   const fetchItems = (offset: number) => {
+    if (fetchLoading) return;
+    setFetchLoading(true);
+
     api
       .get<Item[]>(query + "&offset=" + offset)
       .then((response) => {
@@ -43,12 +47,13 @@ function DisplayItems() {
           setAllItems(newItems);
         } else {
           setAllItems((prev) => [...(prev ?? []), ...newItems]);
-          changeQueryParams("offset", offset + queryParams.limit);
         }
+        changeQueryParams("offset", offset + queryParams.limit);
 
         setHasMore(newItems.length == queryParams.limit);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err))
+      .finally(() => setFetchLoading(false));
   };
 
   // grabs the first page of items based on the search params

@@ -14,6 +14,7 @@ function DisplayTasks() {
   const [completedTasks, setCompletedTasks] = useState<Task[] | null>(null);
   const [queryParams, setQueryParams] = useState(DEFAULT_TASK_QUERY_PARAMS);
   const [hasMore, setHasMore] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
   // the actual value here doesn't matter its for the useEffect so that it can account for changed task list
   const [changedTasksToggle, setChangedTasksToggle] = useState(false);
@@ -38,6 +39,9 @@ function DisplayTasks() {
   const query = "/api/tasks?" + params.toString();
 
   const fetchTasks = (offset: number) => {
+    if (fetchLoading) return;
+    setFetchLoading(true);
+
     api
       .get<Task[]>(query + "&offset=" + offset)
       .then((response) => {
@@ -45,12 +49,13 @@ function DisplayTasks() {
           setAllTasks(response.data);
         } else {
           setAllTasks((prev) => [...(prev ?? []), ...response.data]);
-          changeQueryParams("offset", offset + queryParams.limit);
         }
 
+        changeQueryParams("offset", offset + queryParams.limit);
         setHasMore(response.data.length == queryParams.limit);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err))
+      .finally(() => setFetchLoading(false));
   };
 
   // grab the inital tasks
