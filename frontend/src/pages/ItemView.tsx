@@ -1,9 +1,9 @@
 import { useLocation } from "react-router-dom";
-import { ON_MOBILE } from "../constants";
+import { ALL_ITEM_TYPES, ON_MOBILE } from "../constants";
 import { useEffect, useState } from "react";
 import ItemChart from "../components/ItemChart";
 import api from "../api";
-import type { Item, ItemHistory } from "../types";
+import type { Item, ItemHistory, ItemType } from "../types";
 import PageSwitch from "../components/PageSwitch";
 
 function ItemView() {
@@ -40,8 +40,16 @@ function ItemView() {
         <div style={{ flex: 1, padding: 30 }}>
           <p>{item.name}</p>
           <p>item short name: {item.shortName}</p>
-          {item.types && (
-            <p>item types: {item.types.map((t) => t.name).join(", ")}</p>
+          {item.itemtypes && item.itemtypes.length > 0 && (
+            <p>
+              item types:{" "}
+              {item.itemtypes
+                .map(
+                  (t: ItemType) =>
+                    ALL_ITEM_TYPES[t.name as keyof typeof ALL_ITEM_TYPES]
+                )
+                .join(", ")}
+            </p>
           )}
           {item.avg24hPrice && (
             <p>
@@ -51,15 +59,17 @@ function ItemView() {
           )}
           <p>item base price: {item.basePrice.toLocaleString("en-us")}</p>
           <p>change last 48 hours: {item.changeLast48hPercent}%</p>
-          <p>item width: {item.width}</p>
-          <p>item height: {item.height}</p>
+          <p>
+            item size width x height: {item.width}x{item.height}
+          </p>
           <a href={item.link}>
             <p>{item.name} wiki page</p>
           </a>
 
           {item.sells && (
             <>
-              <p>Sell Prices:</p>
+              <br></br>
+              <p>Sell Prices</p>
               {item.sells.map((sellFor) => (
                 <p key={sellFor.source}>
                   {sellFor.source +

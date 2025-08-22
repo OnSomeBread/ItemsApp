@@ -21,7 +21,7 @@ export type ItemHistory = {
 export type Item = {
   _id: string;
   sells: Sell[];
-  types: ItemType[];
+  itemtypes: ItemType[];
   name: string;
   shortName: string;
   avg24hPrice: number;
