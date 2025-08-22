@@ -2,6 +2,12 @@
 
 all: deploy
 
+dev:
+	docker compose up --build
+
+prod:
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+
 backend:
 	docker build -t itemsapp_backend_stack -f backend/Dockerfile .
 
@@ -13,3 +19,4 @@ deploy: backend frontend
 
 down:
 	docker stack rm itemsapp_swarm
+	docker compose down
