@@ -40,6 +40,16 @@ function ItemView() {
         <div style={{ flex: 1, padding: 30 }}>
           <p>{item.name}</p>
           <p>item short name: {item.shortName}</p>
+          <p>
+            item size width x height: {item.width}x{item.height}
+          </p>
+          <img
+            src={"/icons/" + item._id + ".png"}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/icons/unknown.png";
+            }}
+          />
           {item.itemtypes && item.itemtypes.length > 0 && (
             <p>
               item types:{" "}
@@ -59,9 +69,7 @@ function ItemView() {
           )}
           <p>item base price: {item.basePrice.toLocaleString("en-us")}</p>
           <p>change last 48 hours: {item.changeLast48hPercent}%</p>
-          <p>
-            item size width x height: {item.width}x{item.height}
-          </p>
+
           <a href={item.link}>
             <p>{item.name} wiki page</p>
           </a>
