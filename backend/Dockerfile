@@ -6,6 +6,7 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 FROM python:alpine3.22
 COPY --from=build /install /usr/local
 
+WORKDIR /ItemsApp
 COPY backend/ .
 COPY backend/wait-for /usr/local/bin/wait-for
 RUN chmod +x /usr/local/bin/wait-for
