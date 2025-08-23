@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..auth import create_access_token, create_refresh_token, get_user_data, decode_token
 from django.contrib.auth import authenticate, get_user_model
 from asgiref.sync import sync_to_async
+from ..auth import create_access_token, create_refresh_token, get_user_data, decode_token
 
 router = APIRouter(prefix='/token', tags=['token'])
 
@@ -42,13 +42,13 @@ async def refresh(refresh_token: str):
     payload = decode_token(refresh_token)
     if not payload or payload['type'] != 'refresh':
         return HTTPException(status_code=401, detail='invalid refresh token')
-    
+
     access_token = create_access_token(data={'userid': payload['userid'], 'type': 'access'})
     return {'access_token': access_token, 'token_type':'bearer'}
 
 @router.get('/me')
 async def get_user_me(current_user=Depends(get_user_data)):
-    if type(current_user) == HTTPException:
+    if isinstance(current_user, HTTPException):
         return current_user
     return {'id':current_user.id, 'email':current_user.email}
 
@@ -57,9 +57,9 @@ async def get_user_me(current_user=Depends(get_user_data)):
 async def get_user_pref(preferences:dict, current_user=Depends(get_user_data)):
     page = preferences['page'].pop()
     if page == 'tasks':
-        {'preferences_tasks':current_user.preferences_tasks}
+        return {'preferences_tasks':current_user.preferences_tasks}
     elif page == 'items':
-        {'preferences_items':current_user.preferences_items}
+        return {'preferences_items':current_user.preferences_items}
     return {}
 
 # replaces preferences
@@ -98,7 +98,7 @@ async def remove_user_pref(preferences:dict, current_user=Depends(get_user_data)
     elif page == 'items':
         prefs = current_user.preferences_items
 
-    for key, value in preferences.items():
+    for key in preferences.keys():
         del prefs[key]
 
     await sync_to_async(current_user.save)()

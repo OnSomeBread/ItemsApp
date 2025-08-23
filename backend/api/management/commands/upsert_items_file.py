@@ -4,7 +4,7 @@ from django.db import transaction
 from api.management.commands.upsert import upsert_items
 
 def upsert_items_from_json(file_name):
-    with open(file_name, 'r') as f:
+    with open(file_name, 'r', encoding="utf-8") as f:
         result = json.load(f)
         with transaction.atomic():
             print('upsert items via file ' + file_name)

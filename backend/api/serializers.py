@@ -62,14 +62,3 @@ class SavedItemHistorySerializer(serializers.Serializer):
     changeLast48hPercent = serializers.FloatField()
     fleaMarket = serializers.IntegerField()
     time = serializers.TimeField(source='past_api_call__time')
-
-# serializer for users
-class UserSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        # there are many other fields to play around with here like first/last name, groups, and is_staff 
-        fields = ['id', 'username', 'password']
-        extra_kwargs = {'password': {'write_only':True}}
-
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)

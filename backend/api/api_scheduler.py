@@ -1,10 +1,10 @@
-from fastapi import FastAPI
-from contextlib import asynccontextmanager
-from django.core.management import call_command
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from asgiref.sync import sync_to_async
-from datetime import datetime, timezone
 import asyncio
+from datetime import datetime, timezone
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from django.core.management import call_command
+from asgiref.sync import sync_to_async
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 scheduler = AsyncIOScheduler()
 
@@ -49,6 +49,6 @@ async def lifespan(app: FastAPI):
 # returns the number of seconds til next api call for the respective api
 def get_redis_timeout(api: str):
     job = scheduler.get_job('repeat-upsert-' + api)
-    if job: 
+    if job:
         return (job.next_run_time - datetime.now(timezone.utc)).total_seconds()
     return 3600

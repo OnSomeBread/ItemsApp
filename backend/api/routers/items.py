@@ -1,32 +1,35 @@
-from fastapi import APIRouter, Request
-from django.db.models import Subquery, OuterRef
-from api.models import Item, SellFor, SavedItemData
-from ..serializers import ItemSerializer, SavedItemHistorySerializer
+import os
+import asyncio
 from asgiref.sync import sync_to_async
 from django.core.cache import cache
+from django.db.models import Subquery, OuterRef
+from fastapi import APIRouter, Request
+from api.models import Item, SellFor, SavedItemData
+from ..serializers import ItemSerializer, SavedItemHistorySerializer
 from api.api_scheduler import get_redis_timeout
-import asyncio
-import os
+
 
 router = APIRouter(prefix='/api', tags=['items'])
 REDIS_CACHE_ENABLED = 'REDIS_URL' in os.environ
 
 @sync_to_async(thread_sensitive=True)
-def get_items_db_operations(search:str, sortBy:str, asc:str, item_type:str, limit:int, offset:int):
+def get_items_db_operations(search:str, sort_by:str, asc:str, item_type:str, limit:int, offset:int):
     # do a different search if asking for flea price since not all items have flea
     items = Item.objects
     if item_type != 'any':
         items = items.filter(itemtypes__name__iexact=item_type)
-        
-    # id is needed for order_by to make it consistant because it normally varys 
+
+    # id is needed for order_by to make it consistant because it normally varys
     # leading to duplicates given to user if using pagination
-    if sortBy == 'fleaMarket': 
-        flea_market_prices = SellFor.objects.filter(item=OuterRef('pk'), source='fleaMarket').order_by('-price', 'id')
+    if sort_by == 'fleaMarket':
+        flea_market_prices = SellFor.objects.filter(item=OuterRef('pk'), source='fleaMarket')
+        flea_market_prices = flea_market_prices.order_by('-price', 'id')
         items = items.annotate(fleaPrice=Subquery(flea_market_prices.values('price')[:1]))
-        items = items.filter(fleaPrice__isnull=False, name__icontains=search).order_by(asc + 'fleaPrice', '_id')
+        items = items.filter(fleaPrice__isnull=False, name__icontains=search)
+        items = items.order_by(asc + 'fleaPrice', '_id')
     else:
-        items = items.filter(name__icontains=search).order_by(asc + sortBy, '_id')
-    
+        items = items.filter(name__icontains=search).order_by(asc + sort_by, '_id')
+
     serializer = ItemSerializer(items[offset:offset + limit], many=True)
     return serializer.data
 
@@ -35,7 +38,7 @@ def get_items_db_operations(search:str, sortBy:str, asc:str, item_type:str, limi
 async def get_items(request: Request):
     # grab all of the filter and sort params
     search:str = request.query_params.get('search', '')
-    sortBy:str = request.query_params.get('sortBy', 'fleaMarket')
+    sort_by:str = request.query_params.get('sortBy', 'fleaMarket')
     asc:str = request.query_params.get('asc', '-')
     item_type:str = request.query_params.get('type', 'any')
 
@@ -44,21 +47,24 @@ async def get_items(request: Request):
 
     offset:str = request.query_params.get('offset', '0')
     offset:int = int(offset) if offset.isdigit() else 0
-    
-    # check if current query has already been done and if so just return it 
-    cache_key:str = search + sortBy + asc + item_type + str(limit) + str(offset)
+
+    # check if current query has already been done and if so just return it
+    cache_key:str = search + sort_by + asc + item_type + str(limit) + str(offset)
     if REDIS_CACHE_ENABLED and await cache.ahas_key(cache_key):
         return await cache.aget(cache_key)
 
-    data = await get_items_db_operations(search, sortBy, asc, item_type, limit, offset)
+    data = await get_items_db_operations(search, sort_by, asc, item_type, limit, offset)
 
-    asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout('items'))) if REDIS_CACHE_ENABLED else None
+    if REDIS_CACHE_ENABLED:
+        asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout('items')))
+
     return data
 
 @sync_to_async(thread_sensitive=True)
 def get_item_history_db_operations(item_id:str):
-    item_data = SavedItemData.objects.filter(item_id=item_id).values('item_id', 'avg24hPrice', 'changeLast48hPercent', 'fleaMarket', 'past_api_call__time')
-    
+    item_data = SavedItemData.objects.filter(item_id=item_id)
+    item_data = item_data.values('item_id', 'avg24hPrice', 'changeLast48hPercent', 'fleaMarket', 'past_api_call__time')
+
     serializer = SavedItemHistorySerializer(item_data.order_by('past_api_call__time'), many=True)
     return serializer.data
 
@@ -67,14 +73,15 @@ def get_item_history_db_operations(item_id:str):
 async def get_item_history(request: Request):
     item_id = request.query_params.get('item_id')
 
-    if item_id == None:
+    if item_id is None:
         return 'no given item id'
-    
+
     if REDIS_CACHE_ENABLED and await cache.ahas_key('history' + item_id):
         return await cache.aget('history' + item_id)
 
     data = await get_item_history_db_operations(item_id)
-    asyncio.create_task(cache.aset('history' + item_id, data, timeout=get_redis_timeout('items'))) if REDIS_CACHE_ENABLED else None
+    if REDIS_CACHE_ENABLED:
+        asyncio.create_task(cache.aset('history' + item_id, data, timeout=get_redis_timeout('items')))
 
     return data
 

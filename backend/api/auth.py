@@ -1,10 +1,10 @@
+import os
 from datetime import datetime, timezone, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
 import jwt
-import os 
 
 JWT_SECRET = os.environ['SECRET_KEY']
 JWT_ALGORITHM = "HS256"
@@ -31,7 +31,7 @@ def decode_token(token:str):
     except Exception as e:
         print(e)
         return None
-    
+
 oauth2_schema = OAuth2PasswordBearer(tokenUrl='token')
 User = get_user_model()
 
@@ -39,8 +39,8 @@ async def get_user_data(token: str = Depends(oauth2_schema)):
     payload = decode_token(token)
     if not payload:
         return HTTPException(status_code=401, detail='Invalid token')
-    
+
     try:
         return await sync_to_async(User.objects.get)(id=payload['userid'])
-    except Exception:
-        raise HTTPException(status_code=404, detail='User not found')
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail='User not found') from exc

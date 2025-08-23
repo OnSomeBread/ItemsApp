@@ -1,8 +1,7 @@
-from httpx import AsyncClient
-from .fastapi_views import app
-from django.core.cache import cache
-import pytest
 import os
+import pytest
+from httpx import AsyncClient
+from django.core.cache import cache
 
 @pytest.mark.asyncio
 async def test_get_items_caching():

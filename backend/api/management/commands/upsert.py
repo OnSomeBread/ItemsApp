@@ -1,20 +1,20 @@
-from api.models import *
 from datetime import datetime
+from api.models import *
 
-# example item 
-"""
-{
-    'name': 'Colt M4A1 5.56x45 assault rifle', 
-    'shortName': 'M4A1', 
-    'avg24hPrice': 163943, 
-    'basePrice': 18397, 
-    'width': 1, 
-    'height': 1, 
-    'changeLast48hPercent': -33.33, 
-    'link': 'https://tarkov.dev/item/colt-m4a1-556x45-assault-rifle', 
-    '_id': '5447a9cd4bdc2dbd208b4567'
-}
-"""
+# example item
+# """
+# {
+#     'name': 'Colt M4A1 5.56x45 assault rifle',
+#     'shortName': 'M4A1',
+#     'avg24hPrice': 163943,
+#     'basePrice': 18397,
+#     'width': 1,
+#     'height': 1,
+#     'changeLast48hPercent': -33.33,
+#     'link': 'https://tarkov.dev/item/colt-m4a1-556x45-assault-rifle',
+#     '_id': '5447a9cd4bdc2dbd208b4567'
+# }
+# """
 
 # upsert all of the itemsManyToManyField
 def upsert_items(result):
@@ -28,7 +28,7 @@ def upsert_items(result):
                 continue
 
             SavedItemData.objects.create(past_api_call=curr_api_call, item_id=item['id'], avg24hPrice=item['avg24hPrice'], changeLast48hPercent=item['changeLast48hPercent'], fleaMarket=entry['price'])
-    
+
     # create a types cache
     existing_types = {t.name: t for t in ItemTypes.objects.all()}
 
@@ -47,7 +47,7 @@ def upsert_items(result):
     # for item in result:
     #     # replace item field to fit with current model
     #     item['_id'] = item.pop('id')
-        
+
     #     # remove these fields from items model because they have their own models
     #     types.append(item.pop('types'))
     #     sellfor.append(item.pop('sellFor'))
@@ -70,7 +70,7 @@ def upsert_items(result):
     for item in result:
         # replace item field to fit with current model
         item['_id'] = item.pop('id')
-        
+
         # remove these fields from items model because they have their own models
         types = item.pop('types')
         sellfor = item.pop('sellFor')
@@ -89,51 +89,51 @@ def upsert_items(result):
 
 
 # example tasks query
-"""
-{
-'taskRequirements': [], 
-'name': 'First in Line', 
-'experience': 1200, 
-'id': '657315ddab5a49b71f098853', 
-'kappaRequired': True, 
-'lightkeeperRequired': True, 
-'minPlayerLevel': 1, 
-'factionName': 'Any', 
-'normalizedName': 'first-in-line', 
-'wikiLink': 'https://escapefromtarkov.fandom.com/wiki/First_in_Line', 
-'trader': {'name': 'Therapist'}, 
-'objectives': [
-    {
-        'id': '65732ac3c67dcd96adffa3c7', 
-        'type': 'visit', 
-        'description': 'Locate the Emercom station on Ground Zero', 
-        'maps': [
-            {
-                'id': '653e6760052c01c1c805532f', 
-                'name': 'Ground Zero', 
-                'description': 'The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began.', 
-                'normalizedName': 'ground-zero', 
-                'players': '9-10', 
-                'wiki': 'https://escapefromtarkov.fandom.com/wiki/Ground_Zero'
-            }, 
-            {
-                'id': '65b8d6f5cdde2479cb2a3125', 
-                'name': 'Ground Zero 21+', 
-                'description': 'The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began. The area has yet again become a hot zone since the early days of the conflict.', 
-                'normalizedName': 'ground-zero-21', 
-                'players': '9-12', 
-                'wiki': 'https://escapefromtarkov.fandom.com/wiki/Ground_Zero'
-            }
-        ]
-    }, 
-    {
-        'id': '65817bf31404f3565aef9fec', 
-        'type': 'giveItem', 
-        'description': 'Hand over any found in raid medicine items', 
-        'maps': []
-    }]
-}
-"""
+# """
+# {
+# 'taskRequirements': [],
+# 'name': 'First in Line',
+# 'experience': 1200,
+# 'id': '657315ddab5a49b71f098853',
+# 'kappaRequired': True,
+# 'lightkeeperRequired': True,
+# 'minPlayerLevel': 1,
+# 'factionName': 'Any',
+# 'normalizedName': 'first-in-line',
+# 'wikiLink': 'https://escapefromtarkov.fandom.com/wiki/First_in_Line',
+# 'trader': {'name': 'Therapist'},
+# 'objectives': [
+#     {
+#         'id': '65732ac3c67dcd96adffa3c7',
+#         'type': 'visit',
+#         'description': 'Locate the Emercom station on Ground Zero',
+#         'maps': [
+#             {
+#                 'id': '653e6760052c01c1c805532f',
+#                 'name': 'Ground Zero',
+#                 'description': 'The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began.',
+#                 'normalizedName': 'ground-zero',
+#                 'players': '9-10',
+#                 'wiki': 'https://escapefromtarkov.fandom.com/wiki/Ground_Zero'
+#             },
+#             {
+#                 'id': '65b8d6f5cdde2479cb2a3125',
+#                 'name': 'Ground Zero 21+',
+#                 'description': 'The business center of Tarkov. This is where TerraGroup was headquartered. This is where it all began. The area has yet again become a hot zone since the early days of the conflict.',
+#                 'normalizedName': 'ground-zero-21',
+#                 'players': '9-12',
+#                 'wiki': 'https://escapefromtarkov.fandom.com/wiki/Ground_Zero'
+#             }
+#         ]
+#     },
+#     {
+#         'id': '65817bf31404f3565aef9fec',
+#         'type': 'giveItem',
+#         'description': 'Hand over any found in raid medicine items',
+#         'maps': []
+#     }]
+# }
+# """
 def upsert_tasks(result):
     curr_api_call = PastApiCalls.objects.create(api_name='tasks', time=datetime.now())
     SavedTaskData.objects.create(past_api_call=curr_api_call, task_data=result)
@@ -161,8 +161,8 @@ def upsert_tasks(result):
         task['trader'] = task['trader']['name']
 
         # these are in a separate model
-        taskReqs = task.pop('taskRequirements')
-        taskObjs = task.pop('objectives')
+        task_reqs = task.pop('taskRequirements')
+        task_objs = task.pop('objectives')
 
         inserted_task, _ = Task.objects.update_or_create(_id=task['_id'], defaults=task)
 
@@ -170,21 +170,21 @@ def upsert_tasks(result):
         Objective.objects.filter(task=inserted_task).delete()
         prep_bulk = []
 
-        for taskObj in taskObjs:
+        for task_obj in task_objs:
             # rename fields
-            taskObj['task'] = inserted_task
-            taskObj['_id'] = taskObj.pop('id')
-            taskObj['objType'] = taskObj.pop('type')
+            task_obj['task'] = inserted_task
+            task_obj['_id'] = task_obj.pop('id')
+            task_obj['objType'] = task_obj.pop('type')
 
             # remove maps before creating objective
-            obj_maps = taskObj.pop('maps')
-            
-            obj_insert = Objective(**taskObj)
+            obj_maps = task_obj.pop('maps')
+
+            obj_insert = Objective(**task_obj)
             obj_insert.save()
 
             # many to many field assignments require saved objects making bulk creates kinda difficult here
             obj_insert.maps.set([existing_maps[m['id'] if 'id' in m else m['_id']] for m in obj_maps])
-            
+
             prep_bulk.append(obj_insert)
         #Objective.objects.bulk_create(prep_bulk)
 
@@ -192,5 +192,5 @@ def upsert_tasks(result):
         # delete the old sell data and bulk create new updates
         TaskRequirement.objects.filter(task=inserted_task).delete()
         TaskRequirement.objects.bulk_create([
-            TaskRequirement(task=inserted_task, status=', '.join(entry['status']), reqTaskId=entry['task']['id']) for entry in taskReqs
+            TaskRequirement(task=inserted_task, status=', '.join(entry['status']), reqTaskId=entry['task']['id']) for entry in task_reqs
         ])

@@ -1,5 +1,4 @@
 import requests
-import json
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from api.management.commands.upsert import upsert_tasks
@@ -8,11 +7,11 @@ from api.management.commands.upsert import upsert_tasks
 def upsert_tasks_from_query():
     def run_query(query):
         headers = {"Content-Type": "application/json"}
-        response = requests.post('https://api.tarkov.dev/graphql', headers=headers, json={'query': query})
+        response = requests.post('https://api.tarkov.dev/graphql', headers=headers, json={'query': query}, timeout=30)
         if response.status_code == 200:
             return response.json()
         else:
-            raise Exception("Query failed to run by returning code of {}. {}".format(response.status_code, query))
+            raise Exception(f"Query failed to run by returning code of {response.status_code}. {query}")
 
     # name contains char data that python cant parse to string
     new_query = """
@@ -58,7 +57,7 @@ def upsert_tasks_from_query():
         print('upsert tasks via api')
         upsert_tasks(result['data']['tasks'])
 
-        with open('most_recent_tasks.json', 'w') as f:
+        with open('most_recent_tasks.json', 'w', encoding="utf-8") as f:
             f.write(result.json())
 
 class Command(BaseCommand):
@@ -66,4 +65,3 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         upsert_tasks_from_query()
-

@@ -1,30 +1,31 @@
-from fastapi import APIRouter, Request
-from api.models import Task
-from ..serializers import TaskSerializer
-from asgiref.sync import sync_to_async
-from django.core.cache import cache
-from api.api_scheduler import get_redis_timeout
 import asyncio
 import json
 import os
+from fastapi import APIRouter, Request
+from api.models import Task
+from asgiref.sync import sync_to_async
+from django.core.cache import cache
+from ..serializers import TaskSerializer
+from api.api_scheduler import get_redis_timeout
+
 
 router = APIRouter(prefix='/api', tags=['tasks'])
 REDIS_CACHE_ENABLED = 'REDIS_URL' in os.environ
 
 @sync_to_async(thread_sensitive=True)
-def get_tasks_db_operations(search:str, isKappa:bool, isLightKeeper:bool, playerLvl:int, objType:str, trader:str, limit:int, offset:int, completedTasks: list[str]):
-    tasks = Task.objects.exclude(_id__in=completedTasks)
-    tasks = tasks.filter(name__icontains=search, minPlayerLevel__lte=playerLvl)
+def get_tasks_db_operations(search:str, is_kappa:bool, is_light_keeper:bool, player_lvl:int, obj_type:str, trader:str, limit:int, offset:int, completed_tasks: list[str]):
+    tasks = Task.objects.exclude(_id__in=completed_tasks)
+    tasks = tasks.filter(name__icontains=search, minPlayerLevel__lte=player_lvl)
 
     if trader.lower() != 'any':
         tasks = tasks.filter(trader__iexact=trader)
 
-    if objType.lower() != 'any':
-        tasks = tasks.filter(objectives__objType__iexact=objType).distinct()
-    
-    if isKappa:
+    if obj_type.lower() != 'any':
+        tasks = tasks.filter(objectives__objType__iexact=obj_type).distinct()
+
+    if is_kappa:
         tasks = tasks.filter(kappaRequired=True)
-    if isLightKeeper:
+    if is_light_keeper:
         tasks = tasks.filter(lightkeeperRequired=True)
 
     serializer = TaskSerializer(tasks.order_by('_id')[offset:offset + limit], many=True)
@@ -35,31 +36,32 @@ def get_tasks_db_operations(search:str, isKappa:bool, isLightKeeper:bool, player
 async def get_tasks(request: Request):
     # grab all of the query params
     search:str = request.query_params.get('search', '')
-    isKappa:bool = request.query_params.get('isKappa', 'false').lower() == 'true'
-    isLightKeeper:bool = request.query_params.get('isLightKeeper', 'false').lower() == 'true'
-    objType:str = request.query_params.get('objType', 'any')
+    is_kappa:bool = request.query_params.get('isKappa', 'false').lower() == 'true'
+    is_light_keeper:bool = request.query_params.get('isLightKeeper', 'false').lower() == 'true'
+    obj_type:str = request.query_params.get('objType', 'any')
     trader:str = request.query_params.get('trader', 'any')
-    
-    playerLvl:str = request.query_params.get('playerLvl', '99')
-    playerLvl:int = int(playerLvl) if playerLvl.isdigit() else 99
+
+    player_lvl:str = request.query_params.get('playerLvl', '99')
+    player_lvl:int = int(player_lvl) if player_lvl.isdigit() else 99
 
     limit:str = request.query_params.get('limit', '30')
     limit:int = min(int(limit), 100) if limit.isdigit() else 30
 
     offset:str = request.query_params.get('offset', '0')
     offset:int = int(offset) if offset.isdigit() else 0
-    
-    completedTasks:list[str] = request.query_params.getlist('ids')
+
+    completed_tasks:list[str] = request.query_params.getlist('ids')
 
     # check if this is a repeated query and if so return it
-    cache_key:str = search + str(isKappa) + str(isLightKeeper) + objType + trader + str(playerLvl) + str(limit) + str(offset) + ''.join(completedTasks)
+    cache_key:str = search + str(is_kappa) + str(is_light_keeper) + obj_type + trader + str(player_lvl) + str(limit) + str(offset) + ''.join(completed_tasks)
     if REDIS_CACHE_ENABLED and await cache.ahas_key(cache_key):
         return await cache.aget(cache_key)
 
-    data = await get_tasks_db_operations(search, isKappa, isLightKeeper, playerLvl, objType, trader, limit, offset, completedTasks)
+    data = await get_tasks_db_operations(search, is_kappa, is_light_keeper, player_lvl, obj_type, trader, limit, offset, completed_tasks)
 
     # save this query in the background
-    asyncio.create_task(cache.aset(cache_key, data)) if REDIS_CACHE_ENABLED else None
+    if REDIS_CACHE_ENABLED:
+        asyncio.create_task(cache.aset(cache_key, data))
     return data
 
 @sync_to_async(thread_sensitive=True)
@@ -92,17 +94,17 @@ async def get_tasks_by_ids(request: Request):
 
     return data + found_tasks
 
-# since each task has its requirements we can send over an adjacency list to handle 
+# since each task has its requirements we can send over an adjacency list to handle
 # completing a task and its required tasks in the same button
 @router.get("/adj_list")
 async def get_adj_list():
     # dont build it again if its already cached
     if REDIS_CACHE_ENABLED and await cache.ahas_key('adj_list'):
         return await cache.aget('adj_list')
-    
+
     # if the most_recent_tasks.json file does not exist it likely means the db
     # is also not init since the api call creates the file and pops the db
-    with open('most_recent_tasks.json', 'r') as f:
+    with open('most_recent_tasks.json', 'r', encoding="utf-8") as f:
         result = json.load(f)['data']['tasks']
         adj_list = {}
 
@@ -121,7 +123,9 @@ async def get_adj_list():
                     adj_list[to_id] = []
                 adj_list[to_id].append((from_id, 'unlocks'))
 
-        asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks'))) if REDIS_CACHE_ENABLED else None
+        if REDIS_CACHE_ENABLED:
+            asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks')))
+
         return adj_list
     print('tasks.json does not exist')
     return {}
