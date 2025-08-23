@@ -2,10 +2,8 @@ import os
 import pytest
 from httpx import AsyncClient,ASGITransport
 from django.core.cache import cache
-from django.conf import settings
 from api.fastapi_views import app
 
-#settings.configure()
 url = os.environ['ALLOWED_HOSTS'].split(',')[0]
 
 # BEGIN ITEM TESTS
