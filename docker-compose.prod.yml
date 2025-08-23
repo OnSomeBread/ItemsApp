@@ -1,5 +1,6 @@
 services:
   backend:
+    container_name: "backend"
     build:
       dockerfile: backend/Dockerfile
     environment:
@@ -7,6 +8,7 @@ services:
     restart: unless-stopped
 
   frontend:
+    container_name: "frontend"
     build:
       dockerfile: frontend/Dockerfile
     ports:
