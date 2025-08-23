@@ -23,4 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 
-/src/vite-env.d.ts
+#/src/vite-env.d.ts
