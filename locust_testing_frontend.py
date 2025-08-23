@@ -1,7 +1,7 @@
 from locust import HttpUser, task, between
 
 class WebsiteUser(HttpUser):
-    wait_time = between(1, 5)
+    wait_time = between(1, 2)
     host = "http://localhost:5173"
 
     def on_start(self):

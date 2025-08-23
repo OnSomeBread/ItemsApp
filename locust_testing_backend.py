@@ -11,7 +11,7 @@ with open('backend/most_recent_tasks.json', encoding="utf-8") as f:
     task_ids = [task['id'] for task in json.load(f)['data']['tasks']]
 
 class WebsiteUser(HttpUser):
-    wait_time = between(1, 5)
+    wait_time = between(1, 2)
     host = "http://localhost:8000"
 
     def on_start(self):
