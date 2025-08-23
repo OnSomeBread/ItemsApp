@@ -5,6 +5,7 @@ import SignupLogin from "./pages/SignupLogin";
 import TaskView from "./pages/TaskView";
 import ItemView from "./pages/ItemView";
 import TaskTree from "./pages/TaskTree";
+import "./App.css";
 
 function App() {
   return (
