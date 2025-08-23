@@ -6,12 +6,14 @@ import TaskView from "./pages/TaskView";
 import ItemView from "./pages/ItemView";
 import TaskTree from "./pages/TaskTree";
 import "./App.css";
+import PageSwitch from "./components/PageSwitch";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="*" element={<DisplayItems />} />
+        <Route path="*" element={<PageSwitch />} />
+        <Route path="/items" element={<DisplayItems />} />
         <Route path="/tasks" element={<DisplayTasks />} />
         <Route path="/task_view" element={<TaskView />} />
         <Route path="/item_view" element={<ItemView />} />

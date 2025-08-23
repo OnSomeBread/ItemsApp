@@ -9,8 +9,12 @@ class WebsiteUser(HttpUser):
 
     @task
     def visit_display_items(self):
-        self.client.get('')
+        self.client.get('/items')
 
     @task
     def visit_display_tasks(self):
         self.client.get('/tasks')
+
+    @task
+    def visit_display_tasks(self):
+        self.client.get('/task_tree')

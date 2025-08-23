@@ -4,7 +4,7 @@ function PageSwitch() {
   const navigate = useNavigate();
   return (
     <div style={{ display: "flex", gap: "20px" }}>
-      <a onClick={() => navigate("/")}>Items page</a>
+      <a onClick={() => navigate("/items")}>Items page</a>
       <a onClick={() => navigate("/tasks")}>Tasks page</a>
       <a onClick={() => navigate("/task_tree")}>Task Tree page</a>
     </div>
