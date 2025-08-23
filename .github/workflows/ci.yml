@@ -30,7 +30,7 @@ jobs:
         run: pip install locust
 
       - name: run backend locust tests
-        run: locust -f locust_testing_backend.py --headless -u 10 -r 1 --run-time 30s --fail-on-failure
+        run: locust -f locust_testing_backend.py --headless -u 10 -r 1 --run-time 30s
 
       - name: run frontend locust tests
-        run: locust -f locust_testing_frontend.py --headless -u 10 -r 1 --run-time 30s --fail-on-failure
+        run: locust -f locust_testing_frontend.py --headless -u 10 -r 1 --run-time 30s

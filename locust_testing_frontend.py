@@ -9,12 +9,18 @@ class WebsiteUser(HttpUser):
 
     @task
     def visit_display_items(self):
-        self.client.get('/items')
+        with self.client.get('/items', catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Failed with status {response.status_code}")
 
     @task
     def visit_display_tasks(self):
-        self.client.get('/tasks')
+        with self.client.get('/tasks', catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Failed with status {response.status_code}")
 
     @task
     def visit_display_tasks(self):
-        self.client.get('/task_tree')
+        with self.client.get('/task_tree', catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Failed with status {response.status_code}")

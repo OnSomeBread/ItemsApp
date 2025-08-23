@@ -31,15 +31,24 @@ class WebsiteUser(HttpUser):
         random_offset = random.randint(0, 200)
 
         # example query /api/items?search=&asc=-&sortBy=fleaMarket&type=any&limit=50&offset=0
-        self.client.get(f'/api/items?search={random_search}&asc={random_asc}&sortBy={random_sortby}&type={random_itemtype}&limit={random_limit}&offset={random_offset}', timeout=10)
+        query = f'/api/items?search={random_search}&asc={random_asc}&sortBy={random_sortby}&type={random_itemtype}&limit={random_limit}&offset={random_offset}'
+        with self.client.get(query, timeout=10, catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Failed with status {response.status_code}")
 
     @task
     def get_item_history(self):
-        self.client.get('/api/item_history?item_id=' + item_ids[random.randint(0, len(item_ids) - 1)], timeout=10)
+        query = '/api/item_history?item_id=' + item_ids[random.randint(0, len(item_ids) - 1)]
+        with self.client.get(query, timeout=10, catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Failed with status {response.status_code}")
 
     @task
     def get_item_ids(self):
-        self.client.get('/api/item_ids?ids=' + '&ids='.join(item_ids[random.randint(1, len(item_ids) - 1)] for _ in range(random.randint(0, 50))), timeout=10)
+        query = '/api/item_ids?ids=' + '&ids='.join(item_ids[random.randint(1, len(item_ids) - 1)] for _ in range(random.randint(0, 50)))
+        with self.client.get(query, timeout=10, catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Failed with status {response.status_code}")
 
     @task
     def get_tasks(self):
@@ -59,8 +68,10 @@ class WebsiteUser(HttpUser):
 
         # example query
         # /api/tasks?search=&isKappa=false&isLightKeeper=false&playerLvl=99&objType=any&limit=50&offset=0
-        self.client.get(f'/api/tasks?search={random_search}&isKappa={random_is_kappa}&isLightKeeper={random_is_light_keeper}&playerLvl={random_lvl}&objType={random_objtype}&limit={random_limit}&offset={random_offset}' + random_completed_tasks, timeout=10)
-
+        query = f'/api/tasks?search={random_search}&isKappa={random_is_kappa}&isLightKeeper={random_is_light_keeper}&playerLvl={random_lvl}&objType={random_objtype}&limit={random_limit}&offset={random_offset}' + random_completed_tasks
+        with self.client.get(query, timeout=10, catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Failed with status {response.status_code}")
     # this gets cached after the first time which doesn't really make for a good stress test
     # @task
     # def get_task_adj_list(self):
@@ -68,4 +79,7 @@ class WebsiteUser(HttpUser):
 
     @task
     def get_task_ids(self):
-        self.client.get('/api/task_ids?ids=' + '&ids='.join(task_ids[random.randint(1, len(task_ids) - 1)] for _ in range(random.randint(0, 50))), timeout=10)
+        query = '/api/task_ids?ids=' + '&ids='.join(task_ids[random.randint(1, len(task_ids) - 1)] for _ in range(random.randint(0, 50)))
+        with self.client.get(query, timeout=10, catch_response=True) as response:
+            if response.status_code != 200:
+                response.failure(f"Failed with status {response.status_code}")
