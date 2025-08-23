@@ -15,4 +15,7 @@ jobs:
         run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build
 
       - name: start prod docker container
-        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up
+        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+
+      - name: run pytest tests
+        run: docker exec -T backend pytest api/tests.py
