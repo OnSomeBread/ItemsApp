@@ -2,13 +2,18 @@ services:
   backend:
     build:
       context: .
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "$VITE_BACKEND_SERVER/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     ports:
       - "8000:8000"
     depends_on:
       - db
       - redis
-    env_file:
-      - .env
     
   frontend:
     build:
