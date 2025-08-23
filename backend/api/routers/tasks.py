@@ -92,7 +92,7 @@ async def get_tasks_by_ids(request: Request):
     for tsk in data:
         asyncio.create_task(cache.aset(tsk['_id'], tsk, timeout=get_redis_timeout('tasks')))
 
-    return data + found_tasks
+    return sorted(data + found_tasks, key=lambda task: task['_id'])
 
 # since each task has its requirements we can send over an adjacency list to handle
 # completing a task and its required tasks in the same button

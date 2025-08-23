@@ -113,4 +113,4 @@ async def get_items_by_ids(request: Request):
     for itm in data:
         asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
 
-    return data + found_items
+    return sorted(data + found_items, key=lambda item: item['_id'])
