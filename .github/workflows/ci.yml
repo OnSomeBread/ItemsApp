@@ -22,18 +22,18 @@ jobs:
       - name: build backend with cache
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
+          context: .
           push: false
-          tags: backend:ci
+          tags: backend
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
       - name: build frontend with cache
         uses: docker/build-push-action@v6
         with:
-          context: ./frontend
+          context: .
           push: false
-          tags: frontend:ci
+          tags: frontend
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
