@@ -6,7 +6,7 @@ export const DEFAULT_ITEM_QUERY_PARAMS = {
   asc: "-",
   sortBy: "fleaMarket",
   type: "any",
-  limit: ON_MOBILE ? 10 : 50,
+  limit: ON_MOBILE ? 10 : 40,
   offset: 0,
 };
 
@@ -17,7 +17,7 @@ export const DEFAULT_TASK_QUERY_PARAMS = {
   playerLvl: 99,
   objType: "any",
   trader: "any",
-  limit: ON_MOBILE ? 10 : 50,
+  limit: ON_MOBILE ? 10 : 20,
   offset: 0,
 };
 
