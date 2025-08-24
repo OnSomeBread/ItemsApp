@@ -14,6 +14,7 @@ async def cache_fixture():
     await asyncio.sleep(0)
 
 # BEGIN ITEM TESTS
+# testing /items
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_items():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
@@ -47,6 +48,7 @@ async def test_get_items():
 
         assert len(res5.json()) == 0
 
+# testing /item_ids
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_item_ids():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
@@ -70,6 +72,7 @@ async def test_get_item_ids():
         assert len(res1.json()) == len(res3.json())
         assert res2.json() == res3.json()
 
+# testing /item_history
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_item_history():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
@@ -85,6 +88,7 @@ async def test_get_item_history():
         assert res1.json() == res2.json()
 
 # BEGIN TASK TESTS
+# testing /tasks
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_tasks():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
@@ -118,6 +122,7 @@ async def test_get_tasks():
 
         assert len(res5.json()) == 25
 
+# testing /task_ids
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_task_ids():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
@@ -141,11 +146,13 @@ async def test_get_task_ids():
         assert len(res1.json()) == len(res3.json())
         assert res2.json() == res3.json()
 
+# testing /adj_list
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_task_get_adj_list():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
         await cache.aclear()
 
+        # running test caching
         res1 = await ac.get('/api/adj_list')
         assert res1.status_code == 200
 
@@ -155,3 +162,77 @@ async def test_get_task_get_adj_list():
         assert len(res1.json()) > 0
         assert len(res2.json()) > 0
         assert res1.json() == res2.json()
+
+# this test is to test that all kappa required tasks matches with adj_list requirements for the task collector
+# since the task collector requires ALL kappa required tasks since it is the kappa task
+@pytest.mark.asyncio(loop_scope="session")
+async def test_collector_task():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
+        await cache.aclear()
+
+        res1 = await ac.get('/api/adj_list')
+        assert res1.status_code == 200
+
+        res2 = await ac.get('/api/tasks?search=collector&isKappa=true&limit=1')
+        assert res2.status_code == 200
+
+        res3 = await ac.get('/api/tasks?search=&isKappa=true&limit=2000')
+        assert res3.status_code == 200
+
+        collector_task_id = res2.json()[0]['_id']
+        task_reqs = set([task['_id'] for task in res3.json()])
+
+        adj_list = res1.json()
+        st = [collector_task_id]
+        vis = set()
+        while st:
+            _id = st.pop()
+            immediate_task_reqs = adj_list[_id]
+            vis.add(_id)
+
+            for task_id in immediate_task_reqs:
+                if task_id[1] == 'prerequisite' and task_id[0] not in vis:
+                    assert task_id[0] in task_reqs
+                    st.append(task_id[0])
+                    #task_reqs.remove(task_id[0]) # explained below why commented
+        
+        # this guarantee cannot be made since technically not all kappa required tasks can be reached from adj_list
+        # there are some takes that dont unlock anything or have any prereqs but are still kappa required
+        # assert len(task_reqs) == 0
+
+# this test is to test that all lightkeeper required tasks matches with 
+# adj_list requirements for the task Network Provider - Part 1
+@pytest.mark.asyncio(loop_scope="session")
+async def test_network_provider_task():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
+        await cache.aclear()
+
+        res1 = await ac.get('/api/adj_list')
+        assert res1.status_code == 200
+
+        res2 = await ac.get('/api/tasks?search=network+provider+-+part+1&isLightKeeper=true&limit=1')
+        assert res2.status_code == 200
+
+        res3 = await ac.get('/api/tasks?search=&isLightKeeper=true&limit=2000')
+        assert res3.status_code == 200
+
+        network_provider_id = res2.json()[0]['_id']
+        task_reqs = set([task['_id'] for task in res3.json()])
+
+        adj_list = res1.json()
+        st = [network_provider_id]
+        vis = set()
+        while st:
+            _id = st.pop()
+            immediate_task_reqs = adj_list[_id]
+            vis.add(_id)
+
+            for task_id in immediate_task_reqs:
+                if task_id[1] == 'prerequisite' and task_id[0] not in vis:
+                    assert task_id[0] in task_reqs
+                    st.append(task_id[0])
+                    # task_reqs.remove(task_id[0]) # explained below why commented
+        
+        # this guarantee cannot be made since technically not all lightkeeper required tasks can be reached from adj_list
+        # there are some takes that dont unlock anything or have any prereqs but are still lightkeeper required
+        # assert len(task_reqs) == 0
