@@ -13,6 +13,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: build backend with cache
+        id: backend-build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -23,6 +24,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: build frontend with cache
+        id: frontend-build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -32,11 +34,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: build prod docker container
-        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build
-
       - name: start prod docker container
-        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+        id: prod-docker-container
+        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up
 
       - name: wait for backend to be healthy
         run: |
