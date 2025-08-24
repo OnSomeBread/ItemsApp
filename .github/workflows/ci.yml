@@ -17,20 +17,20 @@ jobs:
         with:
           context: .
           file: backend/Dockerfile
-          push: true
-          tags: user/backend:latest
-          cache-from: type=registry,ref=user/backend:buildcache
-          cache-to: type=registry,ref=user/backend:buildcache,mode=max
+          push: false
+          tags: backend
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: build frontend with cache
         uses: docker/build-push-action@v6
         with:
           context: .
           file: frontend/Dockerfile
-          push: true
-          tags: user/frontend:latest
-          cache-from: type=registry,ref=user/frontend:buildcache
-          cache-to: type=registry,ref=user/frontend:buildcache,mode=max
+          push: false
+          tags: frontend
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: move cache
         run: |
