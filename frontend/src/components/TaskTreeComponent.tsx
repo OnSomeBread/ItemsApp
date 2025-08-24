@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ReactFlow, { Background, type Edge, type Node } from "reactflow";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  type Edge,
+  type Node,
+  type ReactFlowInstance,
+} from "@xyflow/react";
 import type { Task } from "../types";
 import ELK from "elkjs/lib/elk.bundled.js";
 
@@ -33,6 +40,15 @@ function TaskTreeComponent({
   idToTask,
 }: Props) {
   const [nodes, setNodes] = useState<Node[]>([]);
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
+
+  // Whenever nodes change, call fitView
+  useEffect(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ padding: 0.2 });
+    }
+  }, [nodes, reactFlowInstance]);
 
   useEffect(() => {
     if (!adjList || !allTasks) return;
@@ -45,8 +61,8 @@ function TaskTreeComponent({
       },
       children: initNodes.map((n) => ({
         id: n.id,
-        width: 180,
-        height: 40,
+        width: 300,
+        height: 36,
       })),
       edges: initEdges.map((e) => ({
         id: e.id,
@@ -71,7 +87,14 @@ function TaskTreeComponent({
             id: n.id,
             data: { label: initNodes.find((r) => r.id === n.id)?.data.label },
             position: { x: n.x!, y: n.y! },
-            style: { width: n.width, height: n.height },
+            style: {
+              width: n.width,
+              height: n.height,
+              fontWeight: 450,
+              fontSize: 16,
+              padding: 3,
+              justifyContent: "center",
+            },
           })
         );
 
@@ -84,15 +107,23 @@ function TaskTreeComponent({
   const navigate = useNavigate();
 
   return (
-    <div style={{ width: "100vw", height: "92vh" }}>
+    <div style={{ width: "100vw", height: "100vh" }}>
       <ReactFlow
+        colorMode="system"
         nodes={nodes}
         edges={initEdges}
         onNodeClick={(_, node) =>
           navigate("/task_view", { state: idToTask.get(node.id) })
         }
+        minZoom={0.2}
+        maxZoom={4}
         fitView
+        elevateEdgesOnSelect={true}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        onInit={setReactFlowInstance}
       >
+        <Controls showInteractive={false} />
         <Background />
       </ReactFlow>
     </div>

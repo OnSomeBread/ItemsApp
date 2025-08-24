@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../api";
-import { type Edge } from "reactflow";
-import "reactflow/dist/style.css";
 import { ALL_TRADERS } from "../constants";
 import type { Task } from "../types";
 import TaskTreeComponent from "../components/TaskTreeComponent";
 import PageSwitch from "../components/PageSwitch";
+import { type Edge } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 
 // adjlist is defined as an object with all task ids mapped to an array of tasks that precede or succeed the key
 // in graph theory its defined as a double ended adjacency list since at any point in the object can move forward or backwords if exists
@@ -82,6 +82,7 @@ function TaskTree() {
           id: node.id + val[0],
           source: node.id,
           target: val[0],
+          style: { strokeWidth: 2 },
         })
       );
     });
@@ -90,27 +91,32 @@ function TaskTree() {
   if (!adjList || !allTasks) return <article aria-busy="true"></article>;
 
   return (
-    <div>
-      <PageSwitch />
-      <select
-        onChange={(e) => changeQueryParams("trader", e.target.value)}
-        style={{ margin: "auto", width: "300px" }}
-      >
-        {Object.entries(ALL_TRADERS)
-          .filter((trader) => trader[0] !== "any")
-          .map(([key, value]) => (
-            <option key={key} value={key}>
-              Trader: {value}
-            </option>
-          ))}
-      </select>
-      <TaskTreeComponent
-        adjList={adjList}
-        allTasks={allTasks}
-        initNodes={initNodes}
-        initEdges={initEdges}
-        idToTask={idToTask}
-      />
+    // the div styling is to make the subdivs display over eachother
+    <div style={{ position: "relative" }}>
+      <div style={{ zIndex: 2, position: "absolute" }}>
+        <PageSwitch />
+        <select
+          onChange={(e) => changeQueryParams("trader", e.target.value)}
+          style={{ margin: "auto", width: "300px" }}
+        >
+          {Object.entries(ALL_TRADERS)
+            .filter((trader) => trader[0] !== "any")
+            .map(([key, value]) => (
+              <option key={key} value={key}>
+                Trader: {value}
+              </option>
+            ))}
+        </select>
+      </div>
+      <div style={{ zIndex: 1, position: "absolute" }}>
+        <TaskTreeComponent
+          adjList={adjList}
+          allTasks={allTasks}
+          initNodes={initNodes}
+          initEdges={initEdges}
+          idToTask={idToTask}
+        />
+      </div>
     </div>
   );
 }
