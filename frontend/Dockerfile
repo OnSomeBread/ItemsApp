@@ -2,7 +2,7 @@ FROM node:current-alpine3.22 AS build
 WORKDIR /ItemsApp
 
 COPY frontend/package*.json .
-RUN npm install
+RUN npm ci
 
 COPY frontend/ .
 
