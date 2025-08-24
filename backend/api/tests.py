@@ -1,10 +1,17 @@
 import os
 import pytest
+import asyncio
 from httpx import AsyncClient,ASGITransport
 from django.core.cache import cache
 from api.fastapi_views import app
 
 url = os.environ['ALLOWED_HOSTS'].split(',')[0]
+
+@pytest.fixture
+async def cache_fixture():
+    yield cache
+    # ensure any pending tasks are completed
+    await asyncio.sleep(0)
 
 # BEGIN ITEM TESTS
 @pytest.mark.asyncio(loop_scope="session")
@@ -105,11 +112,11 @@ async def test_get_tasks():
         assert len(res4.json()) >= 0
         assert res3.json() == res4.json()
 
-        # running sortBy fleamarket with type noflea which should return no items
-        res5 = await ac.get('/api/items?search=&sortBy=fleaMarket&type=noFlea&limit=2000')
+        # running find all gunsmith tasks test currently there are 25 gunsmith tasks
+        res5 = await ac.get('/api/tasks?search=gunsmith+-+part&limit=50')
         assert res5.status_code == 200
 
-        assert len(res5.json()) == 0
+        assert len(res5.json()) == 25
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_task_ids():
