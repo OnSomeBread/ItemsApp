@@ -183,7 +183,7 @@ function DisplayTasks() {
             {completedTasks?.map((task) => (
               <motion.li
                 key={task._id}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 0.4 }}
                 variants={{
                   hidden: { opacity: 0 },
                   show: { opacity: 1 },
