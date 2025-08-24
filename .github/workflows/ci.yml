@@ -23,7 +23,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          dockerfile: backend/Dockerfile
+          file: backend/Dockerfile
           push: false
           tags: backend
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -33,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          dockerfile: frontend/Dockerfile
+          file: frontend/Dockerfile
           push: false
           tags: frontend
           cache-from: type=local,src=/tmp/.buildx-cache
