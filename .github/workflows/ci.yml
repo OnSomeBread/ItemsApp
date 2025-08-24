@@ -11,6 +11,37 @@ jobs:
       - name: docker buildx setup
         uses: docker/setup-buildx-action@v3
 
+      - name: cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: build backend with cache
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          tags: backend:ci
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: build frontend with cache
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          tags: frontend:ci
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
       - name: build prod docker container
         run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build
 
