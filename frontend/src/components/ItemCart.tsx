@@ -115,7 +115,11 @@ function ItemCart() {
               transition={{ duration: 0.6, ease: "easeOut" }}
               style={{ listStyleType: "none", padding: 2 }}
             >
-              <ItemComponent item={x} idx={i} fields={["name", "fleaMarket"]}>
+              <ItemComponent
+                item={x}
+                idx={i}
+                fields={["name", "fleaMarket", "icon"]}
+              >
                 <p>count: {localStorage.getItem("item-" + x._id)}</p>
               </ItemComponent>
             </motion.li>
