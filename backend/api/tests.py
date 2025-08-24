@@ -165,6 +165,7 @@ async def test_get_task_get_adj_list():
 
 # this test is to test that all kappa required tasks matches with adj_list requirements for the task collector
 # since the task collector requires ALL kappa required tasks since it is the kappa task
+# this test is a fairly definitive test for task dependency using the end points /tasks, /task_ids, and /adj_list
 @pytest.mark.asyncio(loop_scope="session")
 async def test_collector_task():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
@@ -187,14 +188,24 @@ async def test_collector_task():
         vis = set()
         while st:
             _id = st.pop()
-            immediate_task_reqs = adj_list[_id]
+            if _id in vis:
+                continue
             vis.add(_id)
 
+            immediate_task_reqs = adj_list[_id]
+
+            res = await ac.get('/api/task_ids?ids=' + _id)
+            assert res.status_code == 200
+            task_ids_task_reqs = set([task['reqTaskId'] for task in res.json()[0]['taskRequirements']])
+            
             for task_id in immediate_task_reqs:
-                if task_id[1] == 'prerequisite' and task_id[0] not in vis:
+                if task_id[1] == 'prerequisite' and task_id[0]:
                     assert task_id[0] in task_reqs
                     st.append(task_id[0])
+                    task_ids_task_reqs.remove(task_id[0])
                     #task_reqs.remove(task_id[0]) # explained below why commented
+
+            assert len(task_ids_task_reqs) == 0
         
         # this guarantee cannot be made since technically not all kappa required tasks can be reached from adj_list
         # there are some takes that dont unlock anything or have any prereqs but are still kappa required
@@ -202,6 +213,7 @@ async def test_collector_task():
 
 # this test is to test that all lightkeeper required tasks matches with 
 # adj_list requirements for the task Network Provider - Part 1
+# this test is a fairly definitive test for task dependency using the end points /tasks, /task_ids, and /adj_list
 @pytest.mark.asyncio(loop_scope="session")
 async def test_network_provider_task():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
@@ -224,14 +236,24 @@ async def test_network_provider_task():
         vis = set()
         while st:
             _id = st.pop()
-            immediate_task_reqs = adj_list[_id]
+            if _id in vis:
+                continue
             vis.add(_id)
 
+            immediate_task_reqs = adj_list[_id]
+
+            res = await ac.get('/api/task_ids?ids=' + _id)
+            assert res.status_code == 200
+            task_ids_task_reqs = set([task['reqTaskId'] for task in res.json()[0]['taskRequirements']])
+            
             for task_id in immediate_task_reqs:
-                if task_id[1] == 'prerequisite' and task_id[0] not in vis:
+                if task_id[1] == 'prerequisite' and task_id[0]:
                     assert task_id[0] in task_reqs
                     st.append(task_id[0])
-                    # task_reqs.remove(task_id[0]) # explained below why commented
+                    task_ids_task_reqs.remove(task_id[0])
+                    #task_reqs.remove(task_id[0]) # explained below why commented
+
+            assert len(task_ids_task_reqs) == 0
         
         # this guarantee cannot be made since technically not all lightkeeper required tasks can be reached from adj_list
         # there are some takes that dont unlock anything or have any prereqs but are still lightkeeper required
