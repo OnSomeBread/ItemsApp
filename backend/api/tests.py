@@ -7,6 +7,10 @@ from api.fastapi_views import app
 
 url = os.environ['ALLOWED_HOSTS'].split(',')[0]
 
+# some code looks like duplicate code but its to see better in pytest logs like these 2 lines
+# assert len(res1.json()) == 30
+# assert len(res2.json()) == 30
+
 @pytest.fixture
 async def cache_fixture():
     yield cache
@@ -85,6 +89,8 @@ async def test_get_item_history():
         res2 = await ac.get('/api/item_history?item_id=674d90b55704568fe60bc8f5')
         assert res2.status_code == 200
 
+        assert len(res1.json()) >= 0
+        assert len(res2.json()) >= 0
         assert res1.json() == res2.json()
 
 # BEGIN TASK TESTS
