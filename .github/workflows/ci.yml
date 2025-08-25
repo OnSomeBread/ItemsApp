@@ -68,20 +68,19 @@ jobs:
         # TODO when last router page is finished do --cov-fail-under=90
         run: docker exec backend pytest --cov-report term-missing --cov=api/routers api/tests.py
 
-      # disable locust testing until CD workflow finishes
-      # - name: cache pip
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.cache/pip
-      #     key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-pip-
+      - name: cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      # - name: install locust
-      #   run: pip install locust
+      - name: install locust
+        run: pip install locust
 
-      # - name: run backend locust tests
-      #   run: locust -f locust_testing_backend.py --headless -u 10 -r 1 --run-time 30s
+      - name: run backend locust tests
+        run: locust -f locust_testing_backend.py --headless -u 10 -r 1 --run-time 30s
 
-      # - name: run frontend locust tests
-      #   run: locust -f locust_testing_frontend.py --headless -u 10 -r 1 --run-time 30s
+      - name: run frontend locust tests
+        run: locust -f locust_testing_frontend.py --headless -u 10 -r 1 --run-time 30s
