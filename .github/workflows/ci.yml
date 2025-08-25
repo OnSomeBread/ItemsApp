@@ -24,23 +24,23 @@ jobs:
         id: backend-build
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: backend/Dockerfile
+          context: backend
+          file: Dockerfile
           push: True
-          tags: user/backend:latest
-          cache-from: type=registry,ref=user/backend:buildcache,scope=backend
-          cache-to: type=registry,ref=user/backend:buildcache,mode=max,scope=backend
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/backend:latest
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/backend:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/backend:buildcache,mode=max
 
       - name: build frontend with cache
         id: frontend-build
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: frontend/Dockerfile
+          context: frontend
+          file: Dockerfile
           push: True
-          tags: user/frontend:latest
-          cache-from: type=registry,ref=user/frontend:buildcache,scope=frontend
-          cache-to: type=registry,ref=user/frontend:buildcache,mode=max,scope=frontend
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/frontend:latest
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/frontend:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/frontend:buildcache,mode=max
 
       - name: start prod docker container
         id: prod-docker-container

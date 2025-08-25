@@ -2,7 +2,7 @@ services:
   backend:
     container_name: "backend-dev"
     build:
-      dockerfile: backend/Dockerfile.dev
+      dockerfile: Dockerfile.dev
     environment:
       - DEBUG=True
     volumes:
@@ -11,8 +11,8 @@ services:
   frontend:
     container_name: "frontend-dev"
     build:
-      dockerfile: frontend/Dockerfile.dev
-    ports: 
+      dockerfile: Dockerfile.dev
+    ports:
       - "5173:5173"
     volumes:
       - ./frontend:/ItemsApp

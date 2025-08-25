@@ -1,10 +1,10 @@
 FROM node:current-alpine3.22 AS build
 WORKDIR /ItemsApp
 
-COPY frontend/package*.json .
+COPY ./package*.json .
 RUN npm ci
 
-COPY frontend/ .
+COPY . .
 
 # pruning and clearing cache is unneeded here but kept for future use
 RUN npm run build && \
