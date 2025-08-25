@@ -56,7 +56,7 @@ async def get_items(request: Request):
     data = await get_items_db_operations(search, sort_by, asc, item_type, limit, offset)
 
     if REDIS_CACHE_ENABLED:
-        asyncio.create_task(cache.aset(cache_key, data, timeout=get_redis_timeout('items')))
+        await cache.aset(cache_key, data, timeout=get_redis_timeout('items'))
 
     return data
 
@@ -74,43 +74,43 @@ async def get_item_history(request: Request):
     item_id = request.query_params.get('item_id')
 
     if item_id is None:
-        return 'no given item id'
+        return {}
 
     if REDIS_CACHE_ENABLED and await cache.ahas_key('history' + item_id):
         return await cache.aget('history' + item_id)
 
     data = await get_item_history_db_operations(item_id)
     if REDIS_CACHE_ENABLED:
-        asyncio.create_task(cache.aset('history' + item_id, data, timeout=get_redis_timeout('items')))
+        await cache.aset('history' + item_id, data, timeout=get_redis_timeout('items'))
 
     return data
-
-@sync_to_async(thread_sensitive=True)
-def get_items_by_ids_db_operations(ids):
-    # find all the items that weren't cached
-    items = Item.objects.filter(_id__in=ids)
-    serializer = ItemSerializer(items, many=True)
-    return serializer.data
 
 # returns json array of each item in the list of given ids
 @router.get('/item_ids')
 async def get_items_by_ids(request: Request):
     # a set is more appropriate here as fast remove opperations are needed here
     ids = set(request.query_params.getlist('ids'))
-    if not REDIS_CACHE_ENABLED:
-        return await get_items_by_ids_db_operations(ids)
 
     # get all cached item ids
     found_items = []
-    for item_id in ids.copy():
-        if await cache.ahas_key(item_id):
-            found_items.append(await cache.aget(item_id))
-            ids.remove(item_id)
+    if REDIS_CACHE_ENABLED:
+        for item_id in ids.copy():
+            if await cache.ahas_key(item_id):
+                found_items.append(await cache.aget(item_id))
+                ids.remove(item_id)
 
-    data = await get_items_by_ids_db_operations(ids)
+    @sync_to_async(thread_sensitive=True)
+    def get_items_by_ids_db_operations():
+        # find all the items that weren't cached
+        items = Item.objects.filter(_id__in=ids)
+        serializer = ItemSerializer(items, many=True)
+        return serializer.data
+
+    data = await get_items_by_ids_db_operations()
 
     # store all new ids
-    for itm in data:
-        asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
+    if REDIS_CACHE_ENABLED:
+        for itm in data:
+            asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
 
     return sorted(data + found_items, key=lambda item: item['_id'])

@@ -61,36 +61,36 @@ async def get_tasks(request: Request):
 
     # save this query in the background
     if REDIS_CACHE_ENABLED:
-        asyncio.create_task(cache.aset(cache_key, data))
+        await cache.aset(cache_key, data)
     return data
-
-@sync_to_async(thread_sensitive=True)
-def get_tasks_by_ids_db_operations(ids):
-    # find all the tasks that weren't cached
-    tasks = Task.objects.filter(_id__in=ids)
-    serializer = TaskSerializer(tasks, many=True)
-    return serializer.data
 
 # returns json array of each task in the list of given ids
 @router.get("/task_ids")
 async def get_tasks_by_ids(request: Request):
     # a set is more appropriate here as fast remove opperations are needed here
     ids = set(request.query_params.getlist('ids'))
-    if not REDIS_CACHE_ENABLED:
-        return await get_tasks_by_ids_db_operations(ids)
 
     # get all cached task ids
     found_tasks = []
-    for task_id in ids.copy():
-        if await cache.ahas_key(task_id):
-            found_tasks.append(await cache.aget(task_id))
-            ids.remove(task_id)
+    if REDIS_CACHE_ENABLED:
+        for task_id in ids.copy():
+            if await cache.ahas_key(task_id):
+                found_tasks.append(await cache.aget(task_id))
+                ids.remove(task_id)
+    
+    @sync_to_async(thread_sensitive=True)
+    def get_tasks_by_ids_db_operations():
+        # find all the tasks that weren't cached
+        tasks = Task.objects.filter(_id__in=ids)
+        serializer = TaskSerializer(tasks, many=True)
+        return serializer.data
 
-    data = await get_tasks_by_ids_db_operations(ids)
+    data = await get_tasks_by_ids_db_operations()
 
     # store all new ids
-    for tsk in data:
-        asyncio.create_task(cache.aset(tsk['_id'], tsk, timeout=get_redis_timeout('tasks')))
+    if REDIS_CACHE_ENABLED:
+        for tsk in data:
+            asyncio.create_task(cache.aset(tsk['_id'], tsk, timeout=get_redis_timeout('tasks')))
 
     return sorted(data + found_tasks, key=lambda task: task['_id'])
 
@@ -124,8 +124,8 @@ async def get_adj_list():
                 adj_list[to_id].append((from_id, 'unlocks'))
 
         if REDIS_CACHE_ENABLED:
-            asyncio.create_task(cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks')))
+            await cache.aset('adj_list', adj_list, timeout=get_redis_timeout('tasks'))
 
         return adj_list
-    print('tasks.json does not exist')
+    print('ERROR most_recent_tasks.json DOES NOT EXIST')
     return {}
