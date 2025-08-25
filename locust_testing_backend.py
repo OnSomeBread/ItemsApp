@@ -27,7 +27,7 @@ class WebsiteUser(HttpUser):
         random_asc = '-' if random.randint(0, 1) == 0 else ''
         random_sortby = sortby_arr[random.randint(0, len(sortby_arr) - 1)]
         random_itemtype = itemtypes_arr[random.randint(0, len(itemtypes_arr) - 1)]
-        random_limit = random.randint(0, 200)
+        random_limit = random.randint(50, 100)
         random_offset = random.randint(0, 200)
 
         # example query /api/items?search=&asc=-&sortBy=fleaMarket&type=any&limit=50&offset=0
@@ -60,7 +60,7 @@ class WebsiteUser(HttpUser):
         random_is_light_keeper = 'true' if random.randint(0, 1) == 0 else 'false'
         random_lvl = random.randint(0, 99)
         random_objtype = objtypes_arr[random.randint(0, len(objtypes_arr) - 1)]
-        random_limit = random.randint(0, 200)
+        random_limit = random.randint(40, 100)
         random_offset = random.randint(0, 200)
 
         random_completed_tasks_count = random.randint(0, 50)
