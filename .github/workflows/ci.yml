@@ -25,7 +25,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: backend
-          file: Dockerfile
+          file: backend/Dockerfile
           push: True
           tags: ${{ vars.DOCKERHUB_USERNAME }}/backend:latest
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/backend:buildcache
@@ -36,7 +36,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: frontend
-          file: Dockerfile
+          file: frontend/Dockerfile
           push: True
           tags: ${{ vars.DOCKERHUB_USERNAME }}/frontend:latest
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/frontend:buildcache
