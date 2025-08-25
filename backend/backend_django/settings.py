@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.environ.get('DEBUG', False).lower() == 'true' else False
+DEBUG = True if os.environ.get('DEBUG', 'False').lower() == 'true' else False
 
 ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
 
@@ -80,7 +80,7 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DEPLOYED = True if os.environ.get('DEPLOYED', False).lower() == 'true' else False
+DEPLOYED = True if os.environ.get('DEPLOYED', 'False').lower() == 'true' else False
 DATABASES = {}
 if DEPLOYED:
     tmpPostgres = urlparse(os.getenv('POSTGRES_DB_URL'))
