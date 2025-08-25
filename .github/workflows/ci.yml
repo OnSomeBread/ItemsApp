@@ -7,6 +7,18 @@ on:
 jobs:
   itemsapp-docker-ci:
     runs-on: ubuntu-latest
+    env:
+      DEPLOYED: ${{ secrets.DEPLOYED }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+      POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+      ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+      VITE_BACKEND_SERVER: ${{ secrets.VITE_BACKEND_SERVER }}
     steps:
       - name: checkout code
         uses: actions/checkout@v5
