@@ -93,6 +93,11 @@ async def test_get_item_history():
         assert len(res2.json()) >= 0
         assert res1.json() == res2.json()
 
+        # pass in no item test
+        res3 = await ac.get('/api/item_history')
+        assert res3.status_code == 200
+        assert len(res3.json()) == 0
+
 # BEGIN TASK TESTS
 # testing /tasks
 @pytest.mark.asyncio(loop_scope="session")
@@ -264,3 +269,24 @@ async def test_network_provider_task():
         # this guarantee cannot be made since technically not all lightkeeper required tasks can be reached from adj_list
         # there are some takes that dont unlock anything or have any prereqs but are still lightkeeper required
         # assert len(task_reqs) == 0
+
+# TESTS router pastApi
+@pytest.mark.asyncio(loop_scope="session")
+async def test_past_api():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
+        res1 = await ac.get('/api/get_last_items_api_call')
+        assert res1.status_code == 200
+
+        assert len(res1.json()) > 0
+
+        res2 = await ac.get('/api/get_last_tasks_api_call')
+        assert res2.status_code == 200
+
+        assert len(res2.json()) > 0
+
+        # since a call happens for task and items on db init there will always be at least 2
+        # however its not guarenteed to be the above 2 requests unless ofc they are on the same timer
+        res3 = await ac.get('/api/get_most_recent_api_calls?count=2')
+        assert res3.status_code == 200
+
+        assert len(res3.json()) == 2
