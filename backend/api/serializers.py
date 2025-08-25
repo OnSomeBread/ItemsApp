@@ -56,6 +56,11 @@ class SavedItemDataSerializer(serializers.ModelSerializer):
         model = SavedItemData
         fields = '__all__'
 
+class SavedTaskDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedTaskData
+        fields = '__all__'
+
 class SavedItemHistorySerializer(serializers.Serializer):
     item_id = serializers.CharField()
     avg24hPrice = serializers.IntegerField()
