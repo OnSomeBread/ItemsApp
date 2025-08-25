@@ -75,6 +75,7 @@ function ItemComponent({ item, idx, children, fields }: Props) {
       )}
       {fields.includes("icon") && (
         <img
+          style={{ maxWidth: "100%", maxHeight: 100 }}
           src={"/icons/" + item._id + ".png"}
           onError={(e) => {
             e.currentTarget.onerror = null;
