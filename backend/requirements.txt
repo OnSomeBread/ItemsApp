@@ -9,6 +9,7 @@ django-async-redis
 fastapi
 uvicorn[standard]
 httpx
+apscheduler
 pytest
 pytest-asyncio
-apscheduler
+pytest-cov
