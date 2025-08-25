@@ -8,3 +8,11 @@ frontend/npm-debug.log
 **/.pytest_cache
 
 .env
+
+image previews
+locust*
+Makefile
+README.md
+scrap_item_icons.py
+
+.github
