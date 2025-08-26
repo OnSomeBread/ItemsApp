@@ -17,7 +17,6 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
       ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
-      VITE_BACKEND_SERVER: ${{ secrets.VITE_BACKEND_SERVER }}
     steps:
       - name: checkout code
         uses: actions/checkout@v5
@@ -107,7 +106,6 @@ jobs:
             export SECRET_KEY=${{ secrets.SECRET_KEY }}
             export ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
             export ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
-            export VITE_BACKEND_SERVER=${{ secrets.VITE_BACKEND_SERVER }}
 
             docker compose down
             docker compose up -d

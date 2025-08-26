@@ -5,8 +5,6 @@ COPY ./package*.json ./
 RUN npm ci
 
 COPY . .
-ARG VITE_BACKEND_SERVER
-ENV VITE_BACKEND_SERVER=$VITE_BACKEND_SERVER
 
 # pruning and clearing cache is unneeded here but kept for future use
 RUN npm run build
