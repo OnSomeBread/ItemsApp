@@ -1,7 +1,7 @@
 FROM node:current-alpine3.22 AS build
 WORKDIR /ItemsApp
 
-COPY ./package*.json .
+COPY ./package*.json ./
 RUN npm ci
 
 COPY . .
@@ -9,11 +9,13 @@ ARG VITE_BACKEND_SERVER
 ENV VITE_BACKEND_SERVER=$VITE_BACKEND_SERVER
 
 # pruning and clearing cache is unneeded here but kept for future use
-RUN npm run build && \
-    npm prune --omit=dev && \
-    npm cache clean --force && \
-    rm -rf /root/.npm && \
-    rm -rf node_modules
+RUN npm run build
+
+# RUN npm run build && \
+#     npm prune --omit=dev && \
+#     npm cache clean --force && \
+#     rm -rf /root/.npm && \
+#     rm -rf node_modules
 
 # only grab the needed files
 FROM nginx:stable-alpine3.21-slim
