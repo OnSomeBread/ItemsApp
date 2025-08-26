@@ -85,7 +85,6 @@ jobs:
         run: locust -f locust_testing_frontend.py --headless -u 10 -r 1 --run-time 30s
 
       - name: close prod docker container
-        id: prod-docker-container
         run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down
 
       - name: deploy to DigitalOcean Droplet via SSH
