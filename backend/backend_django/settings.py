@@ -12,14 +12,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from dotenv import load_dotenv
-from urllib.parse import urlparse, parse_qsl
 import os
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -80,32 +78,16 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DEPLOYED = True if os.environ.get('DEPLOYED', 'False').lower() == 'true' else False
-DATABASES = {}
-if DEPLOYED:
-    tmpPostgres = urlparse(os.getenv('POSTGRES_DB_URL'))
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': tmpPostgres.path.replace('/', ''),
-            'USER': tmpPostgres.username,
-            'PASSWORD': tmpPostgres.password,
-            'HOST': tmpPostgres.hostname,
-            'PORT': 5432,
-            'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE' : 'django.db.backends.postgresql',
+        'NAME': os.environ['POSTGRES_DB'],
+        'USER': os.environ['POSTGRES_USER'],
+        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
+        'HOST': os.environ['POSTGRES_HOST'],
+        'PORT': os.environ['POSTGRES_PORT'],
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE' : 'django.db.backends.postgresql',
-            'NAME': os.environ['POSTGRES_DB'],
-            'USER': os.environ['POSTGRES_USER'],
-            'PASSWORD': os.environ['POSTGRES_PASSWORD'],
-            'HOST': os.environ['POSTGRES_HOST'],
-            'PORT': os.environ['POSTGRES_PORT'],
-        }
-    }
+}
 
 CACHES = {}
 if 'REDIS_URL' in os.environ:
