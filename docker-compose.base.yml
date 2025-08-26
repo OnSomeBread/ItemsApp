@@ -3,7 +3,6 @@ services:
     build:
       context: backend
     environment:
-      - DEPLOYED=${DEPLOYED}
       - REDIS_URL=${REDIS_URL}
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
