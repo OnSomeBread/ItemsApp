@@ -36,7 +36,8 @@ services:
       cache_to:
         - mark1qaz/frontend:buildcache
     ports:
-      - "5173:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./icons:/usr/share/nginx/html/icons:ro
       - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
