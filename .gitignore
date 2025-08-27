@@ -3,3 +3,6 @@
 **/*.env
 **/.coverage*
 **/*.pem
+
+backend/most_recent_items.json
+backend/most_recent_tasks.json
