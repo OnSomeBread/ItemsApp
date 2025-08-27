@@ -8,7 +8,7 @@ from .api_scheduler import lifespan
 
 load_dotenv()
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend_django.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')
 django_app = get_asgi_application()
 
 app = FastAPI(lifespan=lifespan)
