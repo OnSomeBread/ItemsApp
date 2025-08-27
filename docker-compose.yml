@@ -40,7 +40,7 @@ services:
       - "443:443"
     volumes:
       - ./icons:/usr/share/nginx/html/icons:ro
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./${FULLCHAIN_KEY}:/etc/ssl/certs/fullchain.pem
       - ./${DOMAIN_PRIVKEY}:/etc/ssl/private/privkey.pem
     environment:
