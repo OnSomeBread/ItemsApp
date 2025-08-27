@@ -21,6 +21,9 @@ services:
       - DEBUG=False
     expose:
       - "8000"
+    volumes:
+      - ./most_recent_items.json:/ItemsApp/most_recent_items.json
+      - ./most_recent_tasks.json:/ItemsApp/most_recent_tasks.json
     restart: unless-stopped
     depends_on:
       - db
@@ -50,7 +53,7 @@ services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
-    expose: 
+    expose:
       - "5432"
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
@@ -65,7 +68,7 @@ services:
     image: redis:alpine3.22
     command: ["redis-server", "--save", "", "--appendonly", "no", "--hz", "1"]
     restart: unless-stopped
-    expose: 
+    expose:
       - "6379"
 
 volumes:
