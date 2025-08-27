@@ -290,3 +290,10 @@ async def test_past_api():
         assert res3.status_code == 200
 
         assert len(res3.json()) == 2
+
+# TESTS health
+@pytest.mark.asyncio(loop_scope="session")
+async def test_health():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
+        res1 = await ac.get('/api/health')
+        assert res1.status_code == 200
