@@ -58,7 +58,7 @@ jobs:
 
       - name: wait for backend to be healthy
         run: |
-          until curl -s http://localhost:8000/health; do
+          until curl -s http://localhost:5173/api/health; do
             sleep 2
           done
 
@@ -110,4 +110,4 @@ jobs:
             export DOMAIN_PRIVKEY=${{ secrets.DOMAIN_PRIVKEY }}
 
             docker compose down
-            docker compose up -d
+            docker compose up --pull=always -d

@@ -29,7 +29,7 @@ app.include_router(items.router)
 app.include_router(tasks.router)
 app.include_router(pastApi.router)
 
-@app.get('/health')
+@app.get('/api/health')
 async def health():
     from api.models import Task, Item
     try:
