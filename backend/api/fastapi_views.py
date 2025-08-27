@@ -1,4 +1,4 @@
-import os
+from os import environ
 from dotenv import load_dotenv
 from django.core.asgi import get_asgi_application
 from fastapi import FastAPI, HTTPException
@@ -8,13 +8,13 @@ from .api_scheduler import lifespan
 
 load_dotenv()
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')
+environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')
 django_app = get_asgi_application()
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ['ALLOWED_ORIGINS'].split(','),
+    allow_origins=environ['ALLOWED_ORIGINS'].split(','),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

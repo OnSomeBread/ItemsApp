@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import os
+from os import environ
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -23,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.environ.get('DEBUG', 'False').lower() == 'true' else False
+DEBUG = True if environ.get('DEBUG', 'False').lower() == 'true' else False
 
-ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
+ALLOWED_HOSTS = environ['ALLOWED_HOSTS'].split(',')
 
 AUTH_USER_MODEL = 'api.User'
 
@@ -79,20 +79,20 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE' : 'django.db.backends.postgresql',
-        'NAME': os.environ['POSTGRES_DB'],
-        'USER': os.environ['POSTGRES_USER'],
-        'PASSWORD': os.environ['POSTGRES_PASSWORD'],
-        'HOST': os.environ['POSTGRES_HOST'],
-        'PORT': os.environ['POSTGRES_PORT'],
+        'NAME': environ['POSTGRES_DB'],
+        'USER': environ['POSTGRES_USER'],
+        'PASSWORD': environ['POSTGRES_PASSWORD'],
+        'HOST': environ['POSTGRES_HOST'],
+        'PORT': environ['POSTGRES_PORT'],
     }
 }
 
 CACHES = {}
-if 'REDIS_URL' in os.environ:
+if 'REDIS_URL' in environ:
     CACHES = {
         'default': {
             'BACKEND':'django_async_redis.cache.RedisCache',
-            'LOCATION': os.environ['REDIS_URL'],
+            'LOCATION': environ['REDIS_URL'],
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_async_redis.client.DefaultClient',
             }
@@ -140,5 +140,5 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = os.environ['ALLOWED_ORIGINS'].split(',')
+CORS_ALLOWED_ORIGINS = environ['ALLOWED_ORIGINS'].split(',')
 CORS_ALLOWS_CREDENTIALS = True

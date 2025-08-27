@@ -1,4 +1,4 @@
-import requests
+from requests import post
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from api.management.commands.upsert import upsert_tasks
@@ -7,7 +7,7 @@ from api.management.commands.upsert import upsert_tasks
 def upsert_tasks_from_query():
     def run_query(query):
         headers = {"Content-Type": "application/json"}
-        response = requests.post('https://api.tarkov.dev/graphql', headers=headers, json={'query': query}, timeout=30)
+        response = post('https://api.tarkov.dev/graphql', headers=headers, json={'query': query}, timeout=30)
         if response.status_code == 200:
             return response.json()
         else:

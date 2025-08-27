@@ -1,12 +1,12 @@
-import os
+from os import environ
 from datetime import datetime, timezone, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
-import jwt
+from jwt import encode, decode
 
-JWT_SECRET = os.environ['SECRET_KEY']
+JWT_SECRET = environ['SECRET_KEY']
 JWT_ALGORITHM = "HS256"
 ACCESS_EXPIRE_MINUTES = 30
 REFRESH_EXPIRE_DAYS = 7
@@ -14,7 +14,7 @@ REFRESH_EXPIRE_DAYS = 7
 def create_token(data:dict, expire_minutes):
     to_encode = data.copy()
     to_encode['expire'] = (datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)).isoformat()
-    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def create_access_token(data:dict):
     return create_token(data, ACCESS_EXPIRE_MINUTES)
@@ -24,7 +24,7 @@ def create_refresh_token(data:dict):
 
 def decode_token(token:str):
     try:
-        decoded = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        decoded = decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         if datetime.fromisoformat(decoded['expire']) < datetime.now(timezone.utc):
             return None
         return decoded

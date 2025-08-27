@@ -1,11 +1,11 @@
-import json
+from json import load
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from api.management.commands.upsert import upsert_tasks
 
 def upsert_tasks_from_json(file_name):
     with open(file_name, 'r', encoding="utf-8") as f:
-        result = json.load(f)
+        result = load(f)
         with transaction.atomic():
             print('upsert tasks via file ' + file_name)
             upsert_tasks(result['data']['tasks'])

@@ -1,11 +1,11 @@
-import os
-import asyncio
+from os import environ
+from asyncio import sleep
 import pytest
 from httpx import AsyncClient,ASGITransport
 from django.core.cache import cache
 from api.fastapi_views import app
 
-url = os.environ['ALLOWED_HOSTS'].split(',')[0]
+url = environ['ALLOWED_HOSTS'].split(',')[0]
 
 # some code looks like duplicate code but its to see better in pytest logs like these 2 lines
 # assert len(res1.json()) == 30
@@ -15,7 +15,7 @@ url = os.environ['ALLOWED_HOSTS'].split(',')[0]
 async def cache_fixture():
     yield cache
     # ensure any pending tasks are completed
-    await asyncio.sleep(0)
+    await sleep(0)
 
 # TESTS health
 @pytest.mark.asyncio(loop_scope="session")

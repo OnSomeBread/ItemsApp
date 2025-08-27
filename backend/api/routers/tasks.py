@@ -1,6 +1,6 @@
-import asyncio
-import json
-import os
+from asyncio import create_task
+from json import load
+from os import environ
 from fastapi import APIRouter, Request
 from api.models import Task
 from asgiref.sync import sync_to_async
@@ -10,7 +10,7 @@ from api.api_scheduler import get_redis_timeout
 
 
 router = APIRouter(prefix='/api', tags=['tasks'])
-REDIS_CACHE_ENABLED = 'REDIS_URL' in os.environ
+REDIS_CACHE_ENABLED = 'REDIS_URL' in environ
 
 @sync_to_async(thread_sensitive=True)
 def get_tasks_db_operations(search:str, is_kappa:bool, is_light_keeper:bool, player_lvl:int, obj_type:str, trader:str, limit:int, offset:int, completed_tasks: list[str]):
@@ -90,7 +90,7 @@ async def get_tasks_by_ids(request: Request):
     # store all new ids
     if REDIS_CACHE_ENABLED:
         for tsk in data:
-            asyncio.create_task(cache.aset(tsk['_id'], tsk, timeout=get_redis_timeout('tasks')))
+            create_task(cache.aset(tsk['_id'], tsk, timeout=get_redis_timeout('tasks')))
 
     return sorted(data + found_tasks, key=lambda task: task['_id'])
 
@@ -105,7 +105,7 @@ async def get_adj_list():
     # if the most_recent_tasks.json file does not exist it likely means the db
     # is also not init since the api call creates the file and pops the db
     with open('most_recent_tasks.json', 'r', encoding="utf-8") as f:
-        result = json.load(f)['data']['tasks']
+        result = load(f)['data']['tasks']
         adj_list = {}
 
         for task in result:

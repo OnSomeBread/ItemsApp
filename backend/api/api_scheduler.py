@@ -1,4 +1,4 @@
-import asyncio
+from asyncio import create_task
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -17,10 +17,10 @@ async def lifespan(app: FastAPI):
     await sync_to_async(call_command)('migrate', 'api')
 
     if await sync_to_async(Item.objects.count)() == 0:
-        asyncio.create_task(sync_to_async(call_command)('upsert_items_file', 'most_recent_items.json'))
+        create_task(sync_to_async(call_command)('upsert_items_file', 'most_recent_items.json'))
 
     if await sync_to_async(Task.objects.count)() == 0:
-        asyncio.create_task(sync_to_async(call_command)('upsert_tasks_file', 'most_recent_tasks.json'))
+        create_task(sync_to_async(call_command)('upsert_tasks_file', 'most_recent_tasks.json'))
 
     # TODO replace file upserts with api ones only in production
     # call_command('upsert_items_api')

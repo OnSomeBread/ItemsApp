@@ -1,5 +1,5 @@
-import os
-import asyncio
+from asyncio import create_task
+from os import environ
 from asgiref.sync import sync_to_async
 from django.core.cache import cache
 from django.db.models import Subquery, OuterRef
@@ -10,7 +10,7 @@ from api.api_scheduler import get_redis_timeout
 
 
 router = APIRouter(prefix='/api', tags=['items'])
-REDIS_CACHE_ENABLED = 'REDIS_URL' in os.environ
+REDIS_CACHE_ENABLED = 'REDIS_URL' in environ
 
 @sync_to_async(thread_sensitive=True)
 def get_items_db_operations(search:str, sort_by:str, asc:str, item_type:str, limit:int, offset:int):
@@ -111,6 +111,6 @@ async def get_items_by_ids(request: Request):
     # store all new ids
     if REDIS_CACHE_ENABLED:
         for itm in data:
-            asyncio.create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
+            create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
 
     return sorted(data + found_items, key=lambda item: item['_id'])
