@@ -21,3 +21,4 @@ down:
 	docker stack rm itemsapp_stack
 	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down
 	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down
+	docker compose down
