@@ -1,6 +1,6 @@
 import os
-import pytest
 import asyncio
+import pytest
 from httpx import AsyncClient,ASGITransport
 from django.core.cache import cache
 from api.fastapi_views import app
@@ -222,7 +222,7 @@ async def test_collector_task():
         # there are some takes that dont unlock anything or have any prereqs but are still kappa required
         # assert len(task_reqs) == 0
 
-# this test is to test that all lightkeeper required tasks matches with 
+# this test is to test that all lightkeeper required tasks matches with
 # adj_list requirements for the task Network Provider - Part 1
 # this test is a fairly definitive test for task dependency using the end points /tasks, /task_ids, and /adj_list
 @pytest.mark.asyncio(loop_scope="session")

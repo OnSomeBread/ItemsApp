@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
+from asgiref.sync import sync_to_async
 from api.models import PastApiCalls, SavedItemData, SavedTaskData
 from ..serializers import PastApiCallsSerializer, SavedItemDataSerializer, SavedTaskDataSerializer
-from asgiref.sync import sync_to_async
 
 router = APIRouter(prefix='/api', tags=['pastApi'])
 
@@ -26,9 +26,9 @@ async def get_last_tasks_call():
     return await db_operations()
 
 @router.get("/get_most_recent_api_calls")
-async def get_last_items_call(request: Request):
+async def get_last_api_calls(request: Request):
     count:str = request.query_params.get('count', '10')
-    count:int = int(count) if count.isdigit() else 10 
+    count:int = int(count) if count.isdigit() else 10
 
     @sync_to_async(thread_sensitive=True)
     def db_operations():

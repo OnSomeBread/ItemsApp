@@ -2,8 +2,8 @@ import os
 from dotenv import load_dotenv
 from django.core.asgi import get_asgi_application
 from fastapi import FastAPI, HTTPException
-from asgiref.sync import sync_to_async
 from fastapi.middleware.cors import CORSMiddleware
+from asgiref.sync import sync_to_async
 from .api_scheduler import lifespan
 
 load_dotenv()
@@ -34,7 +34,7 @@ async def health():
     from api.models import Task, Item
     try:
         if await sync_to_async(Item.objects.count)() == 0 or await sync_to_async(Task.objects.count)() == 0:
-            raise 'data base has not been initialized'
+            raise Exception('data base has not been initialized')
         return {"status":"ok"}
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise HTTPException(status_code=503, detail=str(e)) from e

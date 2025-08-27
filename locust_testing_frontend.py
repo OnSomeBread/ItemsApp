@@ -20,7 +20,7 @@ class WebsiteUser(HttpUser):
                 response.failure(f"Failed with status {response.status_code}")
 
     @task
-    def visit_display_tasks(self):
+    def visit_display_task_tree(self):
         with self.client.get('/task_tree', catch_response=True) as response:
             if response.status_code != 200:
                 response.failure(f"Failed with status {response.status_code}")
