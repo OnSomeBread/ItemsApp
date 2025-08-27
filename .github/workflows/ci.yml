@@ -106,6 +106,8 @@ jobs:
             export SECRET_KEY=${{ secrets.SECRET_KEY }}
             export ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
             export ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
+            export FULLCHAIN_KEY=${{ secrets.FULLCHAIN_KEY }}
+            export DOMAIN_PRIVKEY=${{ secrets.DOMAIN_PRIVKEY }}
 
             docker compose down
             docker compose up -d
