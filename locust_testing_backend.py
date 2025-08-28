@@ -4,10 +4,10 @@ import json
 from locust import HttpUser, task, between
 
 
-with open('backend/most_recent_items.json', encoding="utf-8") as f:
+with open('most_recent_items.json', encoding="utf-8") as f:
     item_ids = [item['id'] for item in json.load(f)['data']['items']]
 
-with open('backend/most_recent_tasks.json', encoding="utf-8") as f:
+with open('most_recent_tasks.json', encoding="utf-8") as f:
     task_ids = [task['id'] for task in json.load(f)['data']['tasks']]
 
 class WebsiteUser(HttpUser):
