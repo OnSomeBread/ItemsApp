@@ -97,7 +97,12 @@ function TaskTree() {
         <PageSwitch />
         <select
           onChange={(e) => changeQueryParams("trader", e.target.value)}
-          style={{ margin: "auto", width: "300px" }}
+          style={{
+            margin: "auto",
+            width: "300px",
+            marginTop: 6,
+            marginLeft: 16,
+          }}
         >
           {Object.entries(ALL_TRADERS)
             .filter((trader) => trader[0] !== "any")
