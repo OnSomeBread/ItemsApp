@@ -70,7 +70,7 @@ function ItemCart() {
   useEffect(() => {
     const prevTimeout = setTimeout(() => {
       localStorage.setItem("item-prevFleaMarket", currPrice.toString());
-    }, 800);
+    }, 400);
     return () => clearTimeout(prevTimeout);
   }, [currPrice]);
 
@@ -99,7 +99,7 @@ function ItemCart() {
                   opacity: [0, 1, 1, 0],
                 }}
                 transition={{
-                  duration: 1.2,
+                  duration: 1,
                   times: [0, 0.1, 0.9, 1],
                 }}
                 style={{ color: moneyColor }}
