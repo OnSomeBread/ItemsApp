@@ -74,30 +74,43 @@ function ItemCart() {
     return () => clearTimeout(prevTimeout);
   }, [currPrice]);
 
-  if (currPrice === 0) return <p>add items to show here</p>;
+  const moneyColor = currPrice >= prevPrice ? "green" : "red";
+  const sign = currPrice > prevPrice ? "+" : "";
 
   return (
     <div className="item-cart">
-      <p>Total Flea Market Price</p>
-      <div className="div-align">
-        <p>{currPrice.toLocaleString("en-us")} RUB</p>
-        {currPrice > prevPrice && (
-          <motion.p
-            key={currPrice}
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: [0, 1, 1, 0],
-            }}
-            transition={{
-              duration: 1.2,
-              times: [0, 0.1, 0.9, 1],
-            }}
-            style={{ color: "green" }}
-          >
-            +{(currPrice - prevPrice)?.toLocaleString("en-us")}
-          </motion.p>
-        )}
-      </div>
+      {currPrice === 0 ? (
+        <>
+          <p>Add items to show here</p>
+          <br />
+          <p> </p>
+        </>
+      ) : (
+        <>
+          <p>Total Flea Market Price</p>
+
+          <div className="div-align">
+            <p>{currPrice.toLocaleString("en-us")} RUB</p>
+            {currPrice != prevPrice && (
+              <motion.p
+                key={currPrice}
+                initial={{ opacity: 0 }}
+                animate={{
+                  opacity: [0, 1, 1, 0],
+                }}
+                transition={{
+                  duration: 1.2,
+                  times: [0, 0.1, 0.9, 1],
+                }}
+                style={{ color: moneyColor }}
+              >
+                {sign}
+                {(currPrice - prevPrice)?.toLocaleString("en-us")}
+              </motion.p>
+            )}
+          </div>
+        </>
+      )}
 
       <motion.div
         className="list_item"
