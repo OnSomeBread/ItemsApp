@@ -6,7 +6,7 @@ import TaskSearchBar from "../components/TaskSearchBar";
 import { motion } from "framer-motion";
 import { clearPageLocalStorage } from "../utils";
 import api from "../api";
-import type { Task } from "../types";
+import type { Task, TaskAdjList } from "../types";
 import PageSwitch from "../components/PageSwitch";
 
 function DisplayTasks() {
@@ -83,36 +83,49 @@ function DisplayTasks() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changedTasksToggle]);
 
+  const performDFS = (
+    start_id: string,
+    relation: string,
+    adj_list: TaskAdjList
+  ) => {
+    const visited = new Set();
+    const st = [start_id];
+
+    while (st.length > 0) {
+      const top_id = st.pop();
+      if (top_id === undefined) continue;
+
+      visited.add(top_id);
+      if (relation === "prerequisite") {
+        localStorage.setItem("task-" + top_id, "Completed");
+      } else if (relation === "unlocks") {
+        localStorage.removeItem("task-" + top_id);
+      }
+
+      // if top_id has no requirements continue
+      if (!(top_id in adj_list)) continue;
+      for (const req of adj_list[top_id]) {
+        if (!visited.has(req[0]) && req[1] == relation) {
+          st.push(req[0]);
+        }
+      }
+    }
+    sessionStorage.setItem("tasks-adj_list", JSON.stringify(adj_list));
+    setChangedTasksToggle((prev) => !prev);
+  };
+
   // perform dfs starting from start_id
   const onClickComplete = (start_id: string, relation: string) => {
+    const session_adj_list = sessionStorage.getItem("tasks-adj_list");
+    if (session_adj_list !== null) {
+      performDFS(start_id, relation, JSON.parse(session_adj_list));
+      return;
+    }
+
     api
       .get("/api/adj_list")
       .then((response) => {
-        const adj_list = response.data;
-
-        const visited = new Set();
-        const st = [start_id];
-
-        while (st.length > 0) {
-          const top_id = st.pop();
-          if (top_id === undefined) continue;
-
-          visited.add(top_id);
-          if (relation === "prerequisite") {
-            localStorage.setItem("task-" + top_id, "Completed");
-          } else if (relation === "unlocks") {
-            localStorage.removeItem("task-" + top_id);
-          }
-
-          // if top_id has no requirements continue
-          if (!(top_id in adj_list)) continue;
-          for (const req of adj_list[top_id]) {
-            if (!visited.has(req[0]) && req[1] == relation) {
-              st.push(req[0]);
-            }
-          }
-        }
-        setChangedTasksToggle((prev) => !prev);
+        performDFS(start_id, relation, response.data);
       })
       .catch((err) => console.log(err));
   };

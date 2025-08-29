@@ -1,17 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { ALL_TRADERS } from "../constants";
-import type { Task } from "../types";
+import type { Task, TaskAdjList } from "../types";
 import TaskTreeComponent from "../components/TaskTreeComponent";
 import PageSwitch from "../components/PageSwitch";
 import { type Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-
-// adjlist is defined as an object with all task ids mapped to an array of tasks that precede or succeed the key
-// in graph theory its defined as a double ended adjacency list since at any point in the object can move forward or backwords if exists
-type TaskAdjList = {
-  [key: string]: [string, string][];
-};
 
 function TaskTree() {
   const [adjList, setAdjList] = useState<TaskAdjList | null>(null);
@@ -19,10 +13,17 @@ function TaskTree() {
   const [getAdjList] = useState(false);
 
   useEffect(() => {
+    const session_adj_list = sessionStorage.getItem("tasks-adj_list");
+    if (session_adj_list !== null) {
+      setAdjList(JSON.parse(session_adj_list));
+      return;
+    }
+
     api
       .get("/api/adj_list")
       .then((response) => {
         setAdjList(response.data);
+        sessionStorage.setItem("tasks-adj_list", JSON.stringify(response.data));
       })
       .catch((err) => console.log(err));
   }, [getAdjList]);
