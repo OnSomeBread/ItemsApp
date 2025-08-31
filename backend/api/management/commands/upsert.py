@@ -17,17 +17,18 @@ from api.models import *
 # """
 
 # upsert all of the itemsManyToManyField
-def upsert_items(result):
+def upsert_items(result, api:bool):
     # only save the data that will change often
-    curr_api_call = PastApiCalls.objects.create(api_name='items', time=datetime.now())
+    if api:
+        curr_api_call = PastApiCalls.objects.create(api_name='items', time=datetime.now())
 
-    for item in result:
-        # find the flea market price and only add entry if has flea
-        for entry in item['sellFor']:
-            if entry['source'] != 'fleaMarket':
-                continue
+        for item in result:
+            # find the flea market price and only add entry if has flea
+            for entry in item['sellFor']:
+                if entry['source'] != 'fleaMarket':
+                    continue
 
-            SavedItemData.objects.create(past_api_call=curr_api_call, item_id=item['id'], avg24hPrice=item['avg24hPrice'], changeLast48hPercent=item['changeLast48hPercent'], fleaMarket=entry['price'])
+                SavedItemData.objects.create(past_api_call=curr_api_call, item_id=item['id'], avg24hPrice=item['avg24hPrice'], changeLast48hPercent=item['changeLast48hPercent'], fleaMarket=entry['price'])
 
     # create a types cache
     existing_types = {t.name: t for t in ItemTypes.objects.all()}
@@ -134,9 +135,10 @@ def upsert_items(result):
 #     }]
 # }
 # """
-def upsert_tasks(result):
-    curr_api_call = PastApiCalls.objects.create(api_name='tasks', time=datetime.now())
-    SavedTaskData.objects.create(past_api_call=curr_api_call, task_data=result)
+def upsert_tasks(result, api:bool):
+    if api:
+        curr_api_call = PastApiCalls.objects.create(api_name='tasks', time=datetime.now())
+        SavedTaskData.objects.create(past_api_call=curr_api_call, task_data=result)
 
     # create a maps cache
     existing_maps = {m._id: m for m in Map.objects.all()}

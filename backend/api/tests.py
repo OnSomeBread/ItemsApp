@@ -281,19 +281,13 @@ async def test_network_provider_task():
 @pytest.mark.asyncio(loop_scope="session")
 async def test_past_api():
     async with AsyncClient(transport=ASGITransport(app=app), base_url=url) as ac:
+        # there is no guarentee that any of these calls return any data
+        # since upsert_file does not create an entry only upsert_api does
         res1 = await ac.get('/api/get_last_items_api_call')
         assert res1.status_code == 200
-
-        assert len(res1.json()) > 0
 
         res2 = await ac.get('/api/get_last_tasks_api_call')
         assert res2.status_code == 200
 
-        assert len(res2.json()) > 0
-
-        # since a call happens for task and items on db init there will always be at least 2
-        # however its not guarenteed to be the above 2 requests unless ofc they are on the same timer
         res3 = await ac.get('/api/get_most_recent_api_calls?count=2')
         assert res3.status_code == 200
-
-        assert len(res3.json()) == 2

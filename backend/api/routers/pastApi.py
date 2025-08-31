@@ -9,6 +9,8 @@ router = APIRouter(prefix='/api', tags=['pastApi'])
 async def get_last_items_call():
     @sync_to_async(thread_sensitive=True)
     def db_operations():
+        if SavedItemData.objects.count() == 0:
+            return {}
         saved_data = SavedItemData.objects.latest('past_api_call__time')
         serializer = SavedItemDataSerializer(saved_data, many=False)
         return serializer.data
@@ -19,6 +21,8 @@ async def get_last_items_call():
 async def get_last_tasks_call():
     @sync_to_async(thread_sensitive=True)
     def db_operations():
+        if SavedTaskData.objects.count() == 0:
+            return {}
         saved_data = SavedTaskData.objects.latest('past_api_call__time')
         serializer = SavedTaskDataSerializer(saved_data, many=False)
         return serializer.data
