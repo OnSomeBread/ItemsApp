@@ -32,15 +32,16 @@ async def test_get_items():
         await cache.aclear()
 
         # running fleaMarket caching test
-        res1 = await ac.get('/api/items?search=&sortBy=fleaMarket&type=meds&limit=30')
-        assert res1.status_code == 200
+        # TODO REENABLE TESTS ONCE FLEA MARKET RETURNS
+        # res1 = await ac.get('/api/items?search=&sortBy=fleaMarket&type=meds&limit=30')
+        # assert res1.status_code == 200
 
-        res2 = await ac.get('/api/items?search=&sortBy=fleaMarket&type=meds&limit=30')
-        assert res2.status_code == 200
+        # res2 = await ac.get('/api/items?search=&sortBy=fleaMarket&type=meds&limit=30')
+        # assert res2.status_code == 200
 
-        assert len(res1.json()) == 30
-        assert len(res2.json()) == 30
-        assert res1.json() == res2.json()
+        # assert len(res1.json()) == 30
+        # assert len(res2.json()) == 30
+        # assert res1.json() == res2.json()
 
         # running else sortBy caching test
         res3 = await ac.get('/api/items?search=&sortBy=basePrice&type=keys&limit=30')
@@ -66,7 +67,7 @@ async def test_get_item_ids():
         await cache.aclear()
 
         # grab init ids for test
-        res1 = await ac.get('/api/items?search=&asc=-&sort=fleaMarket&type=any&limit=50')
+        res1 = await ac.get('/api/items?search=&asc=-&sortBy=basePrice&type=any&limit=50')
         assert res1.status_code == 200
         assert len(res1.json()) == 50
 

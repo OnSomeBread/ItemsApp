@@ -22,17 +22,13 @@ async def lifespan(app: FastAPI):
     if not DEBUG or await sync_to_async(Task.objects.count)() == 0:
         create_task(sync_to_async(call_command)('upsert_file', 'tasks', 'most_recent_tasks.json'))
 
-    # TODO replace file upserts with api ones only in production
-    # call_command('upsert_items_api')
-    # call_command('upsert_tasks_api')
-
     if not DEBUG:
-        # scheduler.add_job(
-        #     lambda: call_command('upsert_items_file', 'most_recent_items.json'),
-        #     trigger="interval",
-        #     seconds=300,
-        #     id="repeat-upsert-items"
-        # )
+        scheduler.add_job(
+            lambda: call_command('upsert_api', 'items', 'most_recent_items.json'),
+            trigger="interval",
+            hours=24,
+            id="repeat-upsert-items"
+        )
 
         scheduler.add_job(
             lambda: call_command('upsert_api', 'tasks', 'most_recent_tasks.json'),
