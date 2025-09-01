@@ -7,10 +7,9 @@ from fastapi import APIRouter, Request
 from api.models import Item, SellFor, SavedItemData
 from ..serializers import ItemSerializer, SavedItemHistorySerializer
 from api.api_scheduler import get_redis_timeout
-
+from api.settings import REDIS_CACHE_ENABLED
 
 router = APIRouter(prefix='/api', tags=['items'])
-REDIS_CACHE_ENABLED = 'REDIS_URL' in environ
 
 @sync_to_async(thread_sensitive=True)
 def get_items_db_operations(search:str, sort_by:str, asc:str, item_type:str, limit:int, offset:int):

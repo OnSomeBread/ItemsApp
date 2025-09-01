@@ -7,10 +7,9 @@ from asgiref.sync import sync_to_async
 from django.core.cache import cache
 from ..serializers import TaskSerializer
 from api.api_scheduler import get_redis_timeout
-
+from api.settings import REDIS_CACHE_ENABLED
 
 router = APIRouter(prefix='/api', tags=['tasks'])
-REDIS_CACHE_ENABLED = 'REDIS_URL' in environ
 
 @sync_to_async(thread_sensitive=True)
 def get_tasks_db_operations(search:str, is_kappa:bool, is_light_keeper:bool, player_lvl:int, obj_type:str, trader:str, limit:int, offset:int, completed_tasks: list[str]):

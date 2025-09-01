@@ -87,8 +87,9 @@ DATABASES = {
     }
 }
 
+REDIS_CACHE_ENABLED = 'REDIS_URL' in environ
 CACHES = {}
-if 'REDIS_URL' in environ:
+if REDIS_CACHE_ENABLED:
     CACHES = {
         'default': {
             'BACKEND':'django_async_redis.cache.RedisCache',
