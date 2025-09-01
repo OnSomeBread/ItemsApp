@@ -70,9 +70,6 @@ function ItemComponent({ item, idx, children, fields }: Props) {
         </a>
       )}
       {fields.includes("shortName") && <p>{item.shortName}</p>}
-      {fields.includes("basePrice") && (
-        <p>Base Price: {item.basePrice.toLocaleString("en-us")} RUB</p>
-      )}
       {fields.includes("icon") && (
         <img
           style={{ maxWidth: "100%", maxHeight: 100 }}
@@ -82,6 +79,10 @@ function ItemComponent({ item, idx, children, fields }: Props) {
             e.currentTarget.src = "/icons/unknown.png";
           }}
         />
+      )}
+
+      {fields.includes("basePrice") && (
+        <p>Base Price: {item.basePrice.toLocaleString("en-us")} RUB</p>
       )}
 
       {item.sells.length > 0 ? (
