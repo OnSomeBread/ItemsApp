@@ -39,7 +39,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
       </button>
       <select
         className="dropdown"
-        defaultValue="fleaMarket"
+        defaultValue={queryParams.sortBy}
         onChange={(e) => changeQueryParams("sortBy", e.target.value)}
       >
         {Object.entries(ALL_ITEM_SORTBY).map(([key, value]) => (
@@ -50,7 +50,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
       </select>
       <select
         className="dropdown"
-        defaultValue="any"
+        defaultValue={queryParams.type}
         onChange={(e) => changeQueryParams("type", e.target.value)}
       >
         {Object.entries(ALL_ITEM_TYPES).map(([key, value]) => (

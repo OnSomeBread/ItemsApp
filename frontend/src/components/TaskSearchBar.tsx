@@ -52,7 +52,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       </button>
       <select
         className="dropdown"
-        defaultValue={99}
+        defaultValue={queryParams.playerLvl}
         onChange={(e) => changeQueryParams("playerLvl", e.target.value)}
       >
         {[...Array(100).keys()].map((num) => (
@@ -63,7 +63,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       </select>
       <select
         className="dropdown"
-        defaultValue="any"
+        defaultValue={queryParams.objType}
         onChange={(e) => changeQueryParams("objType", e.target.value)}
       >
         {Object.entries(ALL_TASK_OBJECTIVE_TYPES).map(([key, value]) => (
@@ -74,7 +74,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       </select>
       <select
         className="dropdown"
-        defaultValue="any"
+        defaultValue={queryParams.trader}
         onChange={(e) => changeQueryParams("trader", e.target.value)}
       >
         {Object.entries(ALL_TRADERS).map(([key, value]) => (
