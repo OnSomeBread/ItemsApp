@@ -26,29 +26,30 @@ async def lifespan(app: FastAPI):
     # call_command('upsert_items_api')
     # call_command('upsert_tasks_api')
 
-    # scheduler.add_job(
-    #     lambda: call_command('upsert_items_file', 'most_recent_items.json'),
-    #     trigger="interval",
-    #     seconds=300,
-    #     id="repeat-upsert-items"
-    # )
+    if not DEBUG:
+        # scheduler.add_job(
+        #     lambda: call_command('upsert_items_file', 'most_recent_items.json'),
+        #     trigger="interval",
+        #     seconds=300,
+        #     id="repeat-upsert-items"
+        # )
 
-    # scheduler.add_job(
-    #     lambda: call_command('upsert_tasks_file', 'most_recent_tasks.json'),
-    #     trigger="interval",
-    #     seconds=300,
-    #     id="repeat-upsert-tasks"
-    # )
+        scheduler.add_job(
+            lambda: call_command('upsert_api', 'tasks', 'most_recent_tasks.json'),
+            trigger="interval",
+            hours=24,
+            id="repeat-upsert-tasks"
+        )
 
-    # scheduler.start()
+    scheduler.start()
 
     yield
 
-    # scheduler.shutdown()
+    scheduler.shutdown()
 
 # returns the number of seconds til next api call for the respective api
 def get_redis_timeout(api: str):
     job = scheduler.get_job('repeat-upsert-' + api)
     if job:
-        return (job.next_run_time - datetime.now(timezone.utc)).total_seconds()
+        return max((job.next_run_time - datetime.now(timezone.utc)).total_seconds(), 3600)
     return 3600
