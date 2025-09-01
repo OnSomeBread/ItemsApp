@@ -1,4 +1,5 @@
 from datetime import datetime
+from copy import deepcopy
 from api.models import *
 
 # example item
@@ -17,7 +18,8 @@ from api.models import *
 # """
 
 # upsert all of the itemsManyToManyField
-def upsert_items(result, api:bool):
+def upsert_items(res, api:bool):
+    result = deepcopy(res)
     # only save the data that will change often
     if api:
         curr_api_call = PastApiCalls.objects.create(api_name='items', time=datetime.now())
@@ -135,7 +137,8 @@ def upsert_items(result, api:bool):
 #     }]
 # }
 # """
-def upsert_tasks(result, api:bool):
+def upsert_tasks(res, api:bool):
+    result = deepcopy(res)
     if api:
         curr_api_call = PastApiCalls.objects.create(api_name='tasks', time=datetime.now())
         SavedTaskData.objects.create(past_api_call=curr_api_call, task_data=result)
