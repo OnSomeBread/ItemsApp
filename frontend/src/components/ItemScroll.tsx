@@ -59,7 +59,14 @@ function ItemScroll({
               <ItemComponentPreview
                 item={x}
                 idx={i}
-                fields={["name", "shortName", "icon", "traders", "fleaMarket"]}
+                fields={[
+                  "name",
+                  "shortName",
+                  "icon",
+                  "basePrice",
+                  "traders",
+                  "fleaMarket",
+                ]}
               >
                 <ItemComponentButtons
                   item={x}

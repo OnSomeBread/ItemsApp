@@ -4,7 +4,7 @@ export const ON_MOBILE: boolean =
 export const DEFAULT_ITEM_QUERY_PARAMS = {
   search: "",
   asc: "-",
-  sortBy: "fleaMarket",
+  sortBy: "basePrice",
   type: "any",
   limit: ON_MOBILE ? 10 : 40,
   offset: 0,
