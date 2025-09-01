@@ -65,7 +65,7 @@ function ItemScroll({
                   "icon",
                   "basePrice",
                   "traders",
-                  "fleaMarket",
+                  // "fleaMarket",
                 ]}
               >
                 <ItemComponentButtons
