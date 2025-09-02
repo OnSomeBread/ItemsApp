@@ -1,6 +1,5 @@
 from json import load
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
 from api.management.commands.upsert import upsert_items, upsert_tasks
 
 def upsert_from_json(collection:str, file_name:str):
@@ -8,11 +7,10 @@ def upsert_from_json(collection:str, file_name:str):
         result = load(f)
 
         print('upsert ' + collection + ' via file ' + file_name)
-        with transaction.atomic():
-            if collection == 'items':
-                upsert_items(result['data'][collection], False)
-            elif collection == 'tasks':
-                upsert_tasks(result['data'][collection], False)
+        if collection == 'items':
+            upsert_items(result['data'][collection], False)
+        elif collection == 'tasks':
+            upsert_tasks(result['data'][collection], False)
 
 
 class Command(BaseCommand):

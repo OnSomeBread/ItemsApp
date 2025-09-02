@@ -3,7 +3,6 @@ from requests import post
 import pytest
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
 from api.management.commands.upsert import upsert_items, upsert_tasks
 
 def run_query(query):
@@ -81,11 +80,11 @@ def upsert_from_query(collection:str, file_name:str):
     try:
         query = collection_to_query[collection]
         result = run_query(query)
-        with transaction.atomic():
-            if collection == 'items':
-                upsert_items(result['data'][collection], True)
-            elif collection == 'tasks':
-                upsert_tasks(result['data'][collection], True)
+        
+        if collection == 'items':
+            upsert_items(result['data'][collection], True)
+        elif collection == 'tasks':
+            upsert_tasks(result['data'][collection], True)
         
         if pytest.main(['api/tests.py']) != 0:
             raise Exception("Pytest Failed")

@@ -1,5 +1,6 @@
 from datetime import datetime
 from copy import deepcopy
+from django.db import transaction
 from api.models import *
 
 # example item
@@ -20,75 +21,76 @@ from api.models import *
 # upsert all of the itemsManyToManyField
 def upsert_items(res, api:bool):
     result = deepcopy(res)
-    # only save the data that will change often
-    if api:
-        curr_api_call = PastApiCalls.objects.create(api_name='items', time=datetime.now())
+    with transaction.atomic():
+        # only save the data that will change often
+        if api:
+            curr_api_call = PastApiCalls.objects.create(api_name='items', time=datetime.now())
 
+            for item in result:
+                # find the flea market price and only add entry if has flea
+                for entry in item['sellFor']:
+                    if entry['source'] != 'fleaMarket':
+                        continue
+
+                    SavedItemData.objects.create(past_api_call=curr_api_call, item_id=item['id'], avg24hPrice=item['avg24hPrice'], changeLast48hPercent=item['changeLast48hPercent'], fleaMarket=entry['price'])
+
+        # create a types cache
+        existing_types = {t.name: t for t in ItemTypes.objects.all()}
+
+        # grab only the new types and add them to ItemTypes model
+        new_types = set(t for item in result for t in item['types']) - existing_types.keys()
+        ItemTypes.objects.bulk_create([ItemTypes(name=t) for t in new_types])
+
+        # create dict to grab only the types we need as a cache
+        existing_types.update({t.name: t for t in ItemTypes.objects.filter(name__in=new_types)})
+
+        # set up the item bulk create
+        # this approach is memory wasteful and can be problemsome for larger json files but its quicker
+        # items = []
+        # types = []
+        # sellfor = []
+        # for item in result:
+        #     # replace item field to fit with current model
+        #     item['_id'] = item.pop('id')
+
+        #     # remove these fields from items model because they have their own models
+        #     types.append(item.pop('types'))
+        #     sellfor.append(item.pop('sellFor'))
+        #     items.append(Item(_id=item['_id'], name=item['name'], shortName=item['shortName'], width=item['width'], height=item['height'], link=item['link'], avg24hPrice=item['avg24hPrice'], basePrice=item['basePrice'], changeLast48hPercent=item['changeLast48hPercent']))
+
+        # Item.objects.bulk_create(items, update_conflicts=True, unique_fields=['_id'], update_fields=['avg24hPrice', 'basePrice', 'changeLast48hPercent'])
+
+        # for i in range(len(items)):
+        #     # set the types associated with this item
+        #     items[i].types.set([existing_types[t] for t in types[i]])
+
+        #     # upsert the seller prices
+        #     # delete the old sell data and bulk create new updates
+        #     SellFor.objects.filter(item=items[i]).delete()
+        #     SellFor.objects.bulk_create([
+        #         SellFor(item=items[i], source=entry['source'], price=entry['price']) for entry in sellfor[i]
+        #     ])
+
+        # the individual insert to db appraoch
         for item in result:
-            # find the flea market price and only add entry if has flea
-            for entry in item['sellFor']:
-                if entry['source'] != 'fleaMarket':
-                    continue
+            # replace item field to fit with current model
+            item['_id'] = item.pop('id')
 
-                SavedItemData.objects.create(past_api_call=curr_api_call, item_id=item['id'], avg24hPrice=item['avg24hPrice'], changeLast48hPercent=item['changeLast48hPercent'], fleaMarket=entry['price'])
+            # remove these fields from items model because they have their own models
+            types = item.pop('types')
+            sellfor = item.pop('sellFor')
 
-    # create a types cache
-    existing_types = {t.name: t for t in ItemTypes.objects.all()}
+            obj, _ = Item.objects.update_or_create(_id=item['_id'], defaults=item)
 
-    # grab only the new types and add them to ItemTypes model
-    new_types = set(t for item in result for t in item['types']) - existing_types.keys()
-    ItemTypes.objects.bulk_create([ItemTypes(name=t) for t in new_types])
+            # grab from the cache all the type objects we need for this item
+            obj.itemtypes.set([existing_types[t] for t in types])
 
-    # create dict to grab only the types we need as a cache
-    existing_types.update({t.name: t for t in ItemTypes.objects.filter(name__in=new_types)})
-
-    # set up the item bulk create
-    # this approach is memory wasteful and can be problemsome for larger json files but its quicker
-    # items = []
-    # types = []
-    # sellfor = []
-    # for item in result:
-    #     # replace item field to fit with current model
-    #     item['_id'] = item.pop('id')
-
-    #     # remove these fields from items model because they have their own models
-    #     types.append(item.pop('types'))
-    #     sellfor.append(item.pop('sellFor'))
-    #     items.append(Item(_id=item['_id'], name=item['name'], shortName=item['shortName'], width=item['width'], height=item['height'], link=item['link'], avg24hPrice=item['avg24hPrice'], basePrice=item['basePrice'], changeLast48hPercent=item['changeLast48hPercent']))
-
-    # Item.objects.bulk_create(items, update_conflicts=True, unique_fields=['_id'], update_fields=['avg24hPrice', 'basePrice', 'changeLast48hPercent'])
-
-    # for i in range(len(items)):
-    #     # set the types associated with this item
-    #     items[i].types.set([existing_types[t] for t in types[i]])
-
-    #     # upsert the seller prices
-    #     # delete the old sell data and bulk create new updates
-    #     SellFor.objects.filter(item=items[i]).delete()
-    #     SellFor.objects.bulk_create([
-    #         SellFor(item=items[i], source=entry['source'], price=entry['price']) for entry in sellfor[i]
-    #     ])
-
-    # the individual insert to db appraoch
-    for item in result:
-        # replace item field to fit with current model
-        item['_id'] = item.pop('id')
-
-        # remove these fields from items model because they have their own models
-        types = item.pop('types')
-        sellfor = item.pop('sellFor')
-
-        obj, _ = Item.objects.update_or_create(_id=item['_id'], defaults=item)
-
-        # grab from the cache all the type objects we need for this item
-        obj.itemtypes.set([existing_types[t] for t in types])
-
-        # upsert the seller prices
-        # delete the old sell data and bulk create new updates
-        SellFor.objects.filter(item=obj).delete()
-        SellFor.objects.bulk_create([
-            SellFor(item=obj, source=entry['source'], price=entry['price']) for entry in sellfor
-        ])
+            # upsert the seller prices
+            # delete the old sell data and bulk create new updates
+            SellFor.objects.filter(item=obj).delete()
+            SellFor.objects.bulk_create([
+                SellFor(item=obj, source=entry['source'], price=entry['price']) for entry in sellfor
+            ])
 
 
 # example tasks query
@@ -139,63 +141,64 @@ def upsert_items(res, api:bool):
 # """
 def upsert_tasks(res, api:bool):
     result = deepcopy(res)
-    if api:
-        curr_api_call = PastApiCalls.objects.create(api_name='tasks', time=datetime.now())
-        SavedTaskData.objects.create(past_api_call=curr_api_call, task_data=result)
+    with transaction.atomic():
+        if api:
+            curr_api_call = PastApiCalls.objects.create(api_name='tasks', time=datetime.now())
+            SavedTaskData.objects.create(past_api_call=curr_api_call, task_data=result)
 
-    # create a maps cache
-    existing_maps = {m._id: m for m in Map.objects.all()}
+        # create a maps cache
+        existing_maps = {m._id: m for m in Map.objects.all()}
 
-    # grab only the new maps and add them to Map model
-    all_maps = {m['id']: m for task in result for obj in task['objectives'] for m in obj['maps']}
-    new_maps = {}
-    for map_key in all_maps.keys():
-        if map_key not in existing_maps:
-            all_maps[map_key]['_id'] = all_maps[map_key].pop('id')
-            new_maps[map_key] = all_maps[map_key]
+        # grab only the new maps and add them to Map model
+        all_maps = {m['id']: m for task in result for obj in task['objectives'] for m in obj['maps']}
+        new_maps = {}
+        for map_key in all_maps.keys():
+            if map_key not in existing_maps:
+                all_maps[map_key]['_id'] = all_maps[map_key].pop('id')
+                new_maps[map_key] = all_maps[map_key]
 
-    Map.objects.bulk_create([Map(**m) for m in new_maps.values()])
+        Map.objects.bulk_create([Map(**m) for m in new_maps.values()])
 
-    # create dict to grab only the maps we need as a cache
-    existing_maps.update({m._id: m for m in Map.objects.filter(_id__in=new_maps.keys())})
+        # create dict to grab only the maps we need as a cache
+        existing_maps.update({m._id: m for m in Map.objects.filter(_id__in=new_maps.keys())})
 
-    for task in result:
-        # rename some of the keys
-        task['_id'] = task.pop('id')
-        task['wiki'] = task.pop('wikiLink')
-        task['trader'] = task['trader']['name']
+        for task in result:
+            # rename some of the keys
+            task['_id'] = task.pop('id')
+            task['wiki'] = task.pop('wikiLink')
+            task['trader'] = task['trader']['name']
 
-        # these are in a separate model
-        task_reqs = task.pop('taskRequirements')
-        task_objs = task.pop('objectives')
+            # these are in a separate model
+            task_reqs = task.pop('taskRequirements')
+            task_objs = task.pop('objectives')
 
-        inserted_task, _ = Task.objects.update_or_create(_id=task['_id'], defaults=task)
+            inserted_task, _ = Task.objects.update_or_create(_id=task['_id'], defaults=task)
 
-        # grab from the cache all the type objects we need for this item
-        Objective.objects.filter(task=inserted_task).delete()
-        prep_bulk = []
+            # grab from the cache all the type objects we need for this item
+            Objective.objects.filter(task=inserted_task).delete()
+            prep_bulk = []
 
-        for task_obj in task_objs:
-            # rename fields
-            task_obj['task'] = inserted_task
-            task_obj['_id'] = task_obj.pop('id')
-            task_obj['objType'] = task_obj.pop('type')
+            for task_obj in task_objs:
+                # rename fields
+                task_obj['task'] = inserted_task
+                task_obj['_id'] = task_obj.pop('id')
+                task_obj['objType'] = task_obj.pop('type')
 
-            # remove maps before creating objective
-            obj_maps = task_obj.pop('maps')
+                # remove maps before creating objective
+                obj_maps = task_obj.pop('maps')
 
-            obj_insert = Objective(**task_obj)
-            obj_insert.save()
+                obj_insert = Objective(**task_obj)
+                obj_insert.save()
 
-            # many to many field assignments require saved objects making bulk creates kinda difficult here
-            obj_insert.maps.set([existing_maps[m['id'] if 'id' in m else m['_id']] for m in obj_maps])
+                # many to many field assignments require saved objects making bulk creates kinda difficult here
+                obj_insert.maps.set([existing_maps[m['id'] if 'id' in m else m['_id']] for m in obj_maps])
 
-            prep_bulk.append(obj_insert)
-        #Objective.objects.bulk_create(prep_bulk)
+                prep_bulk.append(obj_insert)
+            #Objective.objects.bulk_create(prep_bulk)
 
-        # upsert the seller prices
-        # delete the old sell data and bulk create new updates
-        TaskRequirement.objects.filter(task=inserted_task).delete()
-        TaskRequirement.objects.bulk_create([
-            TaskRequirement(task=inserted_task, status=', '.join(entry['status']), reqTaskId=entry['task']['id']) for entry in task_reqs
-        ])
+            # upsert the seller prices
+            # delete the old sell data and bulk create new updates
+            TaskRequirement.objects.filter(task=inserted_task).delete()
+            TaskRequirement.objects.bulk_create([
+                TaskRequirement(task=inserted_task, status=', '.join(entry['status']), reqTaskId=entry['task']['id']) for entry in task_reqs
+            ])
