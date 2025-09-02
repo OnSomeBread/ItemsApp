@@ -47,5 +47,5 @@ async def lifespan(app: FastAPI):
 def get_redis_timeout(api: str):
     job = scheduler.get_job('repeat-upsert-' + api)
     if job:
-        return max((job.next_run_time - datetime.now(timezone.utc)).total_seconds(), 3600 * 6)
+        return (job.next_run_time - datetime.now(timezone.utc)).total_seconds()
     return 3600 * 6
