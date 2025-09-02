@@ -95,6 +95,8 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd ~/ItemsApp
+
+            git reset --hard origin/main
             git pull
 
             export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
