@@ -52,14 +52,14 @@ async def get_tasks(request: Request):
     completed_tasks:list[str] = request.query_params.getlist('ids')
 
     # check if this is a repeated query and if so return it
-    cache_key:str = search + str(is_kappa) + str(is_light_keeper) + obj_type + trader + str(player_lvl) + str(limit) + str(offset) + ''.join(completed_tasks)
-    if REDIS_CACHE_ENABLED and await cache.ahas_key(cache_key):
+    cache_key:str = search + str(is_kappa) + str(is_light_keeper) + obj_type + trader + str(player_lvl) + str(limit) + str(offset)
+    if REDIS_CACHE_ENABLED and await cache.ahas_key(cache_key) and len(completed_tasks) == 0:
         return await cache.aget(cache_key)
 
     data = await get_tasks_db_operations(search, is_kappa, is_light_keeper, player_lvl, obj_type, trader, limit, offset, completed_tasks)
 
     # save this query in the background
-    if REDIS_CACHE_ENABLED:
+    if REDIS_CACHE_ENABLED and len(completed_tasks) == 0:
         await cache.aset(cache_key, data)
     return data
 
