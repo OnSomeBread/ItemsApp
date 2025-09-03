@@ -33,7 +33,7 @@ function getBestTrader(allTraders: Sell[]) {
 }
 
 // creates a few lines for the items container only if item can be sold in the flea
-function getFleaPrice({ item, children }: Props) {
+function getFleaPrice(item: Item) {
   for (const trader of item.sells) {
     if (trader.source == "fleaMarket") {
       return (
@@ -51,7 +51,6 @@ function getFleaPrice({ item, children }: Props) {
               {item.changeLast48hPercent}%
             </p>
           )}
-          {children}
         </>
       );
     }
@@ -64,6 +63,7 @@ function ItemComponent({ item, idx, children, fields }: Props) {
 
   return (
     <div className="item">
+      {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
         <a onClick={() => navigate("/item_view", { state: item })}>
           <p>{item.name}</p>
@@ -88,8 +88,8 @@ function ItemComponent({ item, idx, children, fields }: Props) {
       {item.sells.length > 0 ? (
         <>
           {fields.includes("traders") && getBestTrader(item.sells)}
-          {fields.includes("fleaMarket") &&
-            getFleaPrice({ item, idx, children, fields })}
+          {fields.includes("fleaMarket") && getFleaPrice(item)}
+          {children}
         </>
       ) : (
         <p>Cannot be sold</p>

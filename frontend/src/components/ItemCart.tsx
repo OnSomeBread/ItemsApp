@@ -51,14 +51,12 @@ function ItemCart() {
     let totalFleaPrice = 0;
 
     allItems?.forEach((item) => {
+      let bestPrice = 0;
       for (const sell of item.sells) {
-        if (sell.source === "fleaMarket") {
-          totalFleaPrice +=
-            sell.price *
-            parseInt(localStorage.getItem("item-" + item._id) || "0");
-          break;
-        }
+        bestPrice = Math.max(bestPrice, sell.price);
       }
+      totalFleaPrice +=
+        bestPrice * parseInt(localStorage.getItem("item-" + item._id) || "0");
     });
 
     return [totalFleaPrice, prevTotal];
