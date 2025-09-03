@@ -30,6 +30,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
+        name="isKappaBtn"
         className="outline contrast main-btn search-btn"
         onClick={() => {
           changeQueryParams("isKappa", queryParams.isKappa ? false : true);
@@ -38,6 +39,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         {queryParams.isKappa ? "Kappa Required" : "Not Kappa Required"}
       </button>
       <button
+        name="isLightKeeperBtn"
         className="outline contrast main-btn search-btn"
         onClick={() => {
           changeQueryParams(
@@ -51,6 +53,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
           : "Not LightKeeper Required"}
       </button>
       <select
+        name="playerLvl"
         className="dropdown"
         defaultValue={queryParams.playerLvl}
         onChange={(e) => changeQueryParams("playerLvl", e.target.value)}
@@ -62,6 +65,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         ))}
       </select>
       <select
+        name="objType"
         className="dropdown"
         defaultValue={queryParams.objType}
         onChange={(e) => changeQueryParams("objType", e.target.value)}
@@ -73,6 +77,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         ))}
       </select>
       <select
+        name="trader"
         className="dropdown"
         defaultValue={queryParams.trader}
         onChange={(e) => changeQueryParams("trader", e.target.value)}
@@ -84,6 +89,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         ))}
       </select>
       <button
+        name="clearBtn"
         className="outline contrast main-btn search-btn"
         onClick={onClear}
       >

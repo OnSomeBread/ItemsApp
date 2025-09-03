@@ -30,6 +30,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
+        name="asc"
         className="outline contrast main-btn search-btn"
         onClick={() => {
           changeQueryParams("asc", queryParams.asc == "" ? "-" : "");
@@ -38,6 +39,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         {queryParams.asc == "" ? "Ascending" : "Descending"}
       </button>
       <select
+        name="sortBy"
         className="dropdown"
         defaultValue={queryParams.sortBy}
         onChange={(e) => changeQueryParams("sortBy", e.target.value)}
@@ -49,6 +51,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         ))}
       </select>
       <select
+        name="type"
         className="dropdown"
         defaultValue={queryParams.type}
         onChange={(e) => changeQueryParams("type", e.target.value)}
@@ -60,6 +63,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         ))}
       </select>
       <button
+        name="clearBtn"
         className="outline contrast main-btn search-btn"
         onClick={clearCounts}
       >
