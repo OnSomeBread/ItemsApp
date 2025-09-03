@@ -1,6 +1,6 @@
 import InfiniteScroll from "react-infinite-scroll-component";
 import ItemComponentButtons from "./ItemComponentButtons.tsx";
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Item, ItemQueryParams } from "../types.ts";
 
@@ -47,34 +47,38 @@ function ItemScroll({
           className="list-item"
         >
           {allItems?.map((x, i) => (
-            <motion.li
+            <Suspense
               key={x._id}
-              transition={{ duration: 0.8 }}
-              variants={{
-                hidden: { opacity: 0 },
-                show: { opacity: 1 },
-              }}
-              style={{ listStyleType: "none" }}
+              fallback={<article aria-busy="true"></article>}
             >
-              <ItemComponentPreview
-                item={x}
-                idx={i}
-                fields={[
-                  "name",
-                  "shortName",
-                  "icon",
-                  "basePrice",
-                  "traders",
-                  // "fleaMarket",
-                ]}
+              <motion.li
+                transition={{ duration: 0.8 }}
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: { opacity: 1 },
+                }}
+                style={{ listStyleType: "none" }}
               >
-                <ItemComponentButtons
+                <ItemComponentPreview
                   item={x}
                   idx={i}
-                  onChangeCount={changeCount}
-                ></ItemComponentButtons>
-              </ItemComponentPreview>
-            </motion.li>
+                  fields={[
+                    "name",
+                    "shortName",
+                    "icon",
+                    "basePrice",
+                    "traders",
+                    // "fleaMarket",
+                  ]}
+                >
+                  <ItemComponentButtons
+                    item={x}
+                    idx={i}
+                    onChangeCount={changeCount}
+                  ></ItemComponentButtons>
+                </ItemComponentPreview>
+              </motion.li>
+            </Suspense>
           ))}
         </motion.ul>
       </AnimatePresence>
