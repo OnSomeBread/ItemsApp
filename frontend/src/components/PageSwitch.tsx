@@ -12,9 +12,15 @@ function PageSwitch() {
         marginLeft: 18,
       }}
     >
-      <a onClick={() => navigate("/items")}>Items page</a>
-      <a onClick={() => navigate("/tasks")}>Tasks page</a>
-      <a onClick={() => navigate("/task_tree")}>Task Tree page</a>
+      <a href="/items" onClick={() => navigate("/items")}>
+        Items page
+      </a>
+      <a href="/tasks" onClick={() => navigate("/tasks")}>
+        Tasks page
+      </a>
+      <a href="/task_tree" onClick={() => navigate("/task_tree")}>
+        Task Tree page
+      </a>
       <a onClick={() => window.history.back()}>Go Back</a>
     </nav>
   );

@@ -44,7 +44,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
       >
         {Object.entries(ALL_ITEM_SORTBY).map(([key, value]) => (
           <option key={key} value={key}>
-            {value}
+            Sort Data By {value}
           </option>
         ))}
       </select>
@@ -55,7 +55,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
       >
         {Object.entries(ALL_ITEM_TYPES).map(([key, value]) => (
           <option key={key} value={key}>
-            {value}
+            Item Type is {value}
           </option>
         ))}
       </select>

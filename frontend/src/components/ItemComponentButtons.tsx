@@ -23,6 +23,7 @@ function ItemComponentButtons({ item, idx, onChangeCount }: Props) {
         Remove
       </motion.button>
       <input
+        id={"ItemComponent-stepper" + idx}
         className="stepper-input"
         type="text"
         value={item.count}
