@@ -1,6 +1,7 @@
 import { type Item, type Sell } from "../types";
 import { type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
 
 interface Props {
   item: Item;
@@ -63,6 +64,7 @@ function ItemComponent({ item, idx, children, fields }: Props) {
 
   return (
     <div className="item">
+      <p>{idx}</p>
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
         <a onClick={() => navigate("/item_view", { state: item })}>
@@ -71,14 +73,35 @@ function ItemComponent({ item, idx, children, fields }: Props) {
       )}
       {fields.includes("shortName") && <p>{item.shortName}</p>}
       {fields.includes("icon") && (
-        <img
-          style={{ maxWidth: "100%", maxHeight: 100 }}
-          src={"/icons/" + item._id + ".png"}
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = "/icons/unknown.png";
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: 180,
           }}
-        />
+        >
+          <img
+            style={{
+              objectFit: "contain",
+              maxWidth: "100%",
+              maxHeight: 180,
+            }}
+            loading={
+              idx >= DEFAULT_ITEM_QUERY_PARAMS["limit"] ? "lazy" : "eager"
+            }
+            fetchPriority={
+              idx >= DEFAULT_ITEM_QUERY_PARAMS["limit"] ? "low" : "high"
+            }
+            src={"/icons/" + item._id + ".png"}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/icons/unknown.png";
+            }}
+            alt={item.name}
+          />
+        </div>
       )}
 
       {fields.includes("basePrice") && (
