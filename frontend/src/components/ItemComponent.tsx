@@ -64,7 +64,6 @@ function ItemComponent({ item, idx, children, fields }: Props) {
 
   return (
     <div className="item">
-      <p>{idx}</p>
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
         <a onClick={() => navigate("/item_view", { state: item })}>
