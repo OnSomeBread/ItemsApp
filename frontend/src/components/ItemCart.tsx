@@ -12,7 +12,7 @@ function ItemCart() {
   Object.keys(localStorage).forEach((key: string) => {
     if (key.startsWith("item")) {
       const id = key.slice("item-".length);
-      if (id !== "prevFleaMarket") params.append("ids", id);
+      if (id !== "prevTotalPrice") params.append("ids", id);
     }
   });
 
@@ -46,7 +46,7 @@ function ItemCart() {
   // returns both the current flea price and the previous flea price
   const getTotalFleaPrice = () => {
     const prevTotal = parseInt(
-      localStorage.getItem("item-prevFleaMarket") || "0"
+      localStorage.getItem("item-prevTotalPrice") || "0"
     );
     let totalFleaPrice = 0;
 
@@ -67,7 +67,7 @@ function ItemCart() {
   // this allows the user to stack +money that resets after timeout period
   useEffect(() => {
     const prevTimeout = setTimeout(() => {
-      localStorage.setItem("item-prevFleaMarket", currPrice.toString());
+      localStorage.setItem("item-prevTotalPrice", currPrice.toString());
     }, 400);
     return () => clearTimeout(prevTimeout);
   }, [currPrice]);
