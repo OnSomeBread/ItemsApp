@@ -93,10 +93,10 @@ function ItemComponent({ item, idx, children, fields }: Props) {
             fetchPriority={
               idx >= DEFAULT_ITEM_QUERY_PARAMS["limit"] ? "low" : "high"
             }
-            src={"/icons/" + item._id + ".png"}
+            src={"/icons/" + item._id + ".webp"}
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = "/icons/unknown.png";
+              e.currentTarget.src = "/icons/unknown.webp";
             }}
             alt={item.name}
           />
