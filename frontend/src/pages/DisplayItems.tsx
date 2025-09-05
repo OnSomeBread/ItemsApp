@@ -109,7 +109,7 @@ function DisplayItems() {
         changeQueryParams={changeQueryParams}
         clearCounts={clearCounts}
       />
-      <div className="items-container">
+      <div className="!grid !grid-cols-[1fr] md:!grid-cols-[1fr_300px] !justify-items-center md:!justify-items-normal !w-[100%]">
         {ON_MOBILE && (
           <input
             type="checkbox"

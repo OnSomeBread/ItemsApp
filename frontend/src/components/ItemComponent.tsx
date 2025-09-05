@@ -25,7 +25,7 @@ function getBestTrader(allTraders: Sell[]) {
     }
   }
   return (
-    <p>
+    <p className="h-10">
       Highest Trader Sell Price:{" "}
       {bestTrader.charAt(0).toUpperCase() + bestTrader.slice(1)}{" "}
       {bestPrice.toLocaleString("en-us")} RUB
@@ -47,7 +47,9 @@ function getFleaPrice(item: Item) {
           )}
           {item.changeLast48hPercent != 0 && (
             <p
-              style={{ color: item.changeLast48hPercent < 0 ? "green" : "red" }}
+              className={
+                item.changeLast48hPercent < 0 ? "text-green-50" : "text-red-50"
+              }
             >
               {item.changeLast48hPercent}%
             </p>
@@ -61,30 +63,18 @@ function getFleaPrice(item: Item) {
 
 function ItemComponent({ item, idx, children, fields }: Props) {
   return (
-    <div className="item">
+    <div className="flex-col items-center text-center border-1 border-solid board-[#ccc] rounded-[10px] pt-4 px-4 pb-1 w-[92%]">
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
         <Link to="/item_view" state={item}>
-          <p>{item.name}</p>
+          <p className="h-10">{item.name}</p>
         </Link>
       )}
       {fields.includes("shortName") && <p>{item.shortName}</p>}
       {fields.includes("icon") && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-            height: 180,
-          }}
-        >
+        <div className="flex justify-center items-center w-100% h-40">
           <img
-            style={{
-              objectFit: "contain",
-              maxWidth: "100%",
-              maxHeight: 180,
-            }}
+            className="object-contain max-w-100% max-h-40"
             loading={
               idx >= DEFAULT_ITEM_QUERY_PARAMS["limit"] ? "lazy" : "eager"
             }

@@ -20,10 +20,14 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
+  const buttonClass =
+    "outline contrast flex-1 !border !rounded-[8px] h-13 relative bottom-2 md:bottom-0";
+  const dropdownClass = "flex-1 !border !border-[#ccc] !rounded-[8px]";
+
   return (
-    <div className="search-options">
+    <div className="flex-col md:flex-row md:flex p-4 gap-4">
       <input
-        className="search search-bar"
+        className="search flex-1 !border !border-[#ccc]"
         type="search"
         name="search"
         placeholder="search"
@@ -31,7 +35,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       ></input>
       <button
         name="isKappaBtn"
-        className="outline contrast main-btn search-btn"
+        className={buttonClass}
         onClick={() => {
           changeQueryParams("isKappa", queryParams.isKappa ? false : true);
         }}
@@ -40,7 +44,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       </button>
       <button
         name="isLightKeeperBtn"
-        className="outline contrast main-btn search-btn"
+        className={buttonClass}
         onClick={() => {
           changeQueryParams(
             "isLightKeeper",
@@ -54,7 +58,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       </button>
       <select
         name="playerLvl"
-        className="dropdown"
+        className={dropdownClass}
         defaultValue={queryParams.playerLvl}
         onChange={(e) => changeQueryParams("playerLvl", e.target.value)}
       >
@@ -66,7 +70,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       </select>
       <select
         name="objType"
-        className="dropdown"
+        className={dropdownClass}
         defaultValue={queryParams.objType}
         onChange={(e) => changeQueryParams("objType", e.target.value)}
       >
@@ -78,7 +82,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
       </select>
       <select
         name="trader"
-        className="dropdown"
+        className={dropdownClass}
         defaultValue={queryParams.trader}
         onChange={(e) => changeQueryParams("trader", e.target.value)}
       >
@@ -88,11 +92,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
           </option>
         ))}
       </select>
-      <button
-        name="clearBtn"
-        className="outline contrast main-btn search-btn"
-        onClick={onClear}
-      >
+      <button name="clearBtn" className={buttonClass} onClick={onClear}>
         Clear
       </button>
     </div>

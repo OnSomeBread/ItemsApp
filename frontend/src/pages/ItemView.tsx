@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { ALL_ITEM_TYPES, ON_MOBILE } from "../constants";
+import { ALL_ITEM_TYPES } from "../constants";
 import { useEffect, useState } from "react";
 import ItemChart from "../components/ItemChart";
 import api from "../api";
@@ -33,21 +33,18 @@ function ItemView() {
   return (
     <>
       <PageSwitch />
-      <div
-        className={ON_MOBILE ? "" : "div-align"}
-        style={ON_MOBILE ? {} : { display: "flex" }}
-      >
-        <div style={{ flex: 1, padding: 30 }}>
+      <div className="md:flex">
+        <div className="p-10 flex-1">
           <p>{item.name}</p>
           <p>item short name: {item.shortName}</p>
           <p>
             item size width x height: {item.width}x{item.height}
           </p>
           <img
-            src={"/icons/" + item._id + ".png"}
+            src={"/icons/" + item._id + ".webp"}
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = "/icons/unknown.png";
+              e.currentTarget.src = "/icons/unknown.webp";
             }}
           />
           {item.itemtypes && item.itemtypes.length > 0 && (
@@ -88,7 +85,7 @@ function ItemView() {
             </>
           )}
         </div>
-        <div style={{ flex: 3, padding: 10 }}>
+        <div className="p-10 flex-3">
           <p>
             Item Price History Chart{" "}
             <mark>

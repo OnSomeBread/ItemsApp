@@ -107,7 +107,7 @@ function TaskTreeComponent({
   const navigate = useNavigate();
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div className="w-[100vw] h-[100vh]">
       <ReactFlow
         colorMode="system"
         nodes={nodes}

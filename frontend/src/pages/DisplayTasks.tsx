@@ -151,8 +151,8 @@ function DisplayTasks() {
           clearPageLocalStorage("task");
         }}
       />
-      <div style={{ width: "100%", display: "flex" }}>
-        <div style={{ flex: 1 }}>
+      <div className="flex w-[100%]">
+        <div className="flex-1">
           <InfiniteScroll
             dataLength={allTasks?.length ?? 0}
             next={getMoreTasks}
@@ -180,7 +180,7 @@ function DisplayTasks() {
             </motion.ul>
           </InfiniteScroll>
         </div>
-        <div style={{ display: "flex", flex: 1 }}>
+        <div className="flex-1">
           {completedTasks && (
             <div>
               <p>All Completed Tasks</p>

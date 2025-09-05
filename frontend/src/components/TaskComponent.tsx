@@ -10,6 +10,7 @@ interface Props {
 function TaskComponent({ task, onClickButton }: Props) {
   return (
     <motion.div
+      className="pl-8"
       initial={{ x: -20 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.8 }}
@@ -30,7 +31,7 @@ function TaskComponent({ task, onClickButton }: Props) {
         transition={{ duration: 0.4 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
-        className="outline contrast main-btn"
+        className="outline contrast !border !rounded-[8px] !h-12"
       >
         Completed
       </motion.button>

@@ -72,8 +72,8 @@ function TaskView() {
   return (
     <>
       <PageSwitch />
-      <div style={{ display: "flex" }}>
-        <div style={{ padding: 20, flex: 1 }}>
+      <div className="flex">
+        <div className="p-12 flex-1">
           <p>{task.name}</p>
           <p>Minimum player Level: {task.minPlayerLevel}</p>
           <p>Task Giver: {task.trader}</p>
@@ -106,7 +106,7 @@ function TaskView() {
             ))}
           </ul>
         </div>
-        <div style={{ padding: 20, flex: 1 }}>
+        <div className="p-20 flex-1">
           {taskPreqs && taskPreqs.length > 0 && (
             <>
               <p>Task Requirements</p>

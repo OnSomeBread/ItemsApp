@@ -20,10 +20,14 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
+  const buttonClass =
+    "outline contrast flex-1 !border !rounded-[8px] h-13 relative bottom-2 md:bottom-0";
+  const dropdownClass = "flex-1 !border !border-[#ccc] !rounded-[8px]";
+
   return (
-    <div className="search-options">
+    <div className="flex-col md:flex-row md:flex p-4 gap-4">
       <input
-        className="search search-bar"
+        className="search flex-1 !border !border-[#ccc]"
         type="search"
         name="search"
         placeholder="search"
@@ -31,7 +35,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
       ></input>
       <button
         name="asc"
-        className="outline contrast main-btn search-btn"
+        className={buttonClass}
         onClick={() => {
           changeQueryParams("asc", queryParams.asc == "" ? "-" : "");
         }}
@@ -40,7 +44,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
       </button>
       <select
         name="sortBy"
-        className="dropdown"
+        className={dropdownClass}
         defaultValue={queryParams.sortBy}
         onChange={(e) => changeQueryParams("sortBy", e.target.value)}
       >
@@ -52,7 +56,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
       </select>
       <select
         name="type"
-        className="dropdown"
+        className={dropdownClass}
         defaultValue={queryParams.type}
         onChange={(e) => changeQueryParams("type", e.target.value)}
       >
@@ -62,11 +66,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
           </option>
         ))}
       </select>
-      <button
-        name="clearBtn"
-        className="outline contrast main-btn search-btn"
-        onClick={clearCounts}
-      >
+      <button name="clearBtn" className={buttonClass} onClick={clearCounts}>
         Clear
       </button>
     </div>

@@ -44,7 +44,7 @@ function ItemScroll({
           variants={containerVarients}
           initial="hidden"
           animate="show"
-          className="list-item"
+          className="!grid !grid-cols-[repeat(auto-fill,minmax(275px,1fr))] gap-2 p-5"
         >
           {allItems?.map((x, i) => (
             <Suspense

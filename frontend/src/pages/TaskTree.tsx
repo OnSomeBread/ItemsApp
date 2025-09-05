@@ -93,17 +93,12 @@ function TaskTree() {
 
   return (
     // the div styling is to make the subdivs display over eachother
-    <div style={{ position: "relative" }}>
-      <div style={{ zIndex: 2, position: "absolute" }}>
+    <div className="relative">
+      <div className="z-2 absolute">
         <PageSwitch />
         <select
+          className="!mt-2 !ml-4 !w-80"
           onChange={(e) => changeQueryParams("trader", e.target.value)}
-          style={{
-            margin: "auto",
-            width: "300px",
-            marginTop: 6,
-            marginLeft: 16,
-          }}
         >
           {Object.entries(ALL_TRADERS)
             .filter((trader) => trader[0] !== "any")
@@ -114,7 +109,7 @@ function TaskTree() {
             ))}
         </select>
       </div>
-      <div style={{ zIndex: 1, position: "absolute" }}>
+      <div className="z-1 absolute">
         <TaskTreeComponent
           adjList={adjList}
           allTasks={allTasks}

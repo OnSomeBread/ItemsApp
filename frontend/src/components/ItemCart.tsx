@@ -76,7 +76,7 @@ function ItemCart() {
   const sign = currPrice > prevPrice ? "+" : "";
 
   return (
-    <div className="item-cart">
+    <div className="p-4">
       {currPrice === 0 ? (
         <>
           <p>Add items to show here</p>
@@ -86,8 +86,7 @@ function ItemCart() {
       ) : (
         <>
           <p>Total Flea Market Price</p>
-
-          <div className="div-align">
+          <div className="flex justify-between pr-7">
             <p>{currPrice.toLocaleString("en-us")} RUB</p>
             {currPrice != prevPrice && (
               <motion.p
@@ -124,7 +123,7 @@ function ItemCart() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              style={{ listStyleType: "none", padding: 2 }}
+              className="!grid !grid-cols-[repeat(auto-fill,minmax(275px,1fr))] gap-2 p-1"
             >
               <ItemComponent
                 item={x}
