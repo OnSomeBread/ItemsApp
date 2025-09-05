@@ -1,6 +1,6 @@
 import type { Task } from "../types";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface Props {
   task: Task;
@@ -8,14 +8,15 @@ interface Props {
 }
 
 function TaskComponent({ task, onClickButton }: Props) {
-  const navigate = useNavigate();
   return (
     <motion.div
       initial={{ x: -20 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.8 }}
     >
-      <a onClick={() => navigate("/task_view", { state: task })}>{task.name}</a>
+      <Link to="/task_view" state={task}>
+        {task.name}
+      </Link>
       <p>Minimum Player Level: {task.minPlayerLevel}</p>
       <p>given by: {task.trader}</p>
       {task.objectives.map((obj, index) => (

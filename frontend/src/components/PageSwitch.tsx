@@ -1,8 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function PageSwitch() {
-  const navigate = useNavigate();
-
   return (
     <nav
       style={{
@@ -12,15 +10,9 @@ function PageSwitch() {
         marginLeft: 18,
       }}
     >
-      <a href="/items" onClick={() => navigate("/items")}>
-        Items page
-      </a>
-      <a href="/tasks" onClick={() => navigate("/tasks")}>
-        Tasks page
-      </a>
-      <a href="/task_tree" onClick={() => navigate("/task_tree")}>
-        Task Tree page
-      </a>
+      <Link to="/items">Items page</Link>
+      <Link to="/tasks">Tasks page</Link>
+      <Link to="/task_tree">Task Tree page</Link>
       <a onClick={() => window.history.back()}>Go Back</a>
     </nav>
   );

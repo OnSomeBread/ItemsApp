@@ -1,6 +1,6 @@
 import { type Item, type Sell } from "../types";
 import { type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
 
 interface Props {
@@ -60,15 +60,13 @@ function getFleaPrice(item: Item) {
 }
 
 function ItemComponent({ item, idx, children, fields }: Props) {
-  const navigate = useNavigate();
-
   return (
     <div className="item">
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
-        <a onClick={() => navigate("/item_view", { state: item })}>
+        <Link to="/item_view" state={item}>
           <p>{item.name}</p>
-        </a>
+        </Link>
       )}
       {fields.includes("shortName") && <p>{item.shortName}</p>}
       {fields.includes("icon") && (

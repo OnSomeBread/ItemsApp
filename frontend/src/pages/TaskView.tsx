@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../api";
 import type { Task, TaskAdjList } from "../types";
@@ -59,8 +59,6 @@ function TaskView() {
       .catch((err) => console.log(err));
   }, [adjList, task._id, task.taskRequirements]);
 
-  const navigate = useNavigate();
-
   if (!task) return <p>no task passed in</p>;
 
   const taskPreqs = adjTasks?.filter(
@@ -115,11 +113,9 @@ function TaskView() {
               <ul>
                 {taskPreqs.map((taskReq) => (
                   <li key={taskReq._id}>
-                    <a
-                      onClick={() => navigate("/task_view", { state: taskReq })}
-                    >
+                    <Link to="/task_view" state={taskReq}>
                       {statusMap.get(taskReq._id)}: {taskReq.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -132,11 +128,9 @@ function TaskView() {
               <ul>
                 {taskUnlocks.map((taskReq) => (
                   <li key={taskReq._id}>
-                    <a
-                      onClick={() => navigate("/task_view", { state: taskReq })}
-                    >
+                    <Link to="/task_view" state={taskReq}>
                       {statusMap.get(taskReq._id)}: {taskReq.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
