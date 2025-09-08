@@ -14,7 +14,7 @@ export default function RootLayout({
           name="description"
           content="Escape From Tarkov Item and Task data insights. Task dependency graph displays all of the tasks that each trader provides along with their dependency direction"
         />
-        <link
+        {/* <link
           rel="preload"
           href="/node_modules/@picocss/pico/css/pico.min.css"
           as="style"
@@ -25,7 +25,7 @@ export default function RootLayout({
             rel="stylesheet"
             href="/node_modules/@picocss/pico/css/pico.min.css"
           />
-        </noscript>
+        </noscript> */}
 
         {/* <link rel="stylesheet" href="/pico.min.css" /> */}
       </head>
