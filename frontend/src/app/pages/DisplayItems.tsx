@@ -10,7 +10,10 @@ import type { Item } from "../../types.ts";
 import PageSwitch from "../../components/PageSwitch.tsx";
 
 function DisplayItems() {
-  const ON_MOBILE: boolean = false; //window.matchMedia("(max-width: 767px)").matches;
+  const ON_MOBILE: boolean =
+    typeof window === "undefined"
+      ? false
+      : window.matchMedia("(max-width: 767px)").matches;
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
