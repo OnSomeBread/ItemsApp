@@ -64,7 +64,7 @@ function getFleaPrice(item: Item) {
 
 function ItemComponent({ item, idx, children, fields }: Props) {
   return (
-    <div className="flex-col justify-center items-center text-center border-1 border-solid board-[#ccc] rounded-[10px] pt-4 px-4 pb-1 w-[92%]">
+    <div className="flex-col justify-center items-center text-center border-1 border-solid board-[#ccc] rounded-[10px] pt-4 px-4 pb-1 w-[92%] h-130">
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
         <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>
