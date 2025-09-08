@@ -1,4 +1,4 @@
-import TaskView from "../pages/TaskView";
+import TaskView from "./TaskView";
 
 type PageProps = {
   searchParams: Promise<{ id?: string }>;

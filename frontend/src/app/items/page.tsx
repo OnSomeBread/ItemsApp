@@ -1,4 +1,4 @@
-import DisplayItems from "../pages/DisplayItems";
+import DisplayItems from "./DisplayItems";
 
 export default function items() {
   return <DisplayItems />;

@@ -1,4 +1,4 @@
-import TaskTree from "../pages/TaskTree";
+import TaskTree from "./TaskTree";
 
 type PageProps = {
   searchParams: Promise<{ trader?: string }>;

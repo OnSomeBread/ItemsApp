@@ -1,4 +1,4 @@
-import ItemView from "../pages/ItemView";
+import ItemView from "./ItemView";
 
 type PageProps = {
   searchParams: Promise<{ id?: string }>;
