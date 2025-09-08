@@ -1,6 +1,6 @@
 import type { Task } from "../types";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 interface Props {
   task: Task;
@@ -15,7 +15,7 @@ function TaskComponent({ task, onClickButton }: Props) {
       animate={{ x: 0 }}
       transition={{ duration: 0.8 }}
     >
-      <Link to="/task_view" state={task}>
+      <Link href={{ pathname: "/task_view", query: "id=" + task._id }}>
         {task.name}
       </Link>
       <p>Minimum Player Level: {task.minPlayerLevel}</p>

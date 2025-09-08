@@ -1,13 +1,15 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { DEFAULT_TASK_QUERY_PARAMS } from "../constants";
-import TaskComponent from "../components/TaskComponent";
+import { DEFAULT_TASK_QUERY_PARAMS } from "../../constants";
+import TaskComponent from "../../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
-import TaskSearchBar from "../components/TaskSearchBar";
+import TaskSearchBar from "../../components/TaskSearchBar";
 import { motion } from "framer-motion";
-import { clearPageLocalStorage } from "../utils";
-import api from "../api";
-import type { Task, TaskAdjList } from "../types";
-import PageSwitch from "../components/PageSwitch";
+import { clearPageLocalStorage } from "../../utils";
+import api from "../../api";
+import type { Task, TaskAdjList } from "../../types";
+import PageSwitch from "../../components/PageSwitch";
 
 function DisplayTasks() {
   const [allTasks, setAllTasks] = useState<Task[] | null>(null);
@@ -32,8 +34,11 @@ function DisplayTasks() {
   }
 
   // grab all of the tasks that were marked completed
-  for (const key of Object.keys(localStorage)) {
-    if (key.startsWith("task")) params.append("ids", key.slice("task-".length));
+  if (typeof window !== "undefined") {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith("task"))
+        params.append("ids", key.slice("task-".length));
+    }
   }
 
   const query = "/api/tasks?" + params.toString();
@@ -88,6 +93,7 @@ function DisplayTasks() {
     relation: string,
     adj_list: TaskAdjList
   ) => {
+    if (typeof window === "undefined") return;
     const visited = new Set();
     const st = [start_id];
 

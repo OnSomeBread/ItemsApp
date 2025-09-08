@@ -1,0 +1,13 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // output: 'export', // standalone
+  // distDir: './dist',
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH,
+  // add to all pages to enable > export const experimental_ppr = trueexport const experimental_ppr = true
+  // experimental: {
+  //   ppr: 'incremental',
+  // },
+  eslint: {}
+}
+ 
+export default nextConfig

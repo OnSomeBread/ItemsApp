@@ -38,17 +38,28 @@ services:
         - mark1qaz/frontend:buildcache
       cache_to:
         - mark1qaz/frontend:buildcache
+    expose:
+      - "3000"
+    volumes:
+      - ./icons:/ItemsApp/public/icons:ro
+    environment:
+      - HOSTNAME=0.0.0.0
+      - CHOKIDAR_USEPOLLING=false
+      - NEXT_PUBLIC_BASE_PATH=
+      - NEXT_PUBLIC_BACKEND_SERVER=http://backend:8000
+    restart: unless-stopped
+
+  nginx:
+    container_name: "nginx"
+    image: nginx:stable-alpine3.21-slim
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./icons:/usr/share/nginx/html/icons:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.dev.conf:/etc/nginx/conf.d/default.conf
       - ./${FULLCHAIN_KEY}:/etc/ssl/certs/fullchain.pem
       - ./${DOMAIN_PRIVKEY}:/etc/ssl/private/privkey.pem
-    environment:
-      - CHOKIDAR_USEPOLLING=false
-    restart: unless-stopped
+    command: ["nginx", "-g", "daemon off;"]
 
   db:
     image: postgres:17-alpine

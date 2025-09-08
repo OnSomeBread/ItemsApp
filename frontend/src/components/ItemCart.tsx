@@ -1,5 +1,4 @@
 import axios from "axios";
-import { BACKEND_ADDRESS } from "../constants";
 import { useEffect, useState } from "react";
 import ItemComponent from "./ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
@@ -9,14 +8,16 @@ function ItemCart() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
 
   const params = new URLSearchParams();
-  Object.keys(localStorage).forEach((key: string) => {
-    if (key.startsWith("item")) {
-      const id = key.slice("item-".length);
-      if (id !== "prevTotalPrice") params.append("ids", id);
-    }
-  });
+  if (typeof window !== "undefined") {
+    Object.keys(localStorage).forEach((key: string) => {
+      if (key.startsWith("item")) {
+        const id = key.slice("item-".length);
+        if (id !== "prevTotalPrice") params.append("ids", id);
+      }
+    });
+  }
 
-  const query = BACKEND_ADDRESS + "/api/item_ids?" + params.toString();
+  const query = "/api/item_ids?" + params.toString();
   const count = params.getAll("ids").length;
 
   useEffect(() => {
@@ -45,6 +46,7 @@ function ItemCart() {
   // goes through all items and finds its count in localstorage which is set in DisplayItems changeCount used in buttons
   // returns both the current flea price and the previous flea price
   const getTotalFleaPrice = () => {
+    if (typeof window === "undefined") return [0, 0];
     const prevTotal = parseInt(
       localStorage.getItem("item-prevTotalPrice") || "0"
     );
@@ -130,7 +132,12 @@ function ItemCart() {
                 idx={i}
                 fields={["name", "fleaMarket", "icon"]}
               >
-                <p>count: {localStorage.getItem("item-" + x._id)}</p>
+                <p>
+                  count:{" "}
+                  {typeof window === "undefined"
+                    ? 0
+                    : localStorage.getItem("item-" + x._id)}
+                </p>
               </ItemComponent>
             </motion.li>
           ))}

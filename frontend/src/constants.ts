@@ -1,12 +1,9 @@
-export const ON_MOBILE: boolean =
-  window.matchMedia("(max-width: 767px)").matches;
-
 export const DEFAULT_ITEM_QUERY_PARAMS = {
   search: "",
   asc: "-",
   sortBy: "basePrice",
   type: "any",
-  limit: ON_MOBILE ? 10 : 40,
+  limit: 30,
   offset: 0,
 };
 
@@ -17,7 +14,7 @@ export const DEFAULT_TASK_QUERY_PARAMS = {
   playerLvl: 99,
   objType: "any",
   trader: "any",
-  limit: ON_MOBILE ? 10 : 20,
+  limit: 20,
   offset: 0,
 };
 
@@ -103,5 +100,5 @@ export const ALL_TASK_OBJECTIVE_TYPES = {
   skill: "Skill",
 };
 
-export const BACKEND_ADDRESS: string =
-  (import.meta.env.VITE_BACKEND_SERVER as string) ?? "";
+export const DOCKER_BACKEND: string = "http://backend:8000";
+//(process.env.NEXT_PUBLIC_BACKEND_SERVER as string) ?? "";

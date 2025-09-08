@@ -1,7 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import api from "../api";
-import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -52,7 +51,7 @@ function ProtectedRoute({ children }: Props) {
   if (isAuthorized === null) {
     return <div>Loading...</div>;
   }
-  return isAuthorized ? children : <Navigate to="/login" />;
+  return isAuthorized ? children : <p>need to login first</p>;
 }
 
 export default ProtectedRoute;

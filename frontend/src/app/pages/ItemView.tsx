@@ -1,34 +1,34 @@
-import { useLocation } from "react-router-dom";
-import { ALL_ITEM_TYPES } from "../constants";
-import { useEffect, useState } from "react";
-import ItemChart from "../components/ItemChart";
-import api from "../api";
-import type { Item, ItemHistory, ItemType } from "../types";
-import PageSwitch from "../components/PageSwitch";
+import { ALL_ITEM_TYPES, DOCKER_BACKEND } from "../../constants";
+import ItemChart from "../../components/ItemChart";
+import { type Item, type ItemHistory, type ItemType } from "../../types";
+import PageSwitch from "../../components/PageSwitch";
+import ImageComponent from "../../components/ImageComponent";
+import { Suspense } from "react";
 
-function ItemView() {
-  const location = useLocation();
-  const item = location.state as Item;
-  const [itemHistory, setItemHistory] = useState<ItemHistory[] | null>(null);
+type PageProps = {
+  searchParams: Promise<{ id?: string }>;
+};
 
-  // go to api endpoint item_history and grab prev flea market data
-  useEffect(() => {
-    api
-      .get<ItemHistory[]>("/api/item_history?item_id=" + item._id)
-      .then((response) => {
-        if (response.data === undefined || response.data.length === 0) return;
+async function ItemView({ searchParams }: PageProps) {
+  const { id } = (await searchParams) ?? { id: undefined };
+  if (id === undefined) return <p>no item passed in</p>;
 
-        // set all of the dates to a proper format using junkdate since it wont
-        // be used in the graph
-        const itemHistoryArr = response.data.map((d) => ({
-          ...d,
+  const res1 = await fetch(DOCKER_BACKEND + "/api/item_ids?ids=" + id, {
+    cache: "no-store",
+  });
+  const item: Item = (await res1.json())[0];
 
-          time: new Date(`2025-01-01T${d.time}Z`),
-        }));
-
-        setItemHistory(itemHistoryArr);
-      });
-  }, [item._id]);
+  const res2 = await fetch(
+    DOCKER_BACKEND + "/api/item_history?item_id=" + item._id,
+    {
+      cache: "no-store",
+    }
+  );
+  const data = await res2.json();
+  const itemHistory: ItemHistory[] = data.map((d: ItemHistory) => ({
+    ...d,
+    time: new Date(`2025-01-01T${d.time}Z`),
+  }));
 
   return (
     <>
@@ -40,13 +40,13 @@ function ItemView() {
           <p>
             item size width x height: {item.width}x{item.height}
           </p>
-          <img
-            src={"/icons/" + item._id + ".webp"}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = "/icons/unknown.webp";
-            }}
-          />
+          <Suspense fallback={<article aria-busy="true" />}>
+            <ImageComponent
+              item={item}
+              width={64 * item.width}
+              height={64 * item.height}
+            />
+          </Suspense>
           {item.itemtypes && item.itemtypes.length > 0 && (
             <p>
               item types:{" "}
@@ -71,7 +71,7 @@ function ItemView() {
             <p>{item.name} wiki page</p>
           </a>
 
-          {item.sells && (
+          {item.sells && item.sells.length > 0 && (
             <>
               <br></br>
               <p>Sell Prices</p>
@@ -93,7 +93,9 @@ function ItemView() {
               CONSTANT PRICE
             </mark>
           </p>
-          {itemHistory && <ItemChart itemHistory={itemHistory} />}
+          <Suspense fallback={<article aria-busy="true" />}>
+            {itemHistory && <ItemChart itemHistory={itemHistory} />}
+          </Suspense>
         </div>
       </div>
     </>

@@ -1,7 +1,8 @@
 import { type Item, type Sell } from "../types";
 import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
-import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
+import Link from "next/link";
+// import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
+import ImageComponent from "./ImageComponent";
 
 interface Props {
   item: Item;
@@ -38,7 +39,7 @@ function getFleaPrice(item: Item) {
   for (const trader of item.sells) {
     if (trader.source == "fleaMarket") {
       return (
-        <>
+        <div>
           <p>Flea Price: {trader.price.toLocaleString("en-us")} RUB</p>
           {item.avg24hPrice && (
             <p>
@@ -54,7 +55,7 @@ function getFleaPrice(item: Item) {
               {item.changeLast48hPercent}%
             </p>
           )}
-        </>
+        </div>
       );
     }
   }
@@ -63,15 +64,15 @@ function getFleaPrice(item: Item) {
 
 function ItemComponent({ item, idx, children, fields }: Props) {
   return (
-    <div className="flex-col items-center text-center border-1 border-solid board-[#ccc] rounded-[10px] pt-4 px-4 pb-1 w-[92%]">
+    <div className="flex-col justify-center items-center text-center border-1 border-solid board-[#ccc] rounded-[10px] pt-4 px-4 pb-1 w-[92%]">
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
-        <Link to="/item_view" state={item}>
+        <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>
           <p className="h-10">{item.name}</p>
         </Link>
       )}
       {fields.includes("shortName") && <p>{item.shortName}</p>}
-      {fields.includes("icon") && (
+      {/* {fields.includes("icon") && (
         <div className="flex justify-center items-center w-100% h-40">
           <img
             className="object-contain max-w-100% max-h-40"
@@ -88,6 +89,12 @@ function ItemComponent({ item, idx, children, fields }: Props) {
             }}
             alt={item.name}
           />
+        </div>
+      )} */}
+
+      {fields.includes("icon") && (
+        <div className="relative -z-1 flex justify-center items-center w-100% h-60">
+          <ImageComponent item={item} width={64} height={64} />
         </div>
       )}
 

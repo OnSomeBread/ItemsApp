@@ -15,9 +15,14 @@ RUN npm run build
 #     rm -rf /root/.npm && \
 #     rm -rf node_modules
 
-# only grab the needed files
-FROM nginx:stable-alpine3.21-slim
-COPY --from=build /ItemsApp/dist /usr/share/nginx/html
-EXPOSE 80
+FROM node:current-alpine3.22
+WORKDIR /ItemsApp
 
-CMD ["nginx", "-g", "daemon off;"]
+COPY --from=build ./ItemsApp/.next ./.next
+COPY --from=build ./ItemsApp/public ./public
+COPY --from=build ./ItemsApp/package.json ./package.json
+COPY --from=build ./ItemsApp/node_modules ./node_modules
+
+EXPOSE 3000
+CMD ["npm", "start"]
+

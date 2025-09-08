@@ -1,9 +1,6 @@
 import axios from "axios";
-import { BACKEND_ADDRESS } from "./constants";
 
-const api = axios.create({
-  baseURL: BACKEND_ADDRESS,
-});
+const api = axios.create({ baseURL: "" });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("access_token");
@@ -27,7 +24,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem("refresh_token");
         if (!refreshToken) throw new Error("No refresh token");
 
-        const res = await axios.post(BACKEND_ADDRESS + "/token/refresh", {
+        const res = await axios.post("/token/refresh", {
           refresh_token: refreshToken,
         });
 

@@ -1,65 +1,48 @@
-import { Link, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import api from "../api";
-import type { Task, TaskAdjList } from "../types";
-import PageSwitch from "../components/PageSwitch";
-import { ALL_TASK_OBJECTIVE_TYPES } from "../constants";
+import Link from "next/link";
+import type { Task, TaskAdjList } from "../../types";
+import PageSwitch from "../../components/PageSwitch";
+import { ALL_TASK_OBJECTIVE_TYPES, DOCKER_BACKEND } from "../../constants";
 
-function TaskView() {
-  const location = useLocation();
-  const task = location.state as Task;
-  const [adjTasks, setAdjTasks] = useState<Task[] | null>(null);
+type PageProps = {
+  searchParams: Promise<{ id?: string }>;
+};
+
+async function TaskView({ searchParams }: PageProps) {
+  const { id } = (await searchParams) ?? { id: undefined };
+  if (id === undefined) return <p>no task passed in</p>;
+
+  const res1 = await fetch(DOCKER_BACKEND + "/api/task_ids?ids=" + id, {
+    cache: "no-store",
+  });
+  const task: Task = (await res1.json())[0];
+
+  const res2 = await fetch(DOCKER_BACKEND + "/api/adj_list", {
+    cache: "no-store",
+  });
+  const adjList: TaskAdjList = await res2.json();
 
   // maps task id to status for all adjTasks
-  const [statusMap, setStatusMap] = useState<Map<string, string>>(new Map());
-  const [adjList, setAdjList] = useState<TaskAdjList | null>(null);
-  // this forces adjList useEffect to only run once
-  const [getAdjList] = useState(false);
+  const statusMap = new Map<string, string>();
+  const params = new URLSearchParams();
+  task.taskRequirements.forEach((tsk) => {
+    params.append("ids", tsk.reqTaskId);
+    statusMap.set(tsk.reqTaskId, tsk.status);
+  });
 
-  useEffect(() => {
-    const session_adj_list = sessionStorage.getItem("tasks-adj_list");
-    if (session_adj_list !== null) {
-      setAdjList(JSON.parse(session_adj_list));
-      return;
-    }
-
-    api
-      .get("/api/adj_list")
-      .then((response) => {
-        const adj_list = response.data;
-        setAdjList(adj_list);
-
-        sessionStorage.setItem("tasks-adj_list", JSON.stringify(adj_list));
-      })
-      .catch((err) => console.log(err));
-  }, [getAdjList]);
-
-  useEffect(() => {
-    if (adjList === null) return;
-    const params = new URLSearchParams();
-    const statMap = new Map();
-
-    task.taskRequirements.forEach((tsk) => {
-      params.append("ids", tsk.reqTaskId);
-      statMap.set(tsk.reqTaskId, tsk.status);
+  adjList[task._id]
+    .filter((tsk) => tsk[1] === "unlocks")
+    .forEach((tsk) => {
+      params.append("ids", tsk[0]);
+      statusMap.set(tsk[0], tsk[1]);
     });
 
-    adjList[task._id]
-      .filter((tsk) => tsk[1] === "unlocks")
-      .forEach((tsk) => {
-        params.append("ids", tsk[0]);
-        statMap.set(tsk[0], tsk[1]);
-      });
-
-    setStatusMap(statMap);
-
-    api
-      .get<Task[]>("/api/task_ids?" + params.toString())
-      .then((response) => setAdjTasks(response.data))
-      .catch((err) => console.log(err));
-  }, [adjList, task._id, task.taskRequirements]);
-
-  if (!task) return <p>no task passed in</p>;
+  const res3 = await fetch(
+    DOCKER_BACKEND + "/api/task_ids?" + params.toString(),
+    {
+      cache: "no-store",
+    }
+  );
+  const adjTasks: Task[] = await res3.json();
 
   const taskPreqs = adjTasks?.filter(
     (tst) => statusMap.get(tst._id) !== "unlocks"
@@ -113,7 +96,12 @@ function TaskView() {
               <ul>
                 {taskPreqs.map((taskReq) => (
                   <li key={taskReq._id}>
-                    <Link to="/task_view" state={taskReq}>
+                    <Link
+                      href={{
+                        pathname: "/task_view",
+                        query: "id=" + taskReq._id,
+                      }}
+                    >
                       {statusMap.get(taskReq._id)}: {taskReq.name}
                     </Link>
                   </li>
@@ -128,7 +116,12 @@ function TaskView() {
               <ul>
                 {taskUnlocks.map((taskReq) => (
                   <li key={taskReq._id}>
-                    <Link to="/task_view" state={taskReq}>
+                    <Link
+                      href={{
+                        pathname: "/task_view",
+                        query: "id=" + taskReq._id,
+                      }}
+                    >
                       {statusMap.get(taskReq._id)}: {taskReq.name}
                     </Link>
                   </li>

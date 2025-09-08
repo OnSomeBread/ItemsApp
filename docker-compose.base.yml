@@ -26,6 +26,14 @@ services:
   frontend:
     build:
       context: frontend
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    environment:
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_BASE_PATH=
+      - NEXT_PUBLIC_BACKEND_SERVER=http://backend:8000
 
   db:
     image: postgres:17-alpine

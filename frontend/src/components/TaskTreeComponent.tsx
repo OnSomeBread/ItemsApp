@@ -1,5 +1,6 @@
+"use client";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import {
   ReactFlow,
   Background,
@@ -29,16 +30,9 @@ interface Props {
   allTasks: Task[];
   initNodes: InitNode[];
   initEdges: Edge[];
-  idToTask: Map<string, Task>;
 }
 
-function TaskTreeComponent({
-  adjList,
-  allTasks,
-  initNodes,
-  initEdges,
-  idToTask,
-}: Props) {
+function TaskTreeComponent({ adjList, allTasks, initNodes, initEdges }: Props) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
@@ -104,17 +98,15 @@ function TaskTreeComponent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allTasks.length]);
 
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <div className="w-[100vw] h-[100vh]">
       <ReactFlow
-        colorMode="system"
+        colorMode="dark"
         nodes={nodes}
         edges={initEdges}
-        onNodeClick={(_, node) =>
-          navigate("/task_view", { state: idToTask.get(node.id) })
-        }
+        onNodeClick={(_, node) => router.push("/task_view?id=" + node.id)}
         minZoom={0.2}
         maxZoom={4}
         fitView

@@ -1,14 +1,16 @@
-import { DEFAULT_ITEM_QUERY_PARAMS, ON_MOBILE } from "../constants";
+"use client";
+import { DEFAULT_ITEM_QUERY_PARAMS } from "../../constants.ts";
 import { useState, useEffect } from "react";
-import { clearPageLocalStorage } from "../utils.ts";
-import ItemSearchBar from "../components/ItemSearchBar.tsx";
-import ItemScroll from "../components/ItemScroll.tsx";
-import ItemCart from "../components/ItemCart.tsx";
-import api from "../api.ts";
-import type { Item } from "../types.ts";
-import PageSwitch from "../components/PageSwitch.tsx";
+import { clearPageLocalStorage } from "../../utils.ts";
+import ItemSearchBar from "../../components/ItemSearchBar.tsx";
+import ItemScroll from "../../components/ItemScroll.tsx";
+import ItemCart from "../../components/ItemCart.tsx";
+import api from "../../api.ts";
+import type { Item } from "../../types.ts";
+import PageSwitch from "../../components/PageSwitch.tsx";
 
 function DisplayItems() {
+  const ON_MOBILE: boolean = false; //window.matchMedia("(max-width: 767px)").matches;
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -31,6 +33,7 @@ function DisplayItems() {
   const query = "/api/items?" + params.toString();
 
   const fetchItems = (offset: number) => {
+    if (typeof window === "undefined") return;
     if (fetchLoading) return;
     setFetchLoading(true);
 
@@ -69,6 +72,7 @@ function DisplayItems() {
 
   // this function is called when the buttons are pressed to change the value of a specific item in local storage
   const changeCount = (idx: number, newNumber: number) => {
+    if (typeof window === "undefined") return;
     setAllItems(
       allItems?.map((item, index) => {
         if (index !== idx) return item;
@@ -92,6 +96,7 @@ function DisplayItems() {
 
   // only deletes the keys for this page
   const clearCounts = () => {
+    if (typeof window === "undefined") return;
     clearPageLocalStorage("item");
     clearPageLocalStorage("date-added-item");
     setAllItems(
