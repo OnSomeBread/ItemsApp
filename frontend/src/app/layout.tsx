@@ -1,4 +1,3 @@
-import "@picocss/pico/css/pico.min.css";
 import "./globals.css";
 
 export default function RootLayout({
