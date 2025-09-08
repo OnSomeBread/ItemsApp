@@ -58,7 +58,7 @@ jobs:
 
       - name: wait for backend to be healthy
         run: |
-          until [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/api/health)" -eq 200 ]; do
+          until [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/health)" -eq 200 ]; do
             sleep 2
           done
 
