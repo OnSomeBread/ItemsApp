@@ -1,4 +1,4 @@
-import api from "../api";
+import api from "../../utils/api";
 import { useEffect, useState } from "react";
 
 function SignupLogin() {

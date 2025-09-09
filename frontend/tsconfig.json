@@ -34,7 +34,7 @@
     "./next-env.d.ts",
     "./src",
     ".next/types/**/*.ts"
-  ],
+, "utils/api.ts", "utils/constants.ts", "utils/types.ts", "utils/declarations.d.ts", "utils/utils.ts"  ],
   "exclude": [
     "./node_modules"
   ]

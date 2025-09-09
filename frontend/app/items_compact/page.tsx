@@ -1,4 +1,4 @@
-import { ItemQueryParams } from "../../types";
+import { ItemQueryParams } from "../../utils/types";
 import DisplayItemsCompact from "./DisplayItemsCompact";
 
 type PageProps = {

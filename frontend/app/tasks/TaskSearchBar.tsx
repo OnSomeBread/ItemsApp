@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { ALL_TASK_OBJECTIVE_TYPES, ALL_TRADERS } from "../constants";
-import type { TaskQueryParams } from "../types";
+import {
+  ALL_TASK_OBJECTIVE_TYPES,
+  ALL_TRADERS,
+} from "../../utils/constants.ts";
+import type { TaskQueryParams } from "../../utils/types.ts";
 
 interface Props {
   changeQueryParams: (arg0: string, arg1: string | number | boolean) => void;

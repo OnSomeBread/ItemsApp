@@ -9,7 +9,7 @@ import {
   type Node,
   type ReactFlowInstance,
 } from "@xyflow/react";
-import type { Task } from "../types";
+import type { Task } from "../../utils/types.ts";
 import ELK from "elkjs/lib/elk.bundled.js";
 
 const elk = new ELK();

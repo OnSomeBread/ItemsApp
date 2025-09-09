@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import ItemComponent from "./ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
-import type { Item } from "../types";
+import type { Item } from "../../utils/types.ts";
 
 function ItemCart() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);

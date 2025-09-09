@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
-import api from "../api";
+import api from "../../utils/api";
 import type { ReactNode } from "react";
 
 interface Props {

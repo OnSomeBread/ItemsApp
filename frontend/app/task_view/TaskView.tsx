@@ -1,7 +1,10 @@
 import Link from "next/link";
-import type { Task, TaskAdjList } from "../../types";
+import type { Task, TaskAdjList } from "../../utils/types";
 import PageSwitch from "../../components/PageSwitch";
-import { ALL_TASK_OBJECTIVE_TYPES, DOCKER_BACKEND } from "../../constants";
+import {
+  ALL_TASK_OBJECTIVE_TYPES,
+  DOCKER_BACKEND,
+} from "../../utils/constants";
 
 type PageProps = {
   searchParams: Promise<{ id?: string }>;

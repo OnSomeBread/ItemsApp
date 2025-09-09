@@ -1,6 +1,6 @@
-import { ALL_ITEM_TYPES, DOCKER_BACKEND } from "../../constants";
-import ItemChart from "../../components/ItemChart";
-import { type Item, type ItemHistory, type ItemType } from "../../types";
+import { ALL_ITEM_TYPES, DOCKER_BACKEND } from "../../utils/constants";
+import ItemChart from "./ItemChart";
+import { type Item, type ItemHistory, type ItemType } from "../../utils/types";
 import PageSwitch from "../../components/PageSwitch";
 import ImageComponent from "../../components/ImageComponent";
 import { Suspense } from "react";
