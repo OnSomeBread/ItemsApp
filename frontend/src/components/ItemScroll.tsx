@@ -70,6 +70,7 @@ function ItemScroll({
                     "traders",
                     // "fleaMarket",
                   ]}
+                  height={130}
                 >
                   <ItemComponentButtons
                     item={x}

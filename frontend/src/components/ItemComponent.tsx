@@ -8,6 +8,7 @@ interface Props {
   item: Item;
   idx: number;
   fields: string[];
+  height: number;
   children: ReactNode;
 }
 
@@ -62,9 +63,14 @@ function getFleaPrice(item: Item) {
   return <>Cannot be sold on flea</>;
 }
 
-function ItemComponent({ item, idx, children, fields }: Props) {
+function ItemComponent({ item, idx, children, fields, height }: Props) {
   return (
-    <div className="flex-col justify-center items-center text-center border-1 border-solid board-[#ccc] rounded-[10px] pt-4 px-4 pb-1 w-[92%] h-130">
+    <div
+      className={
+        "flex-col justify-center items-center text-center border-1 border-solid board-[#ccc] rounded-[10px] pt-4 px-4 pb-1 w-[92%] h-" +
+        height.toString()
+      }
+    >
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
         <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>

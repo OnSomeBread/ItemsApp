@@ -131,6 +131,7 @@ function ItemCart() {
                 item={x}
                 idx={i}
                 fields={["name", "fleaMarket", "icon"]}
+                height={100}
               >
                 <p>
                   count:{" "}
