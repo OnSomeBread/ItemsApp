@@ -41,7 +41,7 @@ services:
     expose:
       - "3000"
     volumes:
-      - ./icons:/ItemsApp/public/icons:ro
+      - ./icons:/ItemsApp/public:ro
     environment:
       - HOSTNAME=0.0.0.0
       - CHOKIDAR_USEPOLLING=false

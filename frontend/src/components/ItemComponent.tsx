@@ -95,7 +95,8 @@ function ItemComponent({ item, idx, children, fields }: Props) {
       {fields.includes("icon") && (
         <div className="relative -z-1 flex justify-center items-center w-100% h-60">
           <ImageComponent
-            item={item}
+            imgSrc={"/" + item._id + ".webp"}
+            alt={item.name}
             width={64 * item.width}
             height={64 * item.height}
           />

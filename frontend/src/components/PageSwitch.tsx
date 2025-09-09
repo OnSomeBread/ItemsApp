@@ -6,6 +6,7 @@ function PageSwitch() {
       <Link href="/items">Items page</Link>
       <Link href="/tasks">Tasks page</Link>
       <Link href="/task_tree">Task Tree page</Link>
+      {/* <Link href="/items_compact">Items page compact</Link> */}
       {/* <a onClick={() => window.history.back()}>Go Back</a> */}
     </nav>
   );

@@ -12,7 +12,7 @@ services:
     build:
       dockerfile: Dockerfile
     volumes:
-      - ./icons:/ItemsApp/public/icons:ro
+      - ./icons:/ItemsApp/public:ro
     environment:
       - CHOKIDAR_USEPOLLING=false
     restart: unless-stopped

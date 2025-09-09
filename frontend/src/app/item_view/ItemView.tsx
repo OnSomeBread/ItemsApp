@@ -42,7 +42,8 @@ async function ItemView({ searchParams }: PageProps) {
           </p>
           <Suspense fallback={<article aria-busy="true" />}>
             <ImageComponent
-              item={item}
+              imgSrc={"/" + item._id + ".webp"}
+              alt={item.name}
               width={64 * item.width}
               height={64 * item.height}
             />
