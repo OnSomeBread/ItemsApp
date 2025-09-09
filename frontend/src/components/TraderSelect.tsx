@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ALL_TRADERS } from "../../utils/constants.ts";
+import { ALL_TRADERS } from "../constants";
 
 interface Props {
   trader: string;

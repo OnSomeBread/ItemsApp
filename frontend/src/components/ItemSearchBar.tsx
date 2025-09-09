@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { ALL_ITEM_SORTBY, ALL_ITEM_TYPES } from "../../utils/constants";
-import type { ItemQueryParams } from "../../utils/types";
+import { ALL_ITEM_SORTBY, ALL_ITEM_TYPES } from "../constants";
+import type { ItemQueryParams } from "../types";
 
 interface Props {
   queryParams: ItemQueryParams;

@@ -1,12 +1,12 @@
 "use client";
-import { DEFAULT_ITEM_QUERY_PARAMS } from "../../utils/constants.ts";
+import { DEFAULT_ITEM_QUERY_PARAMS } from "../../constants.ts";
 import { useState, useEffect } from "react";
-import { clearPageLocalStorage } from "../../utils/utils.ts";
-import ItemSearchBar from "./ItemSearchBar.tsx";
-import ItemScroll from "./ItemScroll.tsx";
-import ItemCart from "./ItemCart.tsx";
-import api from "../../utils/api.ts";
-import type { Item } from "../../utils/types.ts";
+import { clearPageLocalStorage } from "../../utils.ts";
+import ItemSearchBar from "../../components/ItemSearchBar.tsx";
+import ItemScroll from "../../components/ItemScroll.tsx";
+import ItemCart from "../../components/ItemCart.tsx";
+import api from "../../api.ts";
+import type { Item } from "../../types.ts";
 import PageSwitch from "../../components/PageSwitch.tsx";
 
 function DisplayItems() {

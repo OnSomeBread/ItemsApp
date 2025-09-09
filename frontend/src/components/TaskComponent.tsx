@@ -1,4 +1,4 @@
-import type { Task } from "../../utils/types.ts";
+import type { Task } from "../types";
 import { motion } from "framer-motion";
 import Link from "next/link";
 

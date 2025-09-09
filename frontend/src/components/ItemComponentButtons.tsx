@@ -1,4 +1,4 @@
-import type { Item } from "../../utils/types.ts";
+import type { Item } from "../types";
 import { motion } from "framer-motion";
 
 interface Props {

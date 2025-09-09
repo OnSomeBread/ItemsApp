@@ -1,11 +1,11 @@
-import type { Task, TaskAdjList } from "../../utils/types";
-import TaskTreeComponent from "./TaskTreeComponent";
+import type { Task, TaskAdjList } from "../../types";
+import TaskTreeComponent from "../../components/TaskTreeComponent";
 import PageSwitch from "../../components/PageSwitch";
 import { type Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import TraderSelect from "./TraderSelect";
+import TraderSelect from "../../components/TraderSelect";
 import { Suspense } from "react";
-import { DOCKER_BACKEND } from "../../utils/constants";
+import { DOCKER_BACKEND } from "../../constants";
 
 type PageProps = {
   searchParams: Promise<{ trader?: string }>;

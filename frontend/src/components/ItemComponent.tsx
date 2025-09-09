@@ -1,8 +1,8 @@
-import { type Item, type Sell } from "../../utils/types.ts";
+import { type Item, type Sell } from "../types";
 import { type ReactNode } from "react";
 import Link from "next/link";
 // import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
-import ImageComponent from "../../components/ImageComponent";
+import ImageComponent from "./ImageComponent";
 
 interface Props {
   item: Item;

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DEFAULT_TASK_QUERY_PARAMS } from "../../utils/constants";
-import TaskComponent from "./TaskComponent";
+import { DEFAULT_TASK_QUERY_PARAMS } from "../../constants";
+import TaskComponent from "../../components/TaskComponent";
 import InfiniteScroll from "react-infinite-scroll-component";
-import TaskSearchBar from "./TaskSearchBar";
+import TaskSearchBar from "../../components/TaskSearchBar";
 import { motion } from "framer-motion";
-import { clearPageLocalStorage } from "../../utils/utils";
-import api from "../../utils/api";
-import type { Task, TaskAdjList } from "../../utils/types";
+import { clearPageLocalStorage } from "../../utils";
+import api from "../../api";
+import type { Task, TaskAdjList } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 
 function DisplayTasks() {
