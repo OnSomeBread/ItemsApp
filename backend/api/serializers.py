@@ -7,6 +7,11 @@ class SellForSerializer(serializers.ModelSerializer):
         model = SellFor
         fields = '__all__'
 
+class BuyForSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BuyFor
+        fields = '__all__'
+
 class ItemTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemTypes
@@ -14,6 +19,7 @@ class ItemTypesSerializer(serializers.ModelSerializer):
 
 class ItemSerializer(serializers.ModelSerializer):
     sells = SellForSerializer(many=True, read_only=True)
+    buys = BuyForSerializer(many=True, read_only=True)
     itemtypes = ItemTypesSerializer(many=True, read_only=True)
 
     class Meta:

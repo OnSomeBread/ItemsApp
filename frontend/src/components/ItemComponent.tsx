@@ -13,16 +13,16 @@ interface Props {
 
 // goes through all of the traders and finds the trader that sells for the most
 function getBestTrader(allTraders: Sell[]) {
-  if (allTraders.length == 1 && allTraders[0].source == "fleaMarket") {
+  if (allTraders.length == 1 && allTraders[0].name == "fleaMarket") {
     return <p></p>;
   }
 
   let bestTrader = "";
   let bestPrice = 0;
   for (const trader of allTraders) {
-    if (trader.price > bestPrice && trader.source != "fleaMarket") {
+    if (trader.price > bestPrice && trader.name != "fleaMarket") {
       bestPrice = trader.price;
-      bestTrader = trader.source;
+      bestTrader = trader.name;
     }
   }
   return (
@@ -37,7 +37,7 @@ function getBestTrader(allTraders: Sell[]) {
 // creates a few lines for the items container only if item can be sold in the flea
 function getFleaPrice(item: Item) {
   for (const trader of item.sells) {
-    if (trader.source == "fleaMarket") {
+    if (trader.name == "fleaMarket") {
       return (
         <div>
           <p>Flea Price: {trader.price.toLocaleString("en-us")} RUB</p>
@@ -94,7 +94,11 @@ function ItemComponent({ item, idx, children, fields }: Props) {
 
       {fields.includes("icon") && (
         <div className="relative -z-1 flex justify-center items-center w-100% h-60">
-          <ImageComponent item={item} width={64} height={64} />
+          <ImageComponent
+            item={item}
+            width={64 * item.width}
+            height={64 * item.height}
+          />
         </div>
       )}
 

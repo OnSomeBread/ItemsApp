@@ -76,10 +76,22 @@ async function ItemView({ searchParams }: PageProps) {
               <br></br>
               <p>Sell Prices</p>
               {item.sells.map((sellFor) => (
-                <p key={sellFor.source}>
-                  {sellFor.source +
+                <p key={sellFor.name}>
+                  {sellFor.name +
                     ": " +
-                    sellFor.price.toLocaleString("en-us")}
+                    sellFor.priceRUB.toLocaleString("en-us")}
+                </p>
+              ))}
+            </>
+          )}
+
+          {item.buys && item.buys.length > 0 && (
+            <>
+              <br></br>
+              <p>Buy Prices</p>
+              {item.buys.map((buyFor) => (
+                <p key={buyFor.name}>
+                  {buyFor.name + ": " + buyFor.priceRUB.toLocaleString("en-us")}
                 </p>
               ))}
             </>

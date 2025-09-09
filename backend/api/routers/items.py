@@ -21,7 +21,7 @@ def get_items_db_operations(search:str, sort_by:str, asc:str, item_type:str, lim
     # id is needed for order_by to make it consistant because it normally varys
     # leading to duplicates given to user if using pagination
     if sort_by == 'fleaMarket':
-        flea_market_prices = SellFor.objects.filter(item=OuterRef('pk'), source='fleaMarket')
+        flea_market_prices = SellFor.objects.filter(item=OuterRef('pk'), name='fleaMarket')
         flea_market_prices = flea_market_prices.order_by('-price', 'id')
         items = items.annotate(fleaPrice=Subquery(flea_market_prices.values('price')[:1]))
         items = items.filter(fleaPrice__isnull=False, name__icontains=search)
@@ -37,7 +37,7 @@ def get_items_db_operations(search:str, sort_by:str, asc:str, item_type:str, lim
 async def get_items(request: Request):
     # grab all of the filter and sort params
     search:str = request.query_params.get('search', '')
-    sort_by:str = request.query_params.get('sortBy', 'fleaMarket')
+    sort_by:str = request.query_params.get('sortBy', 'basePrice')
     asc:str = request.query_params.get('asc', '-')
     item_type:str = request.query_params.get('type', 'any')
 

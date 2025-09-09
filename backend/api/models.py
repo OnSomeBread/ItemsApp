@@ -24,7 +24,23 @@ class Item(Model):
 class SellFor(Model):
     item = ForeignKey(Item, on_delete=CASCADE, related_name='sells')
     price = IntegerField(default=0)
-    source = CharField(max_length=50)
+    currency = CharField(max_length=50)
+    priceRUB = CharField(max_length=50)
+
+    name = CharField(max_length=50, null=True)
+    sellOfferFeeRate = DecimalField(max_digits=24, decimal_places=8, null=True)
+    sellRequirementFeeRate = DecimalField(max_digits=24, decimal_places=8, null=True)
+    foundInRaidRequired = BooleanField(default=False, null=True)
+
+class BuyFor(Model):
+    item = ForeignKey(Item, on_delete=CASCADE, related_name='buys')
+    price = IntegerField(default=0)
+    currency = CharField(max_length=50)
+    priceRUB = CharField(max_length=50)
+
+    name = CharField(max_length=50, null=True)
+    minTraderLevel = IntegerField(default=0, null=True)
+    buyLimit = IntegerField(default=0, null=True)
 
 # since api calls are small this model stores only the data that changes often for each item
 class PastApiCalls(Model):

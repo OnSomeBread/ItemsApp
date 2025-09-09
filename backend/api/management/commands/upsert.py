@@ -79,6 +79,7 @@ def upsert_items(res, api:bool):
             # remove these fields from items model because they have their own models
             types = item.pop('types')
             sellfor = item.pop('sellFor')
+            buyfor = item.pop('buyFor')
 
             obj, _ = Item.objects.update_or_create(_id=item['_id'], defaults=item)
 
@@ -89,8 +90,33 @@ def upsert_items(res, api:bool):
             # delete the old sell data and bulk create new updates
             SellFor.objects.filter(item=obj).delete()
             SellFor.objects.bulk_create([
-                SellFor(item=obj, source=entry['source'], price=entry['price']) for entry in sellfor
+                SellFor(
+                    item=obj,
+                    price=entry['price'],
+                    currency=entry['currency'],
+                    priceRUB=entry['priceRUB'],
+
+                    name=entry['vendor'].get('name'),
+                    sellOfferFeeRate=entry['vendor'].get('sellOfferFeeRate'),
+                    sellRequirementFeeRate=entry['vendor'].get('sellRequirementFeeRate'),
+                    foundInRaidRequired=entry['vendor'].get('foundInRaidRequired', False),
+                ) for entry in sellfor
             ])
+
+            BuyFor.objects.filter(item=obj).delete()
+            BuyFor.objects.bulk_create([
+                BuyFor(
+                    item=obj,
+                    price=entry['price'],
+                    currency=entry['currency'],
+                    priceRUB=entry['priceRUB'],
+
+                    name=entry['vendor'].get('name'),
+                    minTraderLevel=entry['vendor'].get('minTraderLevel'),
+                    buyLimit=entry['vendor'].get('buyLimit'),
+                ) for entry in buyfor
+            ])
+
 
 
 # example tasks query

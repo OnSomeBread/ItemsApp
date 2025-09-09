@@ -29,7 +29,28 @@ ITEMS_QUERY = """
         link
         sellFor {
             price
-            source
+            currency
+            priceRUB
+            vendor {
+                name
+                ... on FleaMarket {
+                    sellOfferFeeRate
+                    sellRequirementFeeRate
+                    foundInRaidRequired
+                }
+            }
+        }
+        buyFor {
+            price
+            currency
+            priceRUB
+            vendor {
+                name
+                ... on TraderOffer {
+                    minTraderLevel
+                    buyLimit
+                }
+            }
         }
     }
 }

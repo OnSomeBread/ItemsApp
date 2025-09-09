@@ -9,15 +9,16 @@ interface Props {
   height: number;
 }
 
-function ImageComponent({ item }: Props) {
+function ImageComponent({ item, width, height }: Props) {
   const [src, setSrc] = useState("/icons/" + item._id + ".webp");
 
   return (
     <Image
       src={src}
       alt={item.name}
-      // width={width}
-      // height={height}
+      width={width}
+      height={height}
+      quality={100}
       onError={() => setSrc("/icons/unknown.webp")}
     />
   );

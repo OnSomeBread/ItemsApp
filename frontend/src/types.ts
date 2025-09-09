@@ -1,8 +1,24 @@
 export type Sell = {
+  itemid: string;
   id: number;
   price: number;
-  source: string;
+  currency: string;
+  priceRUB: number;
+  name: string;
+  sellOfferFeeRate: number;
+  sellRequirementFeeRate: number;
+  foundInRaidRequired: boolean;
+};
+
+export type Buy = {
   itemid: string;
+  id: number;
+  price: number;
+  currency: string;
+  priceRUB: number;
+  name: string;
+  minTraderLevel: number;
+  buyLimit: number;
 };
 
 export type ItemType = {
@@ -21,6 +37,7 @@ export type ItemHistory = {
 export type Item = {
   _id: string;
   sells: Sell[];
+  buys: Buy[];
   itemtypes: ItemType[];
   name: string;
   shortName: string;
