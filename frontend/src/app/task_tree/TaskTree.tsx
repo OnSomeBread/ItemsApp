@@ -73,12 +73,14 @@ async function TaskTree({ searchParams }: PageProps) {
       </div>
       <div className="z-1 absolute">
         <Suspense fallback={<article aria-busy="true" />}>
-          <TaskTreeComponent
-            adjList={adjList}
-            allTasks={allTasks}
-            initNodes={initNodes}
-            initEdges={initEdges}
-          />
+          <div className="w-[100vw] h-[100vh]">
+            <TaskTreeComponent
+              adjList={adjList}
+              allTasks={allTasks}
+              initNodes={initNodes}
+              initEdges={initEdges}
+            />
+          </div>
         </Suspense>
       </div>
     </div>

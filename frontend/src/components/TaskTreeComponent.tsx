@@ -101,24 +101,22 @@ function TaskTreeComponent({ adjList, allTasks, initNodes, initEdges }: Props) {
   const router = useRouter();
 
   return (
-    <div className="w-[100vw] h-[100vh]">
-      <ReactFlow
-        colorMode="dark"
-        nodes={nodes}
-        edges={initEdges}
-        onNodeClick={(_, node) => router.push("/task_view?id=" + node.id)}
-        minZoom={0.2}
-        maxZoom={4}
-        fitView
-        elevateEdgesOnSelect={true}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        onInit={setReactFlowInstance}
-      >
-        <Controls showInteractive={false} />
-        <Background />
-      </ReactFlow>
-    </div>
+    <ReactFlow
+      colorMode="dark"
+      nodes={nodes}
+      edges={initEdges}
+      onNodeClick={(_, node) => router.push("/task_view?id=" + node.id)}
+      minZoom={0.2}
+      maxZoom={4}
+      fitView
+      elevateEdgesOnSelect={true}
+      nodesDraggable={false}
+      nodesConnectable={false}
+      onInit={setReactFlowInstance}
+    >
+      <Controls showInteractive={false} />
+      <Background />
+    </ReactFlow>
   );
 }
 
