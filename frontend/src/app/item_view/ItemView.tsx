@@ -3,7 +3,6 @@ import ItemChart from "../../components/ItemChart";
 import { type Item, type ItemHistory, type ItemType } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 import ImageComponent from "../../components/ImageComponent";
-import { Suspense } from "react";
 
 type PageProps = {
   searchParams: Promise<{ id?: string }>;
@@ -40,14 +39,13 @@ async function ItemView({ searchParams }: PageProps) {
           <p>
             item size width x height: {item.width}x{item.height}
           </p>
-          <Suspense fallback={<article aria-busy="true" />}>
-            <ImageComponent
-              imgSrc={"/" + item._id + ".webp"}
-              alt={item.name}
-              width={64 * item.width}
-              height={64 * item.height}
-            />
-          </Suspense>
+          <ImageComponent
+            imgSrc={"/" + item._id + ".webp"}
+            alt={item.name}
+            priority={true}
+            width={64 * item.width}
+            height={64 * item.height}
+          />
           {item.itemtypes && item.itemtypes.length > 0 && (
             <p>
               item types:{" "}
@@ -106,9 +104,7 @@ async function ItemView({ searchParams }: PageProps) {
               CONSTANT PRICE
             </mark>
           </p>
-          <Suspense fallback={<article aria-busy="true" />}>
-            {itemHistory && <ItemChart itemHistory={itemHistory} />}
-          </Suspense>
+          {itemHistory && <ItemChart itemHistory={itemHistory} />}
         </div>
       </div>
     </>

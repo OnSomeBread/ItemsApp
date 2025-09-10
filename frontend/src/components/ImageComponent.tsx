@@ -7,9 +7,10 @@ interface Props {
   alt: string;
   width: number;
   height: number;
+  priority: boolean;
 }
 // /icons/" + item._id + ".webp
-function ImageComponent({ imgSrc, alt, width, height }: Props) {
+function ImageComponent({ imgSrc, alt, width, height, priority }: Props) {
   const [src, setSrc] = useState(imgSrc);
 
   return (
@@ -18,6 +19,7 @@ function ImageComponent({ imgSrc, alt, width, height }: Props) {
       alt={alt}
       width={width}
       height={height}
+      priority={priority}
       onError={() => setSrc("/unknown.webp")}
     />
   );

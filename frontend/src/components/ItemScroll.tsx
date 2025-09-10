@@ -1,10 +1,11 @@
 import InfiniteScroll from "react-infinite-scroll-component";
 import ItemComponentButtons from "./ItemComponentButtons.tsx";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Item, ItemQueryParams } from "../types.ts";
+import ItemComponent from "./ItemComponent.tsx";
 
-const ItemComponentPreview = lazy(() => import("./ItemComponent.tsx"));
+// const ItemComponent = lazy(() => import("./ItemComponent.tsx"));
 
 interface Props {
   allItems: Item[] | null;
@@ -59,7 +60,7 @@ function ItemScroll({
                 }}
                 style={{ listStyleType: "none" }}
               >
-                <ItemComponentPreview
+                <ItemComponent
                   item={x}
                   idx={i}
                   fields={[
@@ -77,7 +78,7 @@ function ItemScroll({
                     idx={i}
                     onChangeCount={changeCount}
                   ></ItemComponentButtons>
-                </ItemComponentPreview>
+                </ItemComponent>
               </motion.li>
             </Suspense>
           ))}

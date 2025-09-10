@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import ItemScrollCompact from "../../components/ItemScrollCompact";
 import PageSwitch from "../../components/PageSwitch";
 import { DEFAULT_ITEM_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
@@ -32,9 +31,7 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     <>
       <PageSwitch />
       <div className="text-[14px]">
-        <Suspense fallback={<article aria-busy="true" />}>
-          <ItemScrollCompact initItems={items} queryParams={queryParams} />
-        </Suspense>
+        <ItemScrollCompact initItems={items} queryParams={queryParams} />
       </div>
     </>
   );

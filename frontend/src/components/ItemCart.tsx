@@ -1,8 +1,8 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import ItemComponent from "./ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Item } from "../types";
+import api from "../api";
 
 function ItemCart() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
@@ -25,7 +25,7 @@ function ItemCart() {
       setAllItems(null);
       return;
     }
-    axios
+    api
       .get<Item[]>(query)
       .then((response) => {
         // sort all of the items by when they where added to the cart ascending

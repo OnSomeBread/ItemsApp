@@ -1,5 +1,7 @@
 import TaskTree from "./TaskTree";
 
+export const metadata = { title: "Tarkov Task Tree" };
+
 type PageProps = {
   searchParams: Promise<{ trader?: string }>;
 };

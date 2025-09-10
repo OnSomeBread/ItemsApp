@@ -3,6 +3,7 @@ import { type ReactNode } from "react";
 import Link from "next/link";
 // import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
 import ImageComponent from "./ImageComponent";
+import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
 
 interface Props {
   item: Item;
@@ -103,6 +104,7 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
           <ImageComponent
             imgSrc={"/" + item._id + ".webp"}
             alt={item.name}
+            priority={idx <= DEFAULT_ITEM_QUERY_PARAMS["limit"] ? true : false}
             width={64 * item.width}
             height={64 * item.height}
           />

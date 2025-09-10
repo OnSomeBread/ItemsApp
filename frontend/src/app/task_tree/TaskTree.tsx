@@ -1,11 +1,9 @@
 import type { Task, TaskAdjList } from "../../types";
-import TaskTreeComponent from "../../components/TaskTreeComponent";
 import PageSwitch from "../../components/PageSwitch";
 import { type Edge } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
 import TraderSelect from "../../components/TraderSelect";
-import { Suspense } from "react";
 import { DOCKER_BACKEND } from "../../constants";
+import TaskTreeComponent from "../../components/TaskTreeComponent";
 
 type PageProps = {
   searchParams: Promise<{ trader?: string }>;
@@ -72,16 +70,14 @@ async function TaskTree({ searchParams }: PageProps) {
         <TraderSelect trader={trader} />
       </div>
       <div className="z-1 absolute">
-        <Suspense fallback={<article aria-busy="true" />}>
-          <div className="w-[100vw] h-[100vh]">
-            <TaskTreeComponent
-              adjList={adjList}
-              allTasks={allTasks}
-              initNodes={initNodes}
-              initEdges={initEdges}
-            />
-          </div>
-        </Suspense>
+        <div className="w-[100vw] h-[100vh]">
+          <TaskTreeComponent
+            adjList={adjList}
+            allTasks={allTasks}
+            initNodes={initNodes}
+            initEdges={initEdges}
+          />
+        </div>
       </div>
     </div>
   );
