@@ -37,10 +37,10 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         name="asc"
         className={buttonClass}
         onClick={() => {
-          changeQueryParams("asc", queryParams.asc == "" ? "-" : "");
+          changeQueryParams("asc", queryParams.asc === "" ? "-" : "");
         }}
       >
-        {queryParams.asc == "" ? "Ascending" : "Descending"}
+        {queryParams.asc === "" ? "Ascending" : "Descending"}
       </button>
       <select
         name="sortBy"

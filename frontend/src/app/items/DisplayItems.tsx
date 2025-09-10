@@ -56,9 +56,9 @@ function DisplayItems() {
         }
         changeQueryParams("offset", offset + queryParams.limit);
 
-        setHasMore(newItems.length == queryParams.limit);
+        setHasMore(newItems.length === queryParams.limit);
       })
-      .catch((err) => console.log(err))
+      .catch((err) => console.error(err))
       .finally(() => setFetchLoading(false));
   };
 

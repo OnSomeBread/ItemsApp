@@ -27,7 +27,7 @@ function ItemScrollCompact({ initItems, queryParams }: Props) {
 
     const res1 = await fetch("/api/items?" + params.toString());
 
-    const items: Item[] = await res1.json();
+    const items = (await res1.json()) as Item[];
 
     setHasMore(items.length === queryParams.limit);
     setAllItems((prev) => [...(prev ?? []), ...items]);
@@ -106,14 +106,14 @@ function ItemScrollCompact({ initItems, queryParams }: Props) {
                   <p>{item.basePrice} RUB</p>
                 </td>
                 <td>
-                  {buyTrader != "" && (
+                  {buyTrader !== "" && (
                     <p>
                       {buyTrader}: {buyPrice} RUB
                     </p>
                   )}
                 </td>
                 <td>
-                  {sellTrader != "" && (
+                  {sellTrader !== "" && (
                     <p>
                       {sellTrader}: {sellPrice} RUB
                     </p>

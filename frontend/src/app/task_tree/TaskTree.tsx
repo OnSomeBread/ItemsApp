@@ -20,7 +20,7 @@ async function TaskTree({ searchParams }: PageProps) {
   const res1 = await fetch(DOCKER_BACKEND + "/api/adj_list", {
     cache: "no-store",
   });
-  const adjList: TaskAdjList = await res1.json();
+  const adjList = (await res1.json()) as TaskAdjList;
 
   // TODO grab all of the tasks that were marked completed
   // for (const key of Object.keys(localStorage)) {
@@ -33,7 +33,7 @@ async function TaskTree({ searchParams }: PageProps) {
       cache: "no-store",
     }
   );
-  const allTasks: Task[] = await res2.json();
+  const allTasks = (await res2.json()) as Task[];
 
   const initNodes =
     allTasks?.map((task) => ({

@@ -40,7 +40,7 @@ function ItemCart() {
         });
         setAllItems(response.data);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
   }, [query, count]);
 
   // goes through all items and finds its count in localstorage which is set in DisplayItems changeCount used in buttons
@@ -90,7 +90,7 @@ function ItemCart() {
           <p>Total Flea Market Price</p>
           <div className="flex justify-between pr-7">
             <p>{currPrice.toLocaleString("en-us")} RUB</p>
-            {currPrice != prevPrice && (
+            {currPrice !== prevPrice && (
               <motion.p
                 key={currPrice}
                 initial={{ opacity: 0 }}

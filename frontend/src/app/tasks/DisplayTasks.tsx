@@ -50,16 +50,16 @@ function DisplayTasks() {
     api
       .get<Task[]>(query + "&offset=" + offset)
       .then((response) => {
-        if (offset == 0) {
+        if (offset === 0) {
           setAllTasks(response.data);
         } else {
           setAllTasks((prev) => [...(prev ?? []), ...response.data]);
         }
 
         changeQueryParams("offset", offset + queryParams.limit);
-        setHasMore(response.data.length == queryParams.limit);
+        setHasMore(response.data.length === queryParams.limit);
       })
-      .catch((err) => console.log(err))
+      .catch((err) => console.error(err))
       .finally(() => setFetchLoading(false));
   };
 
@@ -80,11 +80,11 @@ function DisplayTasks() {
       return;
     }
     api
-      .get("/api/task_ids?ids=" + params.getAll("ids").join("&ids="))
+      .get<Task[]>("/api/task_ids?ids=" + params.getAll("ids").join("&ids="))
       .then((response) => {
         setCompletedTasks(response.data);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changedTasksToggle]);
 
@@ -111,7 +111,7 @@ function DisplayTasks() {
       // if top_id has no requirements continue
       if (!(top_id in adj_list)) continue;
       for (const req of adj_list[top_id]) {
-        if (!visited.has(req[0]) && req[1] == relation) {
+        if (!visited.has(req[0]) && req[1] === relation) {
           st.push(req[0]);
         }
       }
@@ -124,16 +124,20 @@ function DisplayTasks() {
   const onClickComplete = (start_id: string, relation: string) => {
     const session_adj_list = sessionStorage.getItem("tasks-adj_list");
     if (session_adj_list !== null) {
-      performDFS(start_id, relation, JSON.parse(session_adj_list));
+      performDFS(
+        start_id,
+        relation,
+        JSON.parse(session_adj_list) as TaskAdjList
+      );
       return;
     }
 
     api
-      .get("/api/adj_list")
+      .get<TaskAdjList>("/api/adj_list")
       .then((response) => {
         performDFS(start_id, relation, response.data);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
   };
 
   const containerVarients = {

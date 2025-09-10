@@ -40,7 +40,7 @@ function TaskTreeComponent({ adjList, allTasks, initNodes, initEdges }: Props) {
   // Whenever nodes change, call fitView
   useEffect(() => {
     if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.2 });
+      void reactFlowInstance.fitView({ padding: 0.2 });
     }
   }, [nodes, reactFlowInstance]);
 
@@ -94,7 +94,7 @@ function TaskTreeComponent({ adjList, allTasks, initNodes, initEdges }: Props) {
 
         setNodes(layoutedNodes);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allTasks.length]);
 

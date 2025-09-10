@@ -26,7 +26,7 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
   });
 
   const res1 = await fetch(DOCKER_BACKEND + "/api/items?" + params.toString());
-  const items: Item[] = await res1.json();
+  const items = (await res1.json()) as Item[];
 
   return (
     <>

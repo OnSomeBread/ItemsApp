@@ -14,12 +14,13 @@ async function TaskView({ searchParams }: PageProps) {
   const res1 = await fetch(DOCKER_BACKEND + "/api/task_ids?ids=" + id, {
     cache: "no-store",
   });
-  const task: Task = (await res1.json())[0];
+
+  const task = ((await res1.json()) as Task[])[0];
 
   const res2 = await fetch(DOCKER_BACKEND + "/api/adj_list", {
     cache: "no-store",
   });
-  const adjList: TaskAdjList = await res2.json();
+  const adjList = (await res2.json()) as TaskAdjList;
 
   // maps task id to status for all adjTasks
   const statusMap = new Map<string, string>();
@@ -42,7 +43,7 @@ async function TaskView({ searchParams }: PageProps) {
       cache: "no-store",
     }
   );
-  const adjTasks: Task[] = await res3.json();
+  const adjTasks = (await res3.json()) as Task[];
 
   const taskPreqs = adjTasks?.filter(
     (tst) => statusMap.get(tst._id) !== "unlocks"

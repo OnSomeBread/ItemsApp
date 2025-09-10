@@ -16,7 +16,7 @@ async function ItemView({ searchParams }: PageProps) {
   const res1 = await fetch(DOCKER_BACKEND + "/api/item_ids?ids=" + id, {
     cache: "no-store",
   });
-  const item: Item = (await res1.json())[0];
+  const item = ((await res1.json()) as Item[])[0];
 
   const res2 = await fetch(
     DOCKER_BACKEND + "/api/item_history?item_id=" + item._id,
@@ -24,10 +24,10 @@ async function ItemView({ searchParams }: PageProps) {
       cache: "no-store",
     }
   );
-  const data = await res2.json();
-  const itemHistory: ItemHistory[] = data.map((d: ItemHistory) => ({
+  const data = (await res2.json()) as ItemHistory[];
+  const itemHistory = data.map((d: ItemHistory) => ({
     ...d,
-    time: new Date(`2025-01-01T${d.time}Z`),
+    time: new Date(`2025-01-01T${String(d.time)}Z`),
   }));
 
   return (

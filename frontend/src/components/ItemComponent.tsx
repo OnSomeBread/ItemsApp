@@ -14,14 +14,14 @@ interface Props {
 
 // goes through all of the traders and finds the trader that sells for the most
 function getBestTrader(allTraders: Sell[]) {
-  if (allTraders.length == 1 && allTraders[0].name == "fleaMarket") {
+  if (allTraders.length === 1 && allTraders[0].name === "fleaMarket") {
     return <p></p>;
   }
 
   let bestTrader = "";
   let bestPrice = 0;
   for (const trader of allTraders) {
-    if (trader.price > bestPrice && trader.name != "fleaMarket") {
+    if (trader.price > bestPrice && trader.name !== "fleaMarket") {
       bestPrice = trader.price;
       bestTrader = trader.name;
     }
@@ -38,7 +38,7 @@ function getBestTrader(allTraders: Sell[]) {
 // creates a few lines for the items container only if item can be sold in the flea
 function getFleaPrice(item: Item) {
   for (const trader of item.sells) {
-    if (trader.name == "fleaMarket") {
+    if (trader.name === "fleaMarket") {
       return (
         <div>
           <p>Flea Price: {trader.price.toLocaleString("en-us")} RUB</p>
@@ -47,7 +47,7 @@ function getFleaPrice(item: Item) {
               Average 24h Price: {item.avg24hPrice.toLocaleString("en-us")} RUB
             </p>
           )}
-          {item.changeLast48hPercent != 0 && (
+          {item.changeLast48hPercent !== 0 && (
             <p
               className={
                 item.changeLast48hPercent < 0 ? "text-green-50" : "text-red-50"

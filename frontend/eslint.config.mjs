@@ -1,0 +1,53 @@
+import js from "@eslint/js";
+import nextPlugin from "@next/eslint-plugin-next";
+import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
+import jsxA11y from "eslint-plugin-jsx-a11y";
+import reactRefresh from "eslint-plugin-react-refresh";
+// import tailwind from "eslint-plugin-tailwindcss";
+// import prettier from "eslint-plugin-prettier";
+
+export default [
+  js.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  {
+    ignores: ["node_modules", "public", ".next", "dist", "out", "build"],
+  },
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
+    },
+    plugins: {
+      "@next/next": nextPlugin,
+      "react-hooks": reactHooks,
+      "jsx-a11y": jsxA11y,
+      "react-refresh": reactRefresh,
+    },
+    rules: {
+      ...nextPlugin.configs["core-web-vitals"].rules,
+      "@next/next/no-styled-jsx-in-document": "error",
+      "@next/next/no-typos": "error",
+      "@next/next/inline-script-id": "error",
+      //"@next/next/optimized-images": "error",
+
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+
+      ...jsxA11y.configs.recommended.rules,
+
+      "no-console": ["error", { allow: ["warn", "error"] }],
+      "no-alert": "error",
+      "no-duplicate-imports": "error",
+      "prefer-const": "error",
+      "eqeqeq": ["error", "always"],
+
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
+  },
+];

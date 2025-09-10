@@ -24,17 +24,19 @@ function ItemChart({ itemHistory }: Props) {
         <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
         <XAxis
           dataKey="time"
-          tickFormatter={(t) => new Date(t).toLocaleTimeString()}
+          tickFormatter={(t: string) => new Date(t).toLocaleTimeString()}
         />
         <YAxis
-          tickFormatter={(value) =>
+          tickFormatter={(value: number) =>
             new Intl.NumberFormat("en-US", {
               notation: "compact",
               compactDisplay: "short",
             }).format(value)
           }
         />
-        <Tooltip labelFormatter={(t) => new Date(t).toLocaleTimeString()} />
+        <Tooltip
+          labelFormatter={(t: string) => new Date(t).toLocaleTimeString()}
+        />
         <Line
           type="monotone"
           dataKey="fleaMarket"
