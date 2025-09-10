@@ -1,5 +1,7 @@
 import ItemView from "./ItemView";
 
+export const metadata = { title: "Tarkov Item View" };
+
 type PageProps = {
   searchParams: Promise<{ id?: string }>;
 };
