@@ -44,7 +44,7 @@ async def get_tasks(request: Request):
     player_lvl:int = int(player_lvl) if player_lvl.isdigit() else 99
 
     limit:str = request.query_params.get('limit', '30')
-    limit:int = min(int(limit), 300) if limit.isdigit() else 30
+    limit:int = min(int(limit), 500) if limit.isdigit() else 30
 
     offset:str = request.query_params.get('offset', '0')
     offset:int = int(offset) if offset.isdigit() else 0
