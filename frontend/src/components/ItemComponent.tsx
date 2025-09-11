@@ -1,9 +1,11 @@
 import { type Item, type Sell } from "../types";
 import { type ReactNode } from "react";
 import Link from "next/link";
-// import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
-import ImageComponent from "./ImageComponent";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
+import dynamic from "next/dynamic";
+const ImageComponent = dynamic(() => import("./ImageComponent"), {
+  ssr: false,
+});
 
 interface Props {
   item: Item;
@@ -74,31 +76,14 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
     >
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
-        <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>
-          <p className="h-10">{item.name}</p>
-        </Link>
+        <p className="h-10">
+          <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>
+            {item.name}
+          </Link>
+          <br />
+          {item.shortName}
+        </p>
       )}
-      {fields.includes("shortName") && <p>{item.shortName}</p>}
-      {/* {fields.includes("icon") && (
-        <div className="flex justify-center items-center w-100% h-40">
-          <img
-            className="object-contain max-w-100% max-h-40"
-            loading={
-              idx >= DEFAULT_ITEM_QUERY_PARAMS["limit"] ? "lazy" : "eager"
-            }
-            fetchPriority={
-              idx >= DEFAULT_ITEM_QUERY_PARAMS["limit"] ? "low" : "high"
-            }
-            src={"/icons/" + item._id + ".webp"}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = "/icons/unknown.webp";
-            }}
-            alt={item.name}
-          />
-        </div>
-      )} */}
-
       {fields.includes("icon") && (
         <div className="relative -z-1 flex justify-center items-center w-100% h-60">
           <ImageComponent
