@@ -72,13 +72,14 @@ async function ItemView({ searchParams }: PageProps) {
 
           {item.sells && item.sells.length > 0 && (
             <>
-              <br></br>
+              <br />
               <p>Sell Prices</p>
               {item.sells.map((sellFor) => (
                 <p key={sellFor.name}>
                   {sellFor.name +
                     ": " +
-                    sellFor.priceRUB.toLocaleString("en-us")}
+                    sellFor.priceRUB.toLocaleString("en-us")}{" "}
+                  RUB
                 </p>
               ))}
             </>
@@ -86,11 +87,20 @@ async function ItemView({ searchParams }: PageProps) {
 
           {item.buys && item.buys.length > 0 && (
             <>
-              <br></br>
+              <br />
               <p>Buy Prices</p>
               {item.buys.map((buyFor) => (
                 <p key={buyFor.name}>
-                  {buyFor.name + ": " + buyFor.priceRUB.toLocaleString("en-us")}
+                  {"buy " +
+                    buyFor.buyLimit +
+                    " from " +
+                    buyFor.name +
+                    " lvl " +
+                    buyFor.minTraderLevel +
+                    ": " +
+                    buyFor.price.toLocaleString("en-us") +
+                    " " +
+                    buyFor.currency}
                 </p>
               ))}
             </>
