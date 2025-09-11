@@ -10,10 +10,46 @@ import {
   type Node,
   type ReactFlowInstance,
 } from "@xyflow/react";
-import type { Task } from "../types";
-import ELK from "elkjs/lib/elk.bundled.js";
+// import ReactFlow from "@xyflow/react/lib/ReactFlow";
+// import Background from "@xyflow/react/lib/Background";
+// import Controls from "@xyflow/react/lib/Controls";
+// import { ReactFlow, Background, Controls } from "@xyflow/react/esm";
 
-const elk = new ELK();
+import type { Task } from "../types";
+
+import ELK, { type ELK as ELKType } from "elkjs/lib/elk-api";
+
+// const elk = new ELK({
+//   workerFactory: () =>
+//     new Worker(new URL("/elk-worker.min.js", import.meta.url), {
+//       type: "module",
+//     }),
+// });
+// const elk = new ELK({
+//   workerUrl: "/elk-worker.min.js",
+// });
+
+// import ELK from "elkjs/lib/elk.bundled.js";
+// const elk = new ELK();
+
+// let elk: ELKType | null = null;
+
+// if (typeof window !== "undefined") {
+//   elk = new ELK({
+//     workerUrl: "/elk-worker.min.js",
+//   });
+// }
+
+let elk: ELKType | null = null;
+
+if (typeof window !== "undefined") {
+  elk = new ELK({
+    workerFactory: () =>
+      new Worker(new URL("elkjs/lib/elk-worker.min.js", import.meta.url), {
+        type: "module",
+      }),
+  });
+}
 
 type TaskAdjList = {
   [key: string]: [string, string][];
@@ -46,7 +82,7 @@ function TaskTreeComponent({ adjList, allTasks, initNodes, initEdges }: Props) {
   }, [nodes, reactFlowInstance]);
 
   useEffect(() => {
-    if (!adjList || !allTasks) return;
+    if (!adjList || !allTasks || !elk) return;
     const graph = {
       id: "root",
       layoutOptions: {
