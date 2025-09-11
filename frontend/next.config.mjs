@@ -6,8 +6,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: 'export', // standalone
-  // distDir: './dist',
+  output: 'standalone',
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,
   // add to all pages to enable > export const experimental_ppr = trueexport const experimental_ppr = true
   // experimental: {
