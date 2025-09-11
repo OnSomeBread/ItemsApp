@@ -115,8 +115,8 @@ function TaskTreeComponent({ adjList, allTasks, initNodes, initEdges }: Props) {
       nodes={nodes}
       edges={initEdges}
       onNodeClick={(_, node) => router.push("/task_view?id=" + node.id)}
-      minZoom={0.2}
-      maxZoom={4}
+      minZoom={0.1}
+      maxZoom={10}
       fitView
       elevateEdgesOnSelect={true}
       nodesDraggable={false}
