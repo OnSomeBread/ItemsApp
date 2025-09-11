@@ -66,7 +66,6 @@ export const ALL_ITEM_SORTBY = {
 };
 
 export const ALL_TRADERS = {
-  any: "Any",
   prapor: "Prapor",
   therapist: "Therapist",
   fence: "Fence",
@@ -76,6 +75,7 @@ export const ALL_TRADERS = {
   ragman: "Ragman",
   jaeger: "Jaeger",
   ref: "Ref",
+  any: "Any",
 };
 
 export const ALL_TASK_OBJECTIVE_TYPES = {

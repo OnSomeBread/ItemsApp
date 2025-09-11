@@ -16,7 +16,7 @@ function TraderSelect({ trader }: Props) {
       defaultValue={trader}
     >
       {Object.entries(ALL_TRADERS)
-        .filter((trader) => trader[0] !== "any")
+        //.filter((trader) => trader[0] !== "any")
         .map(([key, value]) => (
           <option key={key} value={key}>
             Trader: {value}
