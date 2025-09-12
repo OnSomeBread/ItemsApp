@@ -77,7 +77,7 @@ jobs:
       - name: install locust
         run: |
           python -m pip install --upgrade pip
-          pip install locust gevent zope.event
+          pip install locust==2.40.2
 
       - name: run backend locust tests
         run: locust -f locust_testing_backend.py --headless -u 10 -r 1 --run-time 30s --loglevel DEBUG
