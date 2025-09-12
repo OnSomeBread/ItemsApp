@@ -46,53 +46,72 @@ function ItemCart() {
   // goes through all items and finds its count in localstorage which is set in DisplayItems changeCount used in buttons
   // returns both the current flea price and the previous flea price
   const getTotalFleaPrice = () => {
-    if (typeof window === "undefined") return [0, 0];
-    const prevTotal = parseInt(
-      localStorage.getItem("item-prevTotalPrice") || "0"
+    if (typeof window === "undefined") return [0, 0, 0, 0];
+    const prevTotalBuy = parseInt(
+      localStorage.getItem("item-prevTotalBuy") || "0"
     );
-    let totalFleaPrice = 0;
+    const prevTotalSell = parseInt(
+      localStorage.getItem("item-prevTotalSell") || "0"
+    );
+    let totalBuyPrice = 0;
+    let totalSellPrice = 0;
 
     allItems?.forEach((item) => {
-      let bestPrice = 0;
-      for (const sell of item.sells) {
-        bestPrice = Math.max(bestPrice, sell.price);
+      let bestBuyPrice = Number.MAX_SAFE_INTEGER;
+      let bestSellPrice = 0;
+      for (const sell of item.buys) {
+        bestBuyPrice = Math.min(bestBuyPrice, sell.priceRUB);
       }
-      totalFleaPrice +=
-        bestPrice * parseInt(localStorage.getItem("item-" + item._id) || "0");
+      for (const sell of item.sells) {
+        bestSellPrice = Math.max(bestSellPrice, sell.priceRUB);
+      }
+      const count = parseInt(localStorage.getItem("item-" + item._id) || "0");
+
+      totalSellPrice += bestSellPrice * count;
+      totalBuyPrice +=
+        (bestBuyPrice === Number.MAX_SAFE_INTEGER ? 0 : bestBuyPrice) * count;
     });
 
-    return [totalFleaPrice, prevTotal];
+    return [totalSellPrice, prevTotalSell, totalBuyPrice, prevTotalBuy];
   };
 
-  const [currPrice, prevPrice] = getTotalFleaPrice();
+  const [currSellPrice, prevTotalSell, currBuyPrice, prevTotalBuy] =
+    getTotalFleaPrice();
 
   // this allows the user to stack +money that resets after timeout period
   useEffect(() => {
     const prevTimeout = setTimeout(() => {
-      localStorage.setItem("item-prevTotalPrice", currPrice.toString());
+      localStorage.setItem("item-prevTotalSell", currSellPrice.toString());
+      localStorage.setItem("item-prevTotalBuy", currBuyPrice.toString());
     }, 400);
     return () => clearTimeout(prevTimeout);
-  }, [currPrice]);
+  }, [currSellPrice, currBuyPrice]);
 
-  const moneyColor = currPrice >= prevPrice ? "green" : "red";
-  const sign = currPrice > prevPrice ? "+" : "";
+  const moneyColorB = currBuyPrice >= prevTotalBuy ? "green" : "red";
+  const signB = currBuyPrice > prevTotalBuy ? "+" : "";
+
+  const moneyColorS = currSellPrice >= prevTotalSell ? "green" : "red";
+  const signS = currSellPrice > prevTotalSell ? "+" : "";
 
   return (
     <div className="p-4">
-      {currPrice === 0 ? (
+      {currBuyPrice === 0 && currSellPrice === 0 ? (
         <>
           <p>Add items to show here</p>
           <br />
-          <p> </p>
+          <br />
+          <br />
+          <br />
+          <br />
         </>
       ) : (
         <>
-          <p>Total Flea Market Price</p>
+          <p>Total Buy Price</p>
           <div className="flex justify-between pr-7">
-            <p>{currPrice.toLocaleString("en-us")} RUB</p>
-            {currPrice !== prevPrice && (
+            <p>{currBuyPrice.toLocaleString("en-us")} RUB</p>
+            {currBuyPrice !== prevTotalBuy && (
               <motion.p
-                key={currPrice}
+                key={currBuyPrice}
                 initial={{ opacity: 0 }}
                 animate={{
                   opacity: [0, 1, 1, 0],
@@ -101,10 +120,31 @@ function ItemCart() {
                   duration: 1,
                   times: [0, 0.1, 0.9, 1],
                 }}
-                style={{ color: moneyColor }}
+                style={{ color: moneyColorB }}
               >
-                {sign}
-                {(currPrice - prevPrice)?.toLocaleString("en-us")}
+                {signB}
+                {(currBuyPrice - prevTotalBuy)?.toLocaleString("en-us")}
+              </motion.p>
+            )}
+          </div>
+          <p>Total Sell Price</p>
+          <div className="flex justify-between pr-7">
+            <p>{currSellPrice.toLocaleString("en-us")} RUB</p>
+            {currSellPrice !== prevTotalSell && (
+              <motion.p
+                key={currSellPrice}
+                initial={{ opacity: 0 }}
+                animate={{
+                  opacity: [0, 1, 1, 0],
+                }}
+                transition={{
+                  duration: 1,
+                  times: [0, 0.1, 0.9, 1],
+                }}
+                style={{ color: moneyColorS }}
+              >
+                {signS}
+                {(currSellPrice - prevTotalSell)?.toLocaleString("en-us")}
               </motion.p>
             )}
           </div>
@@ -130,7 +170,7 @@ function ItemCart() {
               <ItemComponent
                 item={x}
                 idx={i}
-                fields={["name", "fleaMarket", "icon"]}
+                fields={["name", "traders", "icon"]}
                 height={100}
               >
                 <p>

@@ -1,4 +1,4 @@
-import { type Item, type Sell } from "../types";
+import { Buy, type Item, type Sell } from "../types";
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
@@ -16,54 +16,63 @@ interface Props {
 }
 
 // goes through all of the traders and finds the trader that sells for the most
-function getBestTrader(allTraders: Sell[]) {
-  if (allTraders.length === 1 && allTraders[0].name === "fleaMarket") {
-    return <p></p>;
-  }
+function getBestTraderBuy(allTraders: Buy[]) {
+  let bestBuy: Buy = {
+    id: -1,
+    itemid: "-1",
+    price: Number.MAX_SAFE_INTEGER,
+    currency: "",
+    priceRUB: -1,
+    name: "",
+    minTraderLevel: -1,
+    buyLimit: -1,
+  };
 
-  let bestTrader = "";
-  let bestPrice = 0;
   for (const trader of allTraders) {
-    if (trader.price > bestPrice && trader.name !== "fleaMarket") {
-      bestPrice = trader.price;
-      bestTrader = trader.name;
+    if (trader.price < bestBuy.price) {
+      bestBuy = trader;
     }
   }
   return (
-    <p className="h-10">
-      Highest Trader Sell Price:{" "}
-      {bestTrader.charAt(0).toUpperCase() + bestTrader.slice(1)}{" "}
-      {bestPrice.toLocaleString("en-us")} RUB
+    <p className="h-8">
+      {"buy " +
+        bestBuy.buyLimit +
+        " from " +
+        bestBuy.name +
+        " lvl " +
+        bestBuy.minTraderLevel +
+        ": " +
+        bestBuy.price.toLocaleString("en-us") +
+        " " +
+        bestBuy.currency}
     </p>
   );
 }
 
-// creates a few lines for the items container only if item can be sold in the flea
-function getFleaPrice(item: Item) {
-  for (const trader of item.sells) {
-    if (trader.name === "fleaMarket") {
-      return (
-        <div>
-          <p>Flea Price: {trader.price.toLocaleString("en-us")} RUB</p>
-          {item.avg24hPrice && (
-            <p>
-              Average 24h Price: {item.avg24hPrice.toLocaleString("en-us")} RUB
-            </p>
-          )}
-          {item.changeLast48hPercent !== 0 && (
-            <p
-              className={
-                item.changeLast48hPercent < 0 ? "text-green-50" : "text-red-50"
-              }
-            >
-              {item.changeLast48hPercent}%
-            </p>
-          )}
-        </div>
-      );
+// goes through all of the traders and finds the trader that sells for the most
+function getBestTraderSell(allTraders: Sell[]) {
+  let bestSell: Sell = {
+    id: -1,
+    itemid: "-1",
+    price: Number.MIN_SAFE_INTEGER,
+    currency: "",
+    priceRUB: -1,
+    name: "",
+    sellOfferFeeRate: -1,
+    sellRequirementFeeRate: -1,
+    foundInRaidRequired: false,
+  };
+  for (const trader of allTraders) {
+    if (trader.price > bestSell.price) {
+      bestSell = trader;
     }
   }
-  return <>Cannot be sold on flea</>;
+  return (
+    <p className="h-8">
+      Best Sell:{" "}
+      {bestSell.name + " " + bestSell.priceRUB.toLocaleString("en-us")} RUB
+    </p>
+  );
 }
 
 function ItemComponent({ item, idx, children, fields, height }: Props) {
@@ -100,15 +109,18 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
         <p>Base Price: {item.basePrice.toLocaleString("en-us")} RUB</p>
       )}
 
-      {item.sells.length > 0 ? (
-        <>
-          {fields.includes("traders") && getBestTrader(item.sells)}
-          {fields.includes("fleaMarket") && getFleaPrice(item)}
-          {children}
-        </>
+      {fields.includes("traders") && item.buys.length > 0 ? (
+        getBestTraderBuy(item.buys)
       ) : (
-        <p>Cannot be sold</p>
+        <p className="h-8">Cannot be bought</p>
       )}
+
+      {fields.includes("traders") && item.sells.length > 0 ? (
+        getBestTraderSell(item.sells)
+      ) : (
+        <p className="h-8">Cannot be sold</p>
+      )}
+      {children}
     </div>
   );
 }
