@@ -75,13 +75,15 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: install locust
-        run: pip3 install locust zope.event
+        run: |
+          python -m pip install --upgrade pip
+          pip install locust gevent zope.event
 
       - name: run backend locust tests
-        run: locust -f locust_testing_backend.py --headless -u 10 -r 1 --run-time 30s
+        run: locust -f locust_testing_backend.py --headless -u 10 -r 1 --run-time 30s --loglevel DEBUG
 
       - name: run frontend locust tests
-        run: locust -f locust_testing_frontend.py --headless -u 10 -r 1 --run-time 30s
+        run: locust -f locust_testing_frontend.py --headless -u 10 -r 1 --run-time 30s --loglevel DEBUG
 
       - name: close prod docker container
         run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down
