@@ -63,8 +63,7 @@ jobs:
           done
 
       - name: run backend pytest tests
-        # TODO when last router page is finished do --cov-fail-under=90
-        run: docker exec backend pytest --cov-report term-missing --cov=api api/tests.py
+        run: docker exec backend pytest --cov-report term-missing --cov=api --cov-fail-under=95 api/tests.py
 
       # - name: cache pip
       #   uses: actions/cache@v4
