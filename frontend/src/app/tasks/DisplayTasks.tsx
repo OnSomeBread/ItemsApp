@@ -175,7 +175,7 @@ function DisplayTasks() {
               initial="hidden"
               animate="show"
             >
-              {allTasks?.map((task) => (
+              {allTasks?.map((task, idx) => (
                 <motion.li
                   key={task._id}
                   transition={{ duration: 0.8 }}
@@ -184,7 +184,11 @@ function DisplayTasks() {
                     show: { opacity: 1 },
                   }}
                 >
-                  <TaskComponent task={task} onClickButton={onClickComplete} />
+                  <TaskComponent
+                    task={task}
+                    idx={idx}
+                    onClickButton={onClickComplete}
+                  />
                 </motion.li>
               ))}
             </motion.ul>
