@@ -152,7 +152,6 @@ function ItemCart() {
       )}
 
       <motion.div
-        className="list_item"
         initial={{ x: 200 }}
         animate={{ x: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}

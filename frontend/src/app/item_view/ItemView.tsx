@@ -33,7 +33,7 @@ async function ItemView({ searchParams }: PageProps) {
     <>
       <PageSwitch />
       <div className="md:flex">
-        <div className="p-10 flex-1">
+        <div className="flex-1 p-10">
           <p>{item.name}</p>
           <p>item short name: {item.shortName}</p>
           <p>
@@ -106,7 +106,7 @@ async function ItemView({ searchParams }: PageProps) {
             </>
           )}
         </div>
-        <div className="p-10 flex-3">
+        <div className="flex-3 p-10">
           <p>
             Item Price History Chart{" "}
             <mark>

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 function PageSwitch() {
   return (
-    <nav className="justify-start mt-1 ml-4 w-90">
+    <nav className="mt-1 ml-4 w-90 justify-start">
       <Link href="/items">Items page</Link>
       <Link href="/tasks">Tasks page</Link>
       <Link href="/task_tree">Task Tree page</Link>

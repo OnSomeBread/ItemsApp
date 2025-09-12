@@ -13,7 +13,7 @@ function ItemComponentButtons({ item, idx, onChangeCount }: Props) {
     "outline contrast !border !rounded-[8px] relative bottom-2 w-30";
 
   return (
-    <div className="flex justify-between items-center gap-1">
+    <div className="flex items-center justify-between gap-1">
       <motion.button
         className={buttonClass}
         onClick={() => {
@@ -27,7 +27,7 @@ function ItemComponentButtons({ item, idx, onChangeCount }: Props) {
       </motion.button>
       <input
         id={"ItemComponent-stepper" + idx}
-        className="!border !border-[#ccc] !rounded-[10px] text-center !w-16"
+        className="!w-16 !rounded-[10px] !border !border-[#ccc] text-center"
         type="text"
         value={item.count}
         onChange={(e) => {

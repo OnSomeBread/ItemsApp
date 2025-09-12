@@ -57,7 +57,7 @@ async function TaskView({ searchParams }: PageProps) {
     <>
       <PageSwitch />
       <div className="flex">
-        <div className="p-12 flex-1">
+        <div className="flex-1 p-12">
           <p>{task.name}</p>
           <p>Minimum player Level: {task.minPlayerLevel}</p>
           <p>Task Giver: {task.trader}</p>
@@ -90,7 +90,7 @@ async function TaskView({ searchParams }: PageProps) {
             ))}
           </ul>
         </div>
-        <div className="p-20 flex-1">
+        <div className="flex-1 p-20">
           {taskPreqs && taskPreqs.length > 0 && (
             <>
               <p>Task Requirements</p>

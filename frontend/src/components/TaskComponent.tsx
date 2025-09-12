@@ -28,7 +28,7 @@ function TaskComponent({ task, idx, onClickButton }: Props) {
           </Link>
           <p>Minimum Player Level: {task.minPlayerLevel}</p>
         </div>
-        <div className="relative left-4 top-2 h-12">
+        <div className="relative top-2 left-4 h-12">
           <ImageComponent
             imgSrc={"/" + task.trader + ".webp"}
             alt={task.trader}
@@ -50,7 +50,7 @@ function TaskComponent({ task, idx, onClickButton }: Props) {
         transition={{ duration: 0.4 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
-        className="outline contrast !border !rounded-[8px] !h-12"
+        className="!h-12 !rounded-[8px] !border"
       >
         Completed
       </motion.button>

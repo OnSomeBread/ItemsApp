@@ -25,9 +25,9 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
   const dropdownClass = "flex-1 !border !border-[#ccc] !rounded-[8px]";
 
   return (
-    <div className="flex-col md:flex-row md:flex p-4 gap-4">
+    <div className="flex-col gap-4 p-4 md:flex md:flex-row">
       <input
-        className="search flex-1 !border !border-[#ccc]"
+        className="flex-1 !border !border-[#ccc]"
         type="search"
         name="search"
         placeholder="search"

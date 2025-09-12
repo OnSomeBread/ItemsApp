@@ -94,7 +94,7 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
         </p>
       )}
       {fields.includes("icon") && (
-        <div className="relative -z-1 flex justify-center items-center w-100% h-60">
+        <div className="relative -z-1 flex h-60 w-[100%] items-center justify-center">
           <ImageComponent
             imgSrc={"/" + item._id + ".webp"}
             alt={item.name}

@@ -65,12 +65,12 @@ async function TaskTree({ searchParams }: PageProps) {
   return (
     // the div styling is to make the subdivs display over eachother
     <div className="relative">
-      <div className="z-2 absolute">
+      <div className="absolute z-2">
         <PageSwitch />
         <TraderSelect trader={trader} />
       </div>
-      <div className="z-1 absolute">
-        <div className="w-[100vw] h-[100vh]">
+      <div className="absolute z-1">
+        <div className="h-[100vh] w-[100vw]">
           <TaskTreeComponent
             adjList={adjList}
             allTasks={allTasks}
