@@ -12,7 +12,7 @@ const nextConfig = {
   // experimental: {
   //   ppr: 'incremental',
   // },
-  eslint: {}
+  eslint: {dirs: ['src']}
 }
 
 //export default nextConfig

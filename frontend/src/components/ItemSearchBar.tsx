@@ -34,6 +34,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
+        type="button"
         name="asc"
         className={buttonClass}
         onClick={() => {
@@ -66,7 +67,12 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
           </option>
         ))}
       </select>
-      <button name="clearBtn" className={buttonClass} onClick={clearCounts}>
+      <button
+        type="button"
+        name="clearBtn"
+        className={buttonClass}
+        onClick={clearCounts}
+      >
         Clear
       </button>
     </div>

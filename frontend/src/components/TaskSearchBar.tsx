@@ -34,6 +34,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button
+        type="button"
         name="isKappaBtn"
         className={buttonClass}
         onClick={() => {
@@ -43,6 +44,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         {queryParams.isKappa ? "Kappa Required" : "Not Kappa Required"}
       </button>
       <button
+        type="button"
         name="isLightKeeperBtn"
         className={buttonClass}
         onClick={() => {
@@ -92,7 +94,12 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
           </option>
         ))}
       </select>
-      <button name="clearBtn" className={buttonClass} onClick={onClear}>
+      <button
+        type="button"
+        name="clearBtn"
+        className={buttonClass}
+        onClick={onClear}
+      >
         Clear
       </button>
     </div>

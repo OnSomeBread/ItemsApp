@@ -10,14 +10,13 @@ import eslintReact from "@eslint-react/eslint-plugin";
 // import prettier from "eslint-plugin-prettier";
 import { FlatCompat } from "@eslint/eslintrc";
 
-
 const compat = new FlatCompat();
 
 export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   ...compat.config(nextPlugin.configs["core-web-vitals"]),
-  //...compat.config(eslintReact.configs["recommended-typescript"]),
+  eslintReact.configs["recommended-typescript"],
   {
     ignores: ["node_modules", "public", ".next"],
   },
@@ -57,6 +56,8 @@ export default [
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+
+      "@eslint-react/hooks-extra/no-direct-set-state-in-use-effect" : "off"
     },
     settings: {
       tailwindcss: {
