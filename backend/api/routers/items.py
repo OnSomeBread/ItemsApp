@@ -1,4 +1,4 @@
-from asyncio import create_task
+from asyncio import create_task, gather
 from os import environ
 from asgiref.sync import sync_to_async
 from django.core.cache import cache
@@ -109,7 +109,9 @@ async def get_items_by_ids(request: Request):
 
     # store all new ids
     if REDIS_CACHE_ENABLED:
+        async_tasks = []
         for itm in data:
-            create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items')))
+            async_tasks.append(create_task(cache.aset(itm['_id'], itm, timeout=get_redis_timeout('items'))))
+        await gather(*async_tasks)
 
     return sorted(data + found_items, key=lambda item: item['_id'])

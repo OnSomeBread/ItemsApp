@@ -1,4 +1,4 @@
-from asyncio import create_task
+from asyncio import create_task, gather
 from json import load
 from os import environ
 from fastapi import APIRouter, Request
@@ -88,8 +88,10 @@ async def get_tasks_by_ids(request: Request):
 
     # store all new ids
     if REDIS_CACHE_ENABLED:
+        async_tasks = []
         for tsk in data:
-            create_task(cache.aset(tsk['_id'], tsk, timeout=get_redis_timeout('tasks')))
+            async_tasks.append(create_task(cache.aset(tsk['_id'], tsk, timeout=get_redis_timeout('tasks'))))
+        await gather(*async_tasks)
 
     return sorted(data + found_tasks, key=lambda task: task['_id'])
 
