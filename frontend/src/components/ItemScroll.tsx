@@ -59,7 +59,7 @@ function ItemScroll({
               <ItemComponent
                 item={x}
                 idx={i}
-                fields={new Set(["name", "icon", "traders"])}
+                fields={["name", "icon", "traders"]}
                 height={130}
               >
                 <ItemComponentButtons

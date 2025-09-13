@@ -169,7 +169,7 @@ function ItemCart() {
               <ItemComponent
                 item={x}
                 idx={i}
-                fields={new Set(["name", "traders", "icon"])}
+                fields={["name", "traders", "icon"]}
                 height={100}
               >
                 <p>

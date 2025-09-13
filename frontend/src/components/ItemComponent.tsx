@@ -10,7 +10,7 @@ const ImageComponent = dynamic(() => import("./ImageComponent"), {
 interface Props {
   item: Item;
   idx: number;
-  fields: Set<string>;
+  fields: string[];
   height: number;
   children: ReactNode;
 }
@@ -69,8 +69,8 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
         height.toString()
       }
     >
-      {fields.has("index") && <p>{idx}</p>}
-      {fields.has("name") && (
+      {fields.includes("index") && <p>{idx}</p>}
+      {fields.includes("name") && (
         <p className="h-10">
           <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>
             {item.name}
@@ -79,7 +79,7 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
           {item.shortName}
         </p>
       )}
-      {fields.has("icon") && (
+      {fields.includes("icon") && (
         <div className="relative -z-1 flex h-60 w-[100%] items-center justify-center">
           <ImageComponent
             imgSrc={"/" + item._id + ".webp"}
@@ -91,12 +91,16 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
         </div>
       )}
 
-      {fields.has("basePrice") && (
+      {fields.includes("basePrice") && (
         <p>Base Price: {item.basePrice.toLocaleString("en-us")} RUB</p>
       )}
 
-      {fields.has("traders") && getBestTraderBuy(item.buys)}
-      {fields.has("traders") && getBestTraderSell(item.sells)}
+      {fields.includes("traders") && (
+        <>
+          {getBestTraderBuy(item.buys)}
+          {getBestTraderSell(item.sells)}
+        </>
+      )}
 
       {children}
     </div>
