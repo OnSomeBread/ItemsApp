@@ -10,29 +10,22 @@ const ImageComponent = dynamic(() => import("./ImageComponent"), {
 interface Props {
   item: Item;
   idx: number;
-  fields: string[];
+  fields: Set<string>;
   height: number;
   children: ReactNode;
 }
 
 // goes through all of the traders and finds the trader that sells for the most
 function getBestTraderBuy(allTraders: Buy[]) {
-  let bestBuy: Buy = {
-    id: -1,
-    itemid: "-1",
-    price: Number.MAX_SAFE_INTEGER,
-    currency: "",
-    priceRUB: -1,
-    name: "",
-    minTraderLevel: -1,
-    buyLimit: -1,
-  };
-
+  let bestBuy: Buy | null = null;
   for (const trader of allTraders) {
-    if (trader.price < bestBuy.price) {
+    if (bestBuy === null || trader.priceRUB < bestBuy.priceRUB) {
       bestBuy = trader;
     }
   }
+
+  if (bestBuy === null) return <p className="h-8">Cannot be bought</p>;
+
   return (
     <p className="h-8">
       {"buy " +
@@ -51,22 +44,15 @@ function getBestTraderBuy(allTraders: Buy[]) {
 
 // goes through all of the traders and finds the trader that sells for the most
 function getBestTraderSell(allTraders: Sell[]) {
-  let bestSell: Sell = {
-    id: -1,
-    itemid: "-1",
-    price: Number.MIN_SAFE_INTEGER,
-    currency: "",
-    priceRUB: -1,
-    name: "",
-    sellOfferFeeRate: -1,
-    sellRequirementFeeRate: -1,
-    foundInRaidRequired: false,
-  };
+  let bestSell: Sell | null = null;
   for (const trader of allTraders) {
-    if (trader.price > bestSell.price) {
+    if (bestSell === null || trader.priceRUB > bestSell.priceRUB) {
       bestSell = trader;
     }
   }
+
+  if (bestSell === null) return <p className="h-8">Cannot be sold</p>;
+
   return (
     <p className="h-8">
       Best Sell:{" "}
@@ -83,8 +69,8 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
         height.toString()
       }
     >
-      {fields.includes("index") && <p>{idx}</p>}
-      {fields.includes("name") && (
+      {fields.has("index") && <p>{idx}</p>}
+      {fields.has("name") && (
         <p className="h-10">
           <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>
             {item.name}
@@ -93,7 +79,7 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
           {item.shortName}
         </p>
       )}
-      {fields.includes("icon") && (
+      {fields.has("icon") && (
         <div className="relative -z-1 flex h-60 w-[100%] items-center justify-center">
           <ImageComponent
             imgSrc={"/" + item._id + ".webp"}
@@ -105,21 +91,13 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
         </div>
       )}
 
-      {fields.includes("basePrice") && (
+      {fields.has("basePrice") && (
         <p>Base Price: {item.basePrice.toLocaleString("en-us")} RUB</p>
       )}
 
-      {fields.includes("traders") && item.buys.length > 0 ? (
-        getBestTraderBuy(item.buys)
-      ) : (
-        <p className="h-8">Cannot be bought</p>
-      )}
+      {fields.has("traders") && getBestTraderBuy(item.buys)}
+      {fields.has("traders") && getBestTraderSell(item.sells)}
 
-      {fields.includes("traders") && item.sells.length > 0 ? (
-        getBestTraderSell(item.sells)
-      ) : (
-        <p className="h-8">Cannot be sold</p>
-      )}
       {children}
     </div>
   );
