@@ -3,9 +3,7 @@ import { type ReactNode } from "react";
 import Link from "next/link";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
 import dynamic from "next/dynamic";
-const ImageComponent = dynamic(() => import("./ImageComponent"), {
-  ssr: false,
-});
+const ImageComponent = dynamic(() => import("./ImageComponent"));
 
 interface Props {
   item: Item;

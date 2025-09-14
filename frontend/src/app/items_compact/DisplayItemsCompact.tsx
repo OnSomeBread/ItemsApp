@@ -31,7 +31,7 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     <>
       <PageSwitch />
       <div className="text-[14px]">
-        <ItemScrollCompact initItems={items} queryParams={queryParams} />
+        <ItemScrollCompact initItems={items} initQueryParams={queryParams} />
       </div>
     </>
   );
