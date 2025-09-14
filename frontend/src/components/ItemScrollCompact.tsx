@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Buy, Item, ItemQueryParams, Sell } from "../types";
 import ItemSearchBar from "./ItemSearchBar";
-
-import ImageComponent from "./ImageComponent";
+import dynamic from "next/dynamic";
+const ImageComponent = dynamic(() => import("./ImageComponent"));
 
 interface Props {
   initItems: Item[];
