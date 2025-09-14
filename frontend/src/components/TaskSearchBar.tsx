@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ALL_TASK_OBJECTIVE_TYPES, ALL_TRADERS } from "../constants";
 import type { TaskQueryParams } from "../types";
 
@@ -10,8 +10,15 @@ interface Props {
 
 function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
   const [searchInput, setSearchInput] = useState("");
+  const firstRun = useRef(true);
 
   useEffect(() => {
+    // check if searchInput it being initalized if so skip
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+
     const delayTimer = setTimeout(() => {
       changeQueryParams("search", searchInput);
     }, 250);

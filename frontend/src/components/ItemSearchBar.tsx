@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ALL_ITEM_SORTBY, ALL_ITEM_TYPES } from "../constants";
 import type { ItemQueryParams } from "../types";
 
@@ -10,8 +10,15 @@ interface Props {
 
 function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
   const [searchInput, setSearchInput] = useState("");
+  const firstRun = useRef(true);
 
   useEffect(() => {
+    // check if searchInput it being initalized if so skip
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+
     const delayTimer = setTimeout(() => {
       changeQueryParams("search", searchInput);
     }, 250);
