@@ -115,5 +115,5 @@ jobs:
             export DOMAIN_PRIVKEY=${{ secrets.DOMAIN_PRIVKEY }}
 
             docker compose down
-            docker system prune --a --force
+            docker system prune --all --force
             docker compose up --pull=always -d

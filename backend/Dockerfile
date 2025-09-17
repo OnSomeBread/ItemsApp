@@ -16,5 +16,6 @@ WORKDIR /ItemsApp
 
 COPY --from=builder /ItemsApp/target/x86_64-unknown-linux-musl/release/backend-rust .
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /ItemsApp/migrations ./migrations
 
 CMD ["./backend-rust"]

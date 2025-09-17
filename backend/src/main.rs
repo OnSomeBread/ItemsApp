@@ -17,7 +17,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let postgres_url = env::var("DATABASE_URL")?;
     // let redis_url = env::var("REDIS_URL")?;
 
-    let pool = PgPool::connect(&postgres_url).await?;
+    let pool = loop {
+        match PgPool::connect(&database_url).await {
+            Ok(p) => break p,
+            Err(e) => {
+                eprintln!("Waiting for DB... {}", e);
+                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            }
+        }
+    };
     sqlx::migrate!("./migrations").run(&pool).await?;
 
     // setting up redis and setting a key value pair
