@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // let redis_url = env::var("REDIS_URL")?;
 
     let pool = loop {
-        match PgPool::connect(&database_url).await {
+        match PgPool::connect(&postgres_url).await {
             Ok(p) => break p,
             Err(e) => {
                 eprintln!("Waiting for DB... {}", e);
