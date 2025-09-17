@@ -40,7 +40,7 @@ export type Item = {
   change_last_48h_percent: number;
   width: number;
   height: number;
-  link: string;
+  wiki: string;
   count: number;
 };
 

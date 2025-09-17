@@ -132,7 +132,7 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
                     )}
                   </td>
                   <td>
-                    <a href={item.link}>wiki link</a>
+                    <a href={item.wiki}>wiki link</a>
                   </td>
                 </tr>
               );

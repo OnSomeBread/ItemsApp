@@ -56,7 +56,7 @@ async function ItemView({ searchParams }: PageProps) {
           <p>item base price: {item.base_price.toLocaleString("en-us")}</p>
           <p>change last 48 hours: {item.change_last_48h_percent}%</p>
 
-          <a href={item.link}>
+          <a href={item.wiki}>
             <p>{item.item_name} wiki page</p>
           </a>
 
