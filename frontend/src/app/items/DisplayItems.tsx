@@ -21,7 +21,7 @@ function DisplayItems() {
   // right now its used to switch between 2 interfaces strictly on mobile
   const [interfaceToggle, setInterfaceToggle] = useState<boolean>(false);
   const [queryParams, setQueryParams] = useState(DEFAULT_ITEM_QUERY_PARAMS);
-  const changeQueryParams = (key: string, value: string | number) => {
+  const changeQueryParams = (key: string, value: string | number | boolean) => {
     setQueryParams((prev) => {
       return { ...prev, [key]: value };
     });
@@ -30,7 +30,7 @@ function DisplayItems() {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(queryParams)) {
     // offset gets skipped for use effect grab since it creates dependency hell and best to add it for scrolling
-    if (key === "offset") continue;
+    if (key === "offset" || value.toString() === "") continue;
     params.append(key, value.toString());
   }
   const query = "/api/items?" + params.toString();

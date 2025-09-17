@@ -25,9 +25,9 @@ async function TaskView({ searchParams }: PageProps) {
   // maps task id to status for all adjTasks
   const statusMap = new Map<string, string>();
   const params = new URLSearchParams();
-  task.taskRequirements.forEach((tsk) => {
-    params.append("ids", tsk.reqTaskId);
-    statusMap.set(tsk.reqTaskId, tsk.status);
+  task.task_requirements.forEach((tsk) => {
+    params.append("ids", tsk.req_task_id);
+    statusMap.set(tsk.req_task_id, tsk.status);
   });
 
   adjList[task._id]
@@ -58,34 +58,29 @@ async function TaskView({ searchParams }: PageProps) {
       <PageSwitch />
       <div className="flex">
         <div className="flex-1 p-12">
-          <p>{task.name}</p>
-          <p>Minimum player Level: {task.minPlayerLevel}</p>
+          <p>{task.task_name}</p>
+          <p>Minimum player Level: {task.min_player_level}</p>
           <p>Task Giver: {task.trader}</p>
-          <p>Faction Name: {task.factionName}</p>
-          <p>Kappa Required: {task.kappaRequired ? "Yes" : "No"}</p>
-          <p>Lightkeeper Required: {task.kappaRequired ? "Yes" : "No"}</p>
+          <p>Faction Name: {task.faction_name}</p>
+          <p>Kappa Required: {task.kappa_required ? "Yes" : "No"}</p>
+          <p>Lightkeeper Required: {task.kappa_required ? "Yes" : "No"}</p>
           <p>
             <a href={task.wiki}>wiki page</a>
           </p>
           <p>Objectives</p>
           <ul>
             {task.objectives.map((obj) => (
-              <li key={obj._id}>
+              <li key={obj.id}>
                 <p>
                   Objective Type:{" "}
                   {
                     ALL_TASK_OBJECTIVE_TYPES[
-                      obj.objType as keyof typeof ALL_TASK_OBJECTIVE_TYPES
+                      obj.obj_type as keyof typeof ALL_TASK_OBJECTIVE_TYPES
                     ]
                   }
                 </p>
-                <p>{obj.description}</p>
-                {obj.maps.length > 0 && (
-                  <p>
-                    {obj.maps.length > 1 ? "Maps" : "Map"}:{" "}
-                    {obj.maps.map((m) => m.name).join(", ")}
-                  </p>
-                )}
+                <p>{obj.obj_description}</p>
+                <p>{obj.map_name}</p>
               </li>
             ))}
           </ul>
@@ -103,7 +98,7 @@ async function TaskView({ searchParams }: PageProps) {
                         query: "id=" + taskReq._id,
                       }}
                     >
-                      {statusMap.get(taskReq._id)}: {taskReq.name}
+                      {statusMap.get(taskReq._id)}: {taskReq.task_name}
                     </Link>
                   </li>
                 ))}
@@ -123,7 +118,7 @@ async function TaskView({ searchParams }: PageProps) {
                         query: "id=" + taskReq._id,
                       }}
                     >
-                      {statusMap.get(taskReq._id)}: {taskReq.name}
+                      {statusMap.get(taskReq._id)}: {taskReq.task_name}
                     </Link>
                   </li>
                 ))}

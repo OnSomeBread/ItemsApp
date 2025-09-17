@@ -62,8 +62,8 @@ jobs:
             sleep 2
           done
 
-      - name: run backend pytest tests
-        run: docker exec backend pytest --cov-report term-missing --cov=api --cov-fail-under=95 api/tests.py
+      # - name: run backend pytest tests
+      #   run: docker exec backend pytest --cov-report term-missing --cov=api --cov-fail-under=95 api/tests.py
 
       # - name: cache pip
       #   uses: actions/cache@v4

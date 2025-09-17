@@ -3,28 +3,16 @@ services:
     image: mark1qaz/backend:latest
     build:
       context: backend
-      dockerfile: Dockerfile
-      cache_from:
-        - mark1qaz/backend:buildcache
-      cache_to:
-        - mark1qaz/backend:buildcache
     environment:
       - REDIS_URL=${REDIS_URL}
-      - SECRET_KEY=${SECRET_KEY}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - DEBUG=False
+      - DATABASE_URL=${DATABASE_URL}
     expose:
       - "8000"
+    ports:
+      - "8000:8000"
     volumes:
       - ./most_recent_items.json:/ItemsApp/most_recent_items.json
       - ./most_recent_tasks.json:/ItemsApp/most_recent_tasks.json
-    restart: unless-stopped
     depends_on:
       - db
       - redis

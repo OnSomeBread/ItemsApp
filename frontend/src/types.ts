@@ -1,36 +1,30 @@
 export type Sell = {
-  itemid: string;
+  item_id: string;
   id: number;
   price: number;
   currency: string;
-  priceRUB: number;
-  name: string;
-  sellOfferFeeRate: number;
-  sellRequirementFeeRate: number;
-  foundInRaidRequired: boolean;
+  price_rub: number;
+  trader_name: string;
+  sell_offer_fee_rate: number;
+  sell_requirement_fee_rate: number;
+  found_in_raid_required: boolean;
 };
 
 export type Buy = {
-  itemid: string;
+  item_id: string;
   id: number;
   price: number;
   currency: string;
-  priceRUB: number;
-  name: string;
-  minTraderLevel: number;
-  buyLimit: number;
-};
-
-export type ItemType = {
-  id: number;
-  name: string;
+  price_rub: number;
+  trader_name: string;
+  min_trader_level: number;
+  buy_limit: number;
 };
 
 export type ItemHistory = {
   _id: string;
-  avg24hPrice: number;
-  changeLast48hPercent: number;
-  fleaMarket: number;
+  avg_24h_price: number;
+  change_last_48h_percent: number;
   time: Date;
 };
 
@@ -38,12 +32,12 @@ export type Item = {
   _id: string;
   sells: Sell[];
   buys: Buy[];
-  itemtypes: ItemType[];
-  name: string;
-  shortName: string;
-  avg24hPrice: number;
-  basePrice: number;
-  changeLast48hPercent: number;
+  item_types: string;
+  item_name: string;
+  short_name: string;
+  avg_24h_price: number;
+  base_price: number;
+  change_last_48h_percent: number;
   width: number;
   height: number;
   link: string;
@@ -52,7 +46,7 @@ export type Item = {
 
 export type ItemQueryParams = {
   search: string;
-  asc: string;
+  asc: boolean;
   sortBy: string;
   type: string;
   limit: number;
@@ -71,41 +65,33 @@ export type TaskQueryParams = {
 };
 
 export type TaskRequirement = {
-  // this isnt a game id which is why its named differently
   id: number;
   status: string;
-  reqTaskId: string;
-};
-
-export type Map = {
-  _id: string;
-  name: string;
-  normalizedName: string;
-  players: string;
-  description: string;
-  wiki: string;
+  req_task_id: string;
+  task_id: string;
 };
 
 export type Objective = {
-  _id: string;
-  reqTaskId: string;
-  objType: string;
-  description: string;
-  maps: Map[];
+  id: number;
+  obj_type: string;
+  obj_description: string;
+  map_name: "";
+  map_wiki: "";
+  task_id: string;
 };
 
 export type Task = {
   _id: string;
-  name: string;
-  normalizedName: string;
+  task_name: string;
+  normalized_name: string;
   experience: number;
-  minPlayerLevel: number;
+  min_player_level: number;
   trader: string;
-  factionName: string;
-  kappaRequired: boolean;
-  lightkeeperRequired: boolean;
+  faction_name: string;
+  kappa_required: boolean;
+  lightkeeper_required: boolean;
   wiki: string;
-  taskRequirements: TaskRequirement[];
+  task_requirements: TaskRequirement[];
   objectives: Objective[];
 };
 

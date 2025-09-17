@@ -15,7 +15,7 @@ function ImageComponent({ imgSrc, alt, width, height, priority }: Props) {
 
   return (
     <Image
-      src={src}
+      src={src.replace(/ /g, "_")}
       alt={alt}
       width={width}
       height={height}

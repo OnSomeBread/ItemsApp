@@ -21,6 +21,7 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
 
   const params = new URLSearchParams();
   Object.entries(queryParams).forEach(([key, value]) => {
+    if (value.toString() === "") return;
     params.append(key, value.toString());
   });
 

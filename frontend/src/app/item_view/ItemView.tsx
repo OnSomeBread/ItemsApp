@@ -1,6 +1,6 @@
-import { ALL_ITEM_TYPES, DOCKER_BACKEND } from "../../constants";
+import { DOCKER_BACKEND } from "../../constants";
 import ItemChart from "../../components/ItemChart";
-import { type Item, type ItemHistory, type ItemType } from "../../types";
+import { type Item, type ItemHistory } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 import ImageComponent from "../../components/ImageComponent";
 
@@ -34,40 +34,30 @@ async function ItemView({ searchParams }: PageProps) {
       <PageSwitch />
       <div className="md:flex">
         <div className="flex-1 p-10">
-          <p>{item.name}</p>
-          <p>item short name: {item.shortName}</p>
+          <p>{item.item_name}</p>
+          <p>item short name: {item.short_name}</p>
           <p>
             item size width x height: {item.width}x{item.height}
           </p>
           <ImageComponent
             imgSrc={"/" + item._id + ".webp"}
-            alt={item.name}
+            alt={item.item_name}
             priority={true}
             width={64 * item.width}
             height={64 * item.height}
           />
-          {item.itemtypes && item.itemtypes.length > 0 && (
-            <p>
-              item types:{" "}
-              {item.itemtypes
-                .map(
-                  (t: ItemType) =>
-                    ALL_ITEM_TYPES[t.name as keyof typeof ALL_ITEM_TYPES]
-                )
-                .join(", ")}
-            </p>
-          )}
-          {item.avg24hPrice && (
+          <p>{item.item_types}</p>
+          {item.avg_24h_price !== 0 && (
             <p>
               item average 24 hour price:{" "}
-              {item.avg24hPrice.toLocaleString("en-us")}
+              {item.avg_24h_price.toLocaleString("en-us")}
             </p>
           )}
-          <p>item base price: {item.basePrice.toLocaleString("en-us")}</p>
-          <p>change last 48 hours: {item.changeLast48hPercent}%</p>
+          <p>item base price: {item.base_price.toLocaleString("en-us")}</p>
+          <p>change last 48 hours: {item.change_last_48h_percent}%</p>
 
           <a href={item.link}>
-            <p>{item.name} wiki page</p>
+            <p>{item.item_name} wiki page</p>
           </a>
 
           {item.sells && item.sells.length > 0 && (
@@ -75,10 +65,10 @@ async function ItemView({ searchParams }: PageProps) {
               <br />
               <p>Sell Prices</p>
               {item.sells.map((sellFor) => (
-                <p key={sellFor.name}>
-                  {sellFor.name +
+                <p key={sellFor.trader_name}>
+                  {sellFor.trader_name +
                     ": " +
-                    sellFor.priceRUB.toLocaleString("en-us")}{" "}
+                    sellFor.price_rub.toLocaleString("en-us")}{" "}
                   RUB
                 </p>
               ))}
@@ -90,13 +80,13 @@ async function ItemView({ searchParams }: PageProps) {
               <br />
               <p>Buy Prices</p>
               {item.buys.map((buyFor) => (
-                <p key={buyFor.name}>
+                <p key={buyFor.trader_name}>
                   {"buy " +
-                    buyFor.buyLimit +
+                    buyFor.buy_limit +
                     " from " +
-                    buyFor.name +
+                    buyFor.trader_name +
                     " lvl " +
-                    buyFor.minTraderLevel +
+                    buyFor.min_trader_level +
                     ": " +
                     buyFor.price.toLocaleString("en-us") +
                     " " +

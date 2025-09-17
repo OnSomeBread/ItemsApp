@@ -1,10 +1,6 @@
 services:
   backend:
     container_name: "backend"
-    build:
-      dockerfile: Dockerfile
-    environment:
-      - DEBUG=False
     restart: unless-stopped
 
   frontend:

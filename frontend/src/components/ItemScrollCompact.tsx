@@ -50,7 +50,7 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
     setLoading(false);
   };
 
-  const changeQueryParams = (key: string, value: string | number) => {
+  const changeQueryParams = (key: string, value: string | number | boolean) => {
     setOffset(0);
     setQueryParams((prev) => {
       return { ...prev, [key]: value };
@@ -91,7 +91,7 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
                   <td className="!h-10 !w-16">
                     <ImageComponent
                       imgSrc={"/" + item._id + ".webp"}
-                      alt={item.name}
+                      alt={item.item_name}
                       priority={true}
                       width={16}
                       height={16}
@@ -102,21 +102,21 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
                       className="w-100"
                       href={{ pathname: "/item_view", query: "id=" + item._id }}
                     >
-                      {item.name}
+                      {item.item_name}
                     </Link>
                   </td>
                   <td>
-                    <p>{item.basePrice} RUB</p>
+                    <p>{item.base_price} RUB</p>
                   </td>
                   <td>
                     {bestBuy !== null && (
                       <p>
                         {"buy " +
-                          bestBuy.buyLimit +
+                          bestBuy.buy_limit +
                           " from " +
-                          bestBuy.name +
+                          bestBuy.trader_name +
                           " lvl " +
-                          bestBuy.minTraderLevel +
+                          bestBuy.min_trader_level +
                           ": " +
                           bestBuy.price.toLocaleString("en-us") +
                           " " +
@@ -127,7 +127,7 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
                   <td>
                     {bestSell !== null && (
                       <p>
-                        {bestSell.name}: {bestSell.priceRUB} RUB
+                        {bestSell.trader_name}: {bestSell.price_rub} RUB
                       </p>
                     )}
                   </td>
@@ -147,7 +147,7 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
 const getBestSell = (item: Item) => {
   let bestSell: Sell | null = null;
   for (const trader of item.sells) {
-    if (bestSell === null || trader.priceRUB > bestSell.priceRUB) {
+    if (bestSell === null || trader.price_rub > bestSell.price_rub) {
       bestSell = trader;
     }
   }
@@ -157,7 +157,7 @@ const getBestSell = (item: Item) => {
 const getBestBuy = (item: Item) => {
   let bestBuy: Buy | null = null;
   for (const trader of item.buys) {
-    if (bestBuy === null || trader.priceRUB < bestBuy.priceRUB) {
+    if (bestBuy === null || trader.price_rub < bestBuy.price_rub) {
       bestBuy = trader;
     }
   }

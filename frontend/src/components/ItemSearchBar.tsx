@@ -4,7 +4,7 @@ import type { ItemQueryParams } from "../types";
 
 interface Props {
   queryParams: ItemQueryParams;
-  changeQueryParams: (arg0: string, arg1: string) => void;
+  changeQueryParams: (arg0: string, arg1: string | number | boolean) => void;
   clearCounts: () => void;
 }
 
@@ -45,10 +45,10 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         name="asc"
         className={buttonClass}
         onClick={() => {
-          changeQueryParams("asc", queryParams.asc === "" ? "-" : "");
+          changeQueryParams("asc", !queryParams.asc);
         }}
       >
-        {queryParams.asc === "" ? "Ascending" : "Descending"}
+        {queryParams.asc ? "Ascending" : "Descending"}
       </button>
       <select
         name="sortBy"

@@ -60,10 +60,10 @@ function ItemCart() {
       let bestBuyPrice = Number.MAX_SAFE_INTEGER;
       let bestSellPrice = 0;
       for (const sell of item.buys) {
-        bestBuyPrice = Math.min(bestBuyPrice, sell.priceRUB);
+        bestBuyPrice = Math.min(bestBuyPrice, sell.price_rub);
       }
       for (const sell of item.sells) {
-        bestSellPrice = Math.max(bestSellPrice, sell.priceRUB);
+        bestSellPrice = Math.max(bestSellPrice, sell.price_rub);
       }
       const count = parseInt(localStorage.getItem("item-" + item._id) || "0");
 

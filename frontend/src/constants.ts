@@ -1,7 +1,7 @@
 export const DEFAULT_ITEM_QUERY_PARAMS = {
   search: "",
-  asc: "-",
-  sortBy: "basePrice",
+  asc: false,
+  sortBy: "base_price",
   type: "any",
   limit: 30,
   offset: 0,
@@ -57,12 +57,13 @@ export const ALL_ITEM_TYPES = {
 };
 
 export const ALL_ITEM_SORTBY = {
-  name: "Name",
-  shortName: "Short Name",
-  basePrice: "Base Price",
-  avg24hPrice: "Average Price 24 hours",
-  changeLast48hPercent: "Change Last 48 hours Percent",
-  fleaMarket: "Flea Market Price",
+  _id: "ID",
+  item_name: "Name",
+  short_name: "Short Name",
+  base_price: "Base Price",
+  avg_24h_price: "Average Price 24 hours",
+  change_last_48h_percent: "Change Last 48 hours Percent",
+  // fleaMarket: "Flea Market Price",
 };
 
 export const ALL_TRADERS = {

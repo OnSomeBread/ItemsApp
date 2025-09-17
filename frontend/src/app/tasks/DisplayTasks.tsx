@@ -29,7 +29,7 @@ function DisplayTasks() {
 
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(queryParams)) {
-    if (key === "offset") continue;
+    if (key === "offset" || value.toString() === "") continue;
     params.append(key, value.toString());
   }
 
@@ -219,7 +219,7 @@ function DisplayTasks() {
                   onClickComplete(task._id, "unlocks");
                 }}
               >
-                {task.name}
+                {task.task_name}
               </motion.li>
             ))}
           </motion.ul>

@@ -1,12 +1,6 @@
 services:
   backend:
     container_name: "backend-dev"
-    build:
-      dockerfile: Dockerfile.dev
-    environment:
-      - DEBUG=True
-    volumes:
-      - ./backend:/ItemsApp
 
   frontend:
     container_name: "frontend-dev"

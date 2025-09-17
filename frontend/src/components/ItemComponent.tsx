@@ -17,7 +17,7 @@ interface Props {
 function getBestTraderBuy(allTraders: Buy[]) {
   let bestBuy: Buy | null = null;
   for (const trader of allTraders) {
-    if (bestBuy === null || trader.priceRUB < bestBuy.priceRUB) {
+    if (bestBuy === null || trader.price_rub < bestBuy.price_rub) {
       bestBuy = trader;
     }
   }
@@ -27,11 +27,11 @@ function getBestTraderBuy(allTraders: Buy[]) {
   return (
     <p className="h-8">
       {"buy " +
-        bestBuy.buyLimit +
+        bestBuy.buy_limit +
         " from " +
-        bestBuy.name +
+        bestBuy.trader_name +
         " lvl " +
-        bestBuy.minTraderLevel +
+        bestBuy.min_trader_level +
         ": " +
         bestBuy.price.toLocaleString("en-us") +
         " " +
@@ -44,7 +44,7 @@ function getBestTraderBuy(allTraders: Buy[]) {
 function getBestTraderSell(allTraders: Sell[]) {
   let bestSell: Sell | null = null;
   for (const trader of allTraders) {
-    if (bestSell === null || trader.priceRUB > bestSell.priceRUB) {
+    if (bestSell === null || trader.price_rub > bestSell.price_rub) {
       bestSell = trader;
     }
   }
@@ -54,7 +54,8 @@ function getBestTraderSell(allTraders: Sell[]) {
   return (
     <p className="h-8">
       Best Sell:{" "}
-      {bestSell.name + " " + bestSell.priceRUB.toLocaleString("en-us")} RUB
+      {bestSell.trader_name + " " + bestSell.price_rub.toLocaleString("en-us")}{" "}
+      RUB
     </p>
   );
 }
@@ -71,17 +72,17 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
       {fields.includes("name") && (
         <p className="h-10">
           <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>
-            {item.name}
+            {item.item_name}
           </Link>
           <br />
-          {item.shortName}
+          {item.short_name}
         </p>
       )}
       {fields.includes("icon") && (
         <div className="relative -z-1 flex h-60 w-[100%] items-center justify-center">
           <ImageComponent
             imgSrc={"/" + item._id + ".webp"}
-            alt={item.name}
+            alt={item.item_name}
             priority={idx <= DEFAULT_ITEM_QUERY_PARAMS["limit"] ? true : false}
             width={64 * item.width}
             height={64 * item.height}
@@ -90,7 +91,7 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
       )}
 
       {fields.includes("basePrice") && (
-        <p>Base Price: {item.basePrice.toLocaleString("en-us")} RUB</p>
+        <p>Base Price: {item.base_price.toLocaleString("en-us")} RUB</p>
       )}
 
       {fields.includes("traders") && (

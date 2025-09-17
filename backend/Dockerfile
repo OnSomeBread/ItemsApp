@@ -1,17 +1,20 @@
-FROM python:alpine3.22 AS build
-WORKDIR /ItemsApp
-COPY ./requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# sqlx database create
+# cargo sqlx prepare 
+# both commands required before running dockerfile
 
-FROM python:alpine3.22
-COPY --from=build /install /usr/local
-
+FROM rust:1.89.0-slim AS builder
 WORKDIR /ItemsApp
+RUN rustup target add x86_64-unknown-linux-musl
 COPY . .
-COPY ./wait-for /usr/local/bin/wait-for
-RUN chmod +x /usr/local/bin/wait-for
+RUN cargo install sqlx-cli --no-default-features --features postgres
+ENV SQLX_OFFLINE true
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
-ENV TZ=UTC
-EXPOSE 8000
 
-CMD ["wait-for", "db:5432", "--", "wait-for", "redis:6379", "--", "uvicorn", "api.fastapi_views:app", "--host", "0.0.0.0", "--port", "8000"]
+FROM scratch
+WORKDIR /ItemsApp
+
+COPY --from=builder /ItemsApp/target/x86_64-unknown-linux-musl/release/backend-rust .
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+CMD ["./backend-rust"]

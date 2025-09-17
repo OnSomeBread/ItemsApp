@@ -36,7 +36,7 @@ async function TaskTree({ searchParams }: PageProps) {
   const initNodes =
     allTasks?.map((task) => ({
       id: task._id,
-      data: { label: task.name },
+      data: { label: task.task_name },
     })) ?? [];
 
   const idToTask = new Map<string, Task>(

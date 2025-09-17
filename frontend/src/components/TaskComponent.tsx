@@ -24,9 +24,9 @@ function TaskComponent({ task, idx, onClickButton }: Props) {
       <div className="flex">
         <div>
           <Link href={{ pathname: "/task_view", query: "id=" + task._id }}>
-            {task.name}
+            {task.task_name}
           </Link>
-          <p>Minimum Player Level: {task.minPlayerLevel}</p>
+          <p>Minimum Player Level: {task.min_player_level}</p>
         </div>
         <div className="relative top-2 left-4 h-12">
           <ImageComponent
@@ -40,8 +40,8 @@ function TaskComponent({ task, idx, onClickButton }: Props) {
       </div>
 
       {task.objectives.map((obj, index) => (
-        <p key={obj._id}>
-          {index + 1}. {obj.description}
+        <p key={obj.id}>
+          {index + 1}. {obj.obj_description}
         </p>
       ))}
       <motion.button
