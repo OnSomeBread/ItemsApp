@@ -15,8 +15,6 @@ jobs:
       POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
       REDIS_URL: ${{ secrets.REDIS_URL }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-      ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: checkout code
@@ -109,11 +107,9 @@ jobs:
             export DATABASE_URL=${{ secrets.DATABASE_URL }}
             export REDIS_URL=${{ secrets.REDIS_URL }}
             export SECRET_KEY=${{ secrets.SECRET_KEY }}
-            export ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
-            export ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
             export FULLCHAIN_KEY=${{ secrets.FULLCHAIN_KEY }}
             export DOMAIN_PRIVKEY=${{ secrets.DOMAIN_PRIVKEY }}
 
             docker compose down
-            docker system prune --all --force
+            docker system prune --all --volumes --force
             docker compose up --pull=always -d
