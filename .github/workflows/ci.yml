@@ -17,6 +17,7 @@ jobs:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
       ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: checkout code
         uses: actions/checkout@v5
@@ -105,6 +106,7 @@ jobs:
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             export POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+            export DATABASE_URL=${{ secrets.DATABASE_URL }}
             export REDIS_URL=${{ secrets.REDIS_URL }}
             export SECRET_KEY=${{ secrets.SECRET_KEY }}
             export ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
