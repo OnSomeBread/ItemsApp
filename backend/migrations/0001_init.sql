@@ -45,8 +45,7 @@ CREATE TABLE IF NOT EXISTS SavedItemData(
     sell_offer_fee_rate INT DEFAULT 0 NOT NULL,
     sell_requirement_fee_rate INT DEFAULT 0 NOT NULL,
     recorded_time TIMESTAMPTZ NOT NULL,
-    item_id CHAR(24) NOT NULL,
-    CONSTRAINT item_history FOREIGN KEY (item_id) REFERENCES Item(_id)
+    item_id CHAR(24) NOT NULL -- NO FOREIGN KEY HERE SINCE ITEMS CAN BE DROPPED ON API REFRESH
 );
 
 CREATE TABLE IF NOT EXISTS Task(

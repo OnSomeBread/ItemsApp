@@ -130,7 +130,7 @@ pub async fn upsert_data_file(
 
     if page == "items" {
         let item_data: Vec<Item> = Vec::<Item>::deserialize(result).unwrap();
-        upsert_items(&item_data, pool).await?;
+        upsert_items(&item_data, pool, false).await?;
         println!("{}", &item_data.len());
     } else if page == "tasks" {
         let task_data: Vec<Task> = Vec::<Task>::deserialize(result).unwrap();
@@ -140,11 +140,34 @@ pub async fn upsert_data_file(
     Ok(())
 }
 
-// TODO ADD A CALLED BY API INSERT INTO ITEM HISTORY
+// pub async fn upsert_data_api(
+//     file_name: &str,
+//     page: &str,
+//     pool: &sqlx::Pool<sqlx::Postgres>,
+// ) -> Result<(), Box<dyn Error>> {
+//     println!("starting {} upsert", page);
+//     let file = std::fs::File::open(file_name).expect("file did not open");
+//     let json: serde_json::Value =
+//         serde_json::from_reader(file).expect("file should be proper JSON");
+
+//     let result = &json["data"][page];
+
+//     if page == "items" {
+//         let item_data: Vec<Item> = Vec::<Item>::deserialize(result).unwrap();
+//         upsert_items(&item_data, pool, true).await?;
+//         println!("{}", &item_data.len());
+//     } else if page == "tasks" {
+//         let task_data: Vec<Task> = Vec::<Task>::deserialize(result).unwrap();
+//         upsert_tasks(&task_data, pool).await?;
+//         println!("{}", task_data.len());
+//     }
+//     Ok(())
+// }
+
 // inserts all of the input items into the db
 async fn upsert_items(
     items: &Vec<Item>,
-    pool: &sqlx::Pool<sqlx::Postgres>,
+    pool: &sqlx::Pool<sqlx::Postgres>, is_api_call:bool
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;
 
@@ -296,10 +319,13 @@ async fn upsert_items(
         &sell_for_found_in_raid_required, 
         &sell_for_item_ids).execute(&mut *txn).await?;
 
+    // SAVEDITEMDATA BULK INSERT ONLY ON UPSERT API
+
     txn.commit().await?;
     Ok(())
 }
 
+// insert all of the input tasks into the db
 // no need to fully bulk optimize this since it is already fast
 async fn upsert_tasks(
     tasks: &Vec<Task>,
