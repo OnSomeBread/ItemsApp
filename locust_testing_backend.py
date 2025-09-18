@@ -24,7 +24,7 @@ class WebsiteUser(HttpUser):
         sortby_arr = ['name', 'shortName', 'basePrice', 'avg24hPrice', 'changeLast48hPercent', 'fleaMarket']
 
         random_search = ''.join(random.choices(string.ascii_lowercase, k=random.randint(0, 2)))
-        random_asc = '-' if random.randint(0, 1) == 0 else ''
+        random_asc = 'true' if random.randint(0, 1) == 0 else 'false'
         random_sortby = sortby_arr[random.randint(0, len(sortby_arr) - 1)]
         random_itemtype = itemtypes_arr[random.randint(0, len(itemtypes_arr) - 1)]
         random_limit = random.randint(50, 100)
