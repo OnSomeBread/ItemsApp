@@ -9,7 +9,6 @@ use dotenvy::dotenv;
 use sqlx::PgPool;
 use std::env;
 use std::error::Error;
-use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -34,26 +33,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // conn.set("hello", "world").await?;
 
-    let items_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM Item")
-        .fetch_one(&pool)
-        .await?;
+    let (items_count, tasks_count): (i64, i64) = tokio::try_join!(
+        sqlx::query_scalar("SELECT COUNT(*) FROM Item").fetch_one(&pool),
+        sqlx::query_scalar("SELECT COUNT(*) FROM Task").fetch_one(&pool)
+    )?;
+
     if items_count == 0 {
         upsert::upsert_data_file("most_recent_items.json", "items", &pool).await?;
     }
 
-    let tasks_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM Task")
-        .fetch_one(&pool)
-        .await
-        .unwrap();
     if tasks_count == 0 {
         upsert::upsert_data_file("most_recent_tasks.json", "tasks", &pool).await?;
     }
 
-    let app_state = Arc::new(database_types::AppState { pool });
+    let app_state = database_types::AppState { pool };
 
     let app = Router::new()
         .nest("/api", api_routers::api_router())
-        .with_state(Arc::clone(&app_state));
+        .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;
     axum::serve(listener, app).await?;

@@ -3,11 +3,10 @@ use crate::query_types::*;
 use axum::{Router, extract::State, response::Json, routing::get};
 use axum_extra::extract::Query;
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 use tokio::try_join;
 
 // checks if the database is initalized
-async fn health(State(app_state): State<Arc<AppState>>) -> Result<String, AppError> {
+async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
     let (items_count, tasks_count) = try_join!(
         sqlx::query_scalar!("SELECT COUNT(*) FROM Item").fetch_one(&app_state.pool),
         sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pool)
@@ -25,7 +24,7 @@ async fn health(State(app_state): State<Arc<AppState>>) -> Result<String, AppErr
 }
 
 // gives data on different interesting stats about the data stored
-async fn stats(State(app_state): State<Arc<AppState>>) -> Result<Json<Stats>, AppError> {
+async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppError> {
     let (items_count, tasks_count, kappa_required_count, lightkeeper_required_count) = try_join!(
         sqlx::query_scalar!("SELECT COUNT(*) FROM Item").fetch_one(&app_state.pool),
         sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pool),
@@ -46,7 +45,7 @@ async fn stats(State(app_state): State<Arc<AppState>>) -> Result<Json<Stats>, Ap
 
 async fn items_from_db_to_items(
     items_from_db: Vec<ItemFromDB>,
-    app_state: Arc<AppState>,
+    app_state: AppState,
 ) -> Result<Vec<Item>, AppError> {
     let ids: Vec<String> = items_from_db.iter().map(|item| item._id.clone()).collect();
     let (buy_for_vec, sell_for_vec) = try_join!(
@@ -98,7 +97,7 @@ async fn items_from_db_to_items(
 
 async fn get_items(
     Query(query_parms): Query<ItemQueryParams>,
-    State(app_state): State<Arc<AppState>>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let search = query_parms.search.unwrap_or(String::new());
     let asc = query_parms.asc.unwrap_or(false);
@@ -152,7 +151,7 @@ async fn get_items(
 
 async fn get_item_history(
     Query(query_parms): Query<ItemHistoryQueryParams>,
-    State(app_state): State<Arc<AppState>>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<SavedItemData>>, AppError> {
     if query_parms.item_id.is_none() {
         return Ok(Json(vec![]));
@@ -175,7 +174,7 @@ async fn get_item_history(
 
 async fn get_items_by_ids(
     Query(query_parms): Query<IdsQueryParams>,
-    State(app_state): State<Arc<AppState>>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let ids = query_parms.ids.unwrap_or(Vec::new());
     let items_from_db = sqlx::query_as!(ItemFromDB, "SELECT * FROM Item WHERE _id = ANY($1)", &ids)
@@ -192,7 +191,7 @@ async fn get_items_by_ids(
 
 async fn tasks_from_db_to_tasks(
     tasks_from_db: Vec<TaskFromDB>,
-    app_state: Arc<AppState>,
+    app_state: AppState,
 ) -> Result<Vec<Task>, AppError> {
     let ids: Vec<String> = tasks_from_db.iter().map(|task| task._id.clone()).collect();
     let (objective_vec, task_requirement_vec) = try_join!(
@@ -245,7 +244,7 @@ async fn tasks_from_db_to_tasks(
 
 async fn get_tasks(
     Query(query_parms): Query<TaskQueryParams>,
-    State(app_state): State<Arc<AppState>>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let search = query_parms.search.unwrap_or(String::new());
     let is_kappa = query_parms.is_kappa.unwrap_or(false);
@@ -294,7 +293,7 @@ async fn get_tasks(
 
 async fn get_tasks_by_ids(
     Query(query_parms): Query<IdsQueryParams>,
-    State(app_state): State<Arc<AppState>>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let ids: Vec<String> = query_parms.ids.unwrap_or(Vec::new());
 
@@ -313,7 +312,7 @@ async fn get_tasks_by_ids(
 // "unlocks" is all the tasks that come after current task
 // effectively mapping every task to their adjacent tasks
 async fn get_adj_list(
-    State(app_state): State<Arc<AppState>>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<HashMap<String, Vec<(String, String)>>>, AppError> {
     let task_requirements = sqlx::query_as!(TaskRequirement, "SELECT * FROM TaskRequirement")
         .fetch_all(&app_state.pool)
@@ -343,21 +342,21 @@ async fn get_adj_list(
     Ok(Json(adj_list))
 }
 
-fn items_router() -> Router<Arc<AppState>> {
+fn items_router() -> Router<AppState> {
     Router::new()
         .route("/items", get(get_items))
         .route("/item_history", get(get_item_history))
         .route("/item_ids", get(get_items_by_ids))
 }
 
-fn tasks_router() -> Router<Arc<AppState>> {
+fn tasks_router() -> Router<AppState> {
     Router::new()
         .route("/tasks", get(get_tasks))
         .route("/task_ids", get(get_tasks_by_ids))
         .route("/adj_list", get(get_adj_list))
 }
 
-pub fn api_router() -> Router<Arc<AppState>> {
+pub fn api_router() -> Router<AppState> {
     Router::new()
         .route("/health", get(health))
         .route("/stats", get(stats))
