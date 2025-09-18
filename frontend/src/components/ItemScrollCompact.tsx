@@ -20,13 +20,11 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
   const [queryParams, setQueryParams] = useState(initQueryParams);
 
   useEffect(() => {
-    fetchItems()
-      .then()
-      .catch((err) => console.error(err));
+    fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...Object.values(queryParams)]);
 
-  const fetchItems = async () => {
+  const fetchItems = () => {
     if (loading) return;
     setLoading(true);
     const params = new URLSearchParams();
@@ -35,19 +33,24 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
     });
     params.append("offset", offset.toString());
 
-    const res1 = await fetch("api/items?" + params.toString());
+    fetch("api/items?" + params.toString())
+      .then((res1) => {
+        res1
+          .json()
+          .then((items: Item[]) => {
+            if (offset === 0) {
+              setAllItems(items);
+            } else {
+              setAllItems((prev) => [...(prev ?? []), ...items]);
+            }
 
-    const items = (await res1.json()) as Item[];
-
-    if (offset === 0) {
-      setAllItems(items);
-    } else {
-      setAllItems((prev) => [...(prev ?? []), ...items]);
-    }
-
-    setHasMore(items.length === queryParams.limit);
-    setOffset((prev) => prev + queryParams.limit);
-    setLoading(false);
+            setHasMore(items.length === queryParams.limit);
+            setOffset((prev) => prev + queryParams.limit);
+            setLoading(false);
+          })
+          .catch((err) => console.error(err));
+      })
+      .catch((err) => console.error(err));
   };
 
   const changeQueryParams = (key: string, value: string | number | boolean) => {
