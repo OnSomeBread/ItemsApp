@@ -154,7 +154,9 @@ pub struct SavedItemData {
     pub item_id: String,
 }
 
+use bb8_redis::{RedisConnectionManager, bb8};
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: sqlx::PgPool,
+    pub pgpool: sqlx::PgPool,
+    pub redispool: bb8::Pool<RedisConnectionManager>,
 }

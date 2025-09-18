@@ -13,7 +13,7 @@ services:
       - ./most_recent_tasks.json:/ItemsApp/most_recent_tasks.json
     depends_on:
       - db
-      # - redis
+      - redis
 
   frontend:
     image: mark1qaz/frontend:latest
@@ -61,12 +61,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  # redis:
-  #   image: redis:alpine3.22
-  #   command: ["redis-server", "--save", "", "--appendonly", "no", "--hz", "1"]
-  #   restart: unless-stopped
-  #   expose:
-  #     - "6379"
+  redis:
+    image: redis:alpine3.22
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--hz", "1"]
+    restart: unless-stopped
+    expose:
+      - "6379"
 
 volumes:
   pgdata:

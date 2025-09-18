@@ -10,7 +10,8 @@ tokio = { version = "1.47.1", features = ["full"] }
 
 chrono = { version = "0.4.42", features = ["serde"] }
 sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres", "uuid", "chrono"] }
-redis = { version = "0.32.5", features = ["aio", "tokio-comp"] }
+redis = { version = "0.32.5", features = ["tokio-comp", "cluster-async", "r2d2"] }
+bb8-redis = "0.24"
 
 dotenvy = "0.15.7"
 serde = { version = "1.0.223", features = ["derive"] }
