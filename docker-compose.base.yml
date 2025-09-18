@@ -14,7 +14,7 @@ services:
       - ./most_recent_tasks.json:/ItemsApp/most_recent_tasks.json
     depends_on:
       - db
-     - redis
+      - redis
 
   frontend:
     build:
