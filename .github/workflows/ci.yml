@@ -99,6 +99,9 @@ jobs:
             git reset --hard origin/main
             git pull
 
+            docker compose down
+            docker system prune --all --volumes --force
+
             export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -109,7 +112,4 @@ jobs:
             export SECRET_KEY=${{ secrets.SECRET_KEY }}
             export FULLCHAIN_KEY=${{ secrets.FULLCHAIN_KEY }}
             export DOMAIN_PRIVKEY=${{ secrets.DOMAIN_PRIVKEY }}
-
-            docker compose down
-            docker system prune --all --volumes --force
             docker compose up --pull=always -d
