@@ -13,7 +13,7 @@ WORKDIR /ItemsApp
 RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /ItemsApp/target/release/backend-rust .
-COPY .env .env
+COPY ./migrations ./migrations
 
 EXPOSE 8000
 CMD ["./backend-rust"]
