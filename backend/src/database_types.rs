@@ -21,8 +21,8 @@ pub struct SellFor {
     pub currency: String,
     pub price_rub: i32,
     pub trader_name: String,
-    pub sell_offer_fee_rate: i32,
-    pub sell_requirement_fee_rate: i32,
+    pub sell_offer_fee_rate: f32,
+    pub sell_requirement_fee_rate: f32,
     pub found_in_raid_required: bool,
     pub item_id: String,
 }
@@ -149,8 +149,6 @@ pub struct SavedItemData {
     pub avg_24h_price: i32,
     pub change_last_48h_percent: f32,
     pub price_rub: i32,
-    pub sell_offer_fee_rate: i32,
-    pub sell_requirement_fee_rate: i32,
     pub recorded_time: DateTime<Utc>,
     pub item_id: String,
 }

@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS SellFor(
     currency VARCHAR(24) NOT NULL,
     price_rub INT DEFAULT 0 NOT NULL,
     trader_name VARCHAR(24) NOT NULL,
-    sell_offer_fee_rate INT DEFAULT 0 NOT NULL,
-    sell_requirement_fee_rate INT DEFAULT 0 NOT NULL,
+    sell_offer_fee_rate REAL DEFAULT 0 NOT NULL,
+    sell_requirement_fee_rate REAL DEFAULT 0 NOT NULL,
     found_in_raid_required BOOL DEFAULT False NOT NULL,
     item_id CHAR(24) NOT NULL,
     CONSTRAINT sells FOREIGN KEY (item_id) REFERENCES Item(_id)
@@ -42,10 +42,8 @@ CREATE TABLE IF NOT EXISTS SavedItemData(
     avg_24h_price INT DEFAULT 0 NOT NULL,
     change_last_48h_percent REAL DEFAULT 0 NOT NULL,
     price_rub INT DEFAULT 0 NOT NULL,
-    sell_offer_fee_rate INT DEFAULT 0 NOT NULL,
-    sell_requirement_fee_rate INT DEFAULT 0 NOT NULL,
     recorded_time TIMESTAMPTZ NOT NULL,
-    item_id CHAR(24) NOT NULL -- NO FOREIGN KEY HERE SINCE ITEMS CAN BE DROPPED ON API REFRESH
+    item_id CHAR(24) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Task(

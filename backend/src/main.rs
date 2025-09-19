@@ -1,10 +1,12 @@
 mod api_routers;
 mod database_types;
+mod deserialize_json_types;
 mod query_types;
 mod upsert;
 use axum::Router;
 use bb8_redis::{RedisConnectionManager, bb8};
 use dotenvy::dotenv;
+use upsert::*;
 
 use sqlx::PgPool;
 use std::env;
@@ -33,17 +35,33 @@ async fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     if items_count == 0 {
-        upsert::upsert_data_file("most_recent_items.json", "items", &pgpool).await?;
+        upsert_data_file("most_recent_items.json", "items", &pgpool).await?;
     }
 
     if tasks_count == 0 {
-        upsert::upsert_data_file("most_recent_tasks.json", "tasks", &pgpool).await?;
+        upsert_data_file("most_recent_tasks.json", "tasks", &pgpool).await?;
     }
 
     let redispool = bb8::Pool::builder()
         .max_size(10)
         .build(RedisConnectionManager::new(redis_url)?)
         .await?;
+
+    let pgpool1 = pgpool.clone();
+    let pgpool2 = pgpool.clone();
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(3600 * 8)).await;
+            let _ = upsert_data_api("most_recent_items.json", "items", &pgpool1).await;
+        }
+    });
+
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(3600 * 12)).await;
+            let _ = upsert_data_api("most_recent_tasks.json", "tasks", &pgpool2).await;
+        }
+    });
 
     let app_state = database_types::AppState { pgpool, redispool };
 

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM TaskRequirement;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "b06889b96e002d6bfe33a15cd917cb8c3051dd17931052746113c0086bf4bcb5"
+}

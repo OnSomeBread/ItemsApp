@@ -1,120 +1,9 @@
+use crate::deserialize_json_types::*;
+use chrono::Utc;
+use reqwest::Client;
 use serde::Deserialize;
-use std::error::Error;
-
-#[derive(Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct BuyForVendor {
-    #[serde(rename = "name")]
-    trader_name: String,
-    min_trader_level: i32,
-    buy_limit: i32,
-}
-
-#[derive(Deserialize, Clone)]
-struct BuyFor {
-    price: i32,
-    currency: String,
-    #[serde(rename = "priceRUB")]
-    price_rub: i32,
-    vendor: BuyForVendor,
-}
-
-#[derive(Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct SellForVendor {
-    #[serde(rename = "name")]
-    trader_name: String,
-    sell_offer_fee_rate: Option<i32>,
-    sell_requirement_fee_rate: Option<i32>,
-    found_in_raid_required: Option<bool>,
-}
-
-#[derive(Deserialize, Clone)]
-struct SellFor {
-    price: i32,
-    currency: String,
-    #[serde(rename = "priceRUB")]
-    price_rub: i32,
-    vendor: SellForVendor,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Item {
-    #[serde(rename = "id")]
-    _id: String,
-    #[serde(rename = "name")]
-    item_name: String,
-    short_name: String,
-    avg_24h_price: Option<i32>,
-    base_price: i32,
-    change_last_48h_percent: Option<f32>,
-    width: i32,
-    height: i32,
-    #[serde(rename = "link")]
-    wiki: String,
-    #[serde(rename = "types")]
-    item_types: Vec<String>,
-    #[serde(rename = "buyFor")]
-    buys: Vec<BuyFor>,
-    #[serde(rename = "sellFor")]
-    sells: Vec<SellFor>,
-}
-
-#[derive(Deserialize)]
-struct Map {
-    name: String,
-    wiki: String,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Objective {
-    #[serde(rename = "type")]
-    obj_type: String,
-    #[serde(rename = "description")]
-    obj_description: String,
-    maps: Vec<Map>,
-}
-
-#[derive(Deserialize)]
-struct ReqTaskId {
-    id: String,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct TaskRequirement {
-    status: Vec<String>,
-    #[serde(rename = "task")]
-    req_task_id: ReqTaskId,
-}
-
-#[derive(Deserialize)]
-struct Trader {
-    name: String,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Task {
-    #[serde(rename = "id")]
-    _id: String,
-    #[serde(rename = "name")]
-    task_name: String,
-    normalized_name: String,
-    experience: i32,
-    min_player_level: i32,
-    trader: Trader,
-    faction_name: String,
-    kappa_required: bool,
-    lightkeeper_required: bool,
-    #[serde(rename = "wikiLink")]
-    wiki: String,
-    objectives: Vec<Objective>,
-    #[serde(rename = "taskRequirements")]
-    task_requirements: Vec<TaskRequirement>,
-}
+use serde_json::Value;
+use std::{error::Error, io::Write};
 
 pub async fn upsert_data_file(
     file_name: &str,
@@ -122,60 +11,94 @@ pub async fn upsert_data_file(
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
     println!("starting {} upsert", page);
-    let file = std::fs::File::open(file_name).expect("file did not open");
-    let json: serde_json::Value =
-        serde_json::from_reader(file).expect("file should be proper JSON");
-
-    let result = &json["data"][page];
+    let file = std::fs::File::open(file_name)?;
+    let json: Value = serde_json::from_reader(file)?;
 
     if page == "items" {
-        let item_data: Vec<Item> = Vec::<Item>::deserialize(result).unwrap();
+        let item_data: Vec<Item> = Vec::<Item>::deserialize(&json["data"][page])?;
         upsert_items(&item_data, pool, false).await?;
-        println!("{}", &item_data.len());
+        println!("finished {} upsert with {} entries", page, item_data.len());
     } else if page == "tasks" {
-        let task_data: Vec<Task> = Vec::<Task>::deserialize(result).unwrap();
+        let task_data: Vec<Task> = Vec::<Task>::deserialize(&json["data"][page])?;
         upsert_tasks(&task_data, pool).await?;
-        println!("{}", task_data.len());
+        println!("finished {} upsert with {} entries", page, task_data.len());
     }
     Ok(())
 }
 
-// pub async fn upsert_data_api(
-//     file_name: &str,
-//     page: &str,
-//     pool: &sqlx::Pool<sqlx::Postgres>,
-// ) -> Result<(), Box<dyn Error>> {
-//     println!("starting {} upsert", page);
-//     let file = std::fs::File::open(file_name).expect("file did not open");
-//     let json: serde_json::Value =
-//         serde_json::from_reader(file).expect("file should be proper JSON");
+async fn run_query(query: &str) -> Result<Value, Box<dyn Error>> {
+    let res = Client::new()
+        .post("https://api.tarkov.dev/graphql")
+        .header("Content-Type", "applicaion/json")
+        .json(&serde_json::json!({"query": query}))
+        .timeout(std::time::Duration::from_secs(30))
+        .send()
+        .await?;
 
-//     let result = &json["data"][page];
+    if res.status().is_success() {
+        return Ok(res.json().await?);
+    }
+    Err(format!("Query failed with status: {}", res.status()).into())
+}
 
-//     if page == "items" {
-//         let item_data: Vec<Item> = Vec::<Item>::deserialize(result).unwrap();
-//         upsert_items(&item_data, pool, true).await?;
-//         println!("{}", &item_data.len());
-//     } else if page == "tasks" {
-//         let task_data: Vec<Task> = Vec::<Task>::deserialize(result).unwrap();
-//         upsert_tasks(&task_data, pool).await?;
-//         println!("{}", task_data.len());
-//     }
-//     Ok(())
-// }
+pub async fn upsert_data_api(
+    file_name: &str,
+    page: &str,
+    pool: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<(), Box<dyn Error>> {
+    println!("starting {} upsert", page);
+
+    if page == "items" {
+        let json = run_query(ITEMS_QUERY).await?;
+        let item_data = Vec::<Item>::deserialize(&json["data"][page])?;
+        upsert_items(&item_data, pool, true).await?;
+
+        let json_string =
+            serde_json::to_string_pretty(&serde_json::json!({"data": {page: item_data}}))?;
+        let mut file = std::fs::File::create(file_name)?;
+        file.write_all(json_string.as_bytes())?;
+
+        println!("finished {} upsert with {} entries", page, item_data.len());
+    } else if page == "tasks" {
+        let json = run_query(TASKS_QUERY).await?;
+        let task_data = Vec::<Task>::deserialize(&json["data"][page])?;
+        upsert_tasks(&task_data, pool).await?;
+
+        let json_string =
+            serde_json::to_string_pretty(&serde_json::json!({"data": {page: task_data}}))?;
+        let mut file = std::fs::File::create(file_name)?;
+        file.write_all(json_string.as_bytes())?;
+
+        println!("finished {} upsert with {} entries", page, task_data.len());
+    }
+
+    Ok(())
+}
 
 // inserts all of the input items into the db
 async fn upsert_items(
     items: &Vec<Item>,
-    pool: &sqlx::Pool<sqlx::Postgres>, _is_api_call:bool
+    pool: &sqlx::Pool<sqlx::Postgres>,
+    is_api_call: bool,
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;
+
+    sqlx::query!("DELETE FROM BuyFor;")
+        .execute(&mut *txn)
+        .await?;
+    sqlx::query!("DELETE FROM SellFor;")
+        .execute(&mut *txn)
+        .await?;
+    sqlx::query!("DELETE FROM Item;").execute(&mut *txn).await?;
 
     let ids: Vec<String> = items.iter().map(|item| item._id.to_string()).collect();
     let names: Vec<String> = items.iter().map(|x| x.item_name.to_string()).collect();
     let short_names: Vec<String> = items.iter().map(|x| x.short_name.to_string()).collect();
     let avg_24h_prices: Vec<i32> = items.iter().map(|x| x.avg_24h_price.unwrap_or(0)).collect();
-    let change_last_48h_percents: Vec<f32> = items.iter().map(|x| x.change_last_48h_percent.unwrap_or(0.0)).collect();
+    let change_last_48h_percents: Vec<f32> = items
+        .iter()
+        .map(|x| x.change_last_48h_percent.unwrap_or(0.0))
+        .collect();
     let types_arr: Vec<String> = items.iter().map(|x| x.item_types.join(", ")).collect();
 
     // ITEM BULK INSERT
@@ -224,7 +147,7 @@ async fn upsert_items(
         .flat_map(|x| {
             x.buys
                 .iter()
-                .map(|y| y.vendor.min_trader_level)
+                .map(|y| y.vendor.min_trader_level.unwrap_or(0))
                 .collect::<Vec<i32>>()
         })
         .collect();
@@ -233,12 +156,15 @@ async fn upsert_items(
         .flat_map(|x| {
             x.buys
                 .iter()
-                .map(|y| y.vendor.buy_limit)
+                .map(|y| y.vendor.buy_limit.unwrap_or(0))
                 .collect::<Vec<i32>>()
         })
         .collect();
 
-    let buy_for_item_ids = items.iter().flat_map(|x| vec![x._id.to_string(); x.buys.len()]).collect::<Vec<String>>();
+    let buy_for_item_ids = items
+        .iter()
+        .flat_map(|x| vec![x._id.to_string(); x.buys.len()])
+        .collect::<Vec<String>>();
 
     // BUYFOR BULK INSERT
     sqlx::query!("INSERT INTO BuyFor (price, currency, price_rub, trader_name, min_trader_level, buy_limit, item_id) SELECT * FROM UNNEST($1::int[], $2::text[], $3::int[], $4::text[], $5::int[], $6::int[], $7::text[]) ON CONFLICT (id) DO UPDATE SET price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, min_trader_level = EXCLUDED.min_trader_level, buy_limit = EXCLUDED.buy_limit, item_id = EXCLUDED.item_id;",
@@ -277,22 +203,22 @@ async fn upsert_items(
         })
         .collect();
 
-    let sell_for_sell_offer_fee_rate: Vec<i32> = items
+    let sell_for_sell_offer_fee_rate: Vec<f32> = items
         .iter()
         .flat_map(|x| {
             x.sells
                 .iter()
-                .map(|y| y.vendor.sell_offer_fee_rate.unwrap_or(0))
-                .collect::<Vec<i32>>()
+                .map(|y| y.vendor.sell_offer_fee_rate.unwrap_or(0.0))
+                .collect::<Vec<f32>>()
         })
         .collect();
-    let sell_for_sell_requirement_fee_rate: Vec<i32> = items
+    let sell_for_sell_requirement_fee_rate: Vec<f32> = items
         .iter()
         .flat_map(|x| {
             x.sells
                 .iter()
-                .map(|y| y.vendor.sell_requirement_fee_rate.unwrap_or(0))
-                .collect::<Vec<i32>>()
+                .map(|y| y.vendor.sell_requirement_fee_rate.unwrap_or(0.0))
+                .collect::<Vec<f32>>()
         })
         .collect();
 
@@ -306,20 +232,45 @@ async fn upsert_items(
         })
         .collect();
 
-    let sell_for_item_ids = items.iter().flat_map(|x| vec![x._id.to_string(); x.sells.len()]).collect::<Vec<String>>();
+    let sell_for_item_ids = items
+        .iter()
+        .flat_map(|x| vec![x._id.to_string(); x.sells.len()])
+        .collect::<Vec<String>>();
 
     // SELLFOR BULK INSERT
-    sqlx::query!("INSERT INTO SellFor (price, currency, price_rub, trader_name, sell_offer_fee_rate, sell_requirement_fee_rate, found_in_raid_required, item_id) SELECT * FROM UNNEST($1::int[], $2::text[], $3::int[], $4::text[], $5::int[], $6::int[], $7::bool[], $8::text[]) ON CONFLICT (id) DO UPDATE SET price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, sell_offer_fee_rate = EXCLUDED.sell_offer_fee_rate, sell_requirement_fee_rate = EXCLUDED.sell_requirement_fee_rate, found_in_raid_required = EXCLUDED.found_in_raid_required, item_id = EXCLUDED.item_id;",
+    sqlx::query!("INSERT INTO SellFor (price, currency, price_rub, trader_name, sell_offer_fee_rate, sell_requirement_fee_rate, found_in_raid_required, item_id) SELECT * FROM UNNEST($1::int[], $2::text[], $3::int[], $4::text[], $5::real[], $6::real[], $7::bool[], $8::text[]) ON CONFLICT (id) DO UPDATE SET price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, sell_offer_fee_rate = EXCLUDED.sell_offer_fee_rate, sell_requirement_fee_rate = EXCLUDED.sell_requirement_fee_rate, found_in_raid_required = EXCLUDED.found_in_raid_required, item_id = EXCLUDED.item_id;",
         &sell_for_prices,
         &sell_for_currencys,
         &sell_for_price_rubs,
         &sell_for_traders,
         &sell_for_sell_offer_fee_rate,
         &sell_for_sell_requirement_fee_rate,
-        &sell_for_found_in_raid_required, 
+        &sell_for_found_in_raid_required,
         &sell_for_item_ids).execute(&mut *txn).await?;
 
     // SAVEDITEMDATA BULK INSERT ONLY ON UPSERT API
+    if is_api_call {
+        let best_flea_prices: Vec<i32> = items
+            .iter()
+            .map(|x| {
+                let flea_market_price =
+                    x.buys.iter().find(|b| b.vendor.trader_name == "fleaMarket");
+                if let Some(flea_market_price) = flea_market_price {
+                    return flea_market_price.price_rub;
+                }
+                0
+            })
+            .collect();
+
+        sqlx::query!(
+            "INSERT INTO SavedItemData (avg_24h_price, change_last_48h_percent, price_rub, recorded_time, item_id) SELECT * FROM UNNEST($1::int[], $2::real[], $3::int[], $4::timestamptz[], $5::text[])",
+            &avg_24h_prices,
+            &change_last_48h_percents,
+            &best_flea_prices,
+            &vec![Utc::now(); items.len()],
+            &ids,
+        ).execute(&mut *txn).await?;
+    }
 
     txn.commit().await?;
     Ok(())
@@ -332,6 +283,15 @@ async fn upsert_tasks(
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;
+
+    sqlx::query!("DELETE FROM TaskRequirement;")
+        .execute(&mut *txn)
+        .await?;
+    sqlx::query!("DELETE FROM Objective;")
+        .execute(&mut *txn)
+        .await?;
+    sqlx::query!("DELETE FROM Task;").execute(&mut *txn).await?;
+
     for task in tasks {
         sqlx::query!("INSERT INTO Task (_id, task_name, normalized_name, experience, min_player_level, trader, faction_name, kappa_required, lightkeeper_required, wiki) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT(_id) DO NOTHING;",
             &task._id,

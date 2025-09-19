@@ -31,12 +31,12 @@
       {
         "ordinal": 5,
         "name": "sell_offer_fee_rate",
-        "type_info": "Int4"
+        "type_info": "Float4"
       },
       {
         "ordinal": 6,
         "name": "sell_requirement_fee_rate",
-        "type_info": "Int4"
+        "type_info": "Float4"
       },
       {
         "ordinal": 7,

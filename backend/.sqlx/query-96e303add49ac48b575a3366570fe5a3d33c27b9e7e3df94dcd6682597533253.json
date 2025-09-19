@@ -25,21 +25,11 @@
       },
       {
         "ordinal": 4,
-        "name": "sell_offer_fee_rate",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 5,
-        "name": "sell_requirement_fee_rate",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 6,
         "name": "recorded_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 5,
         "name": "item_id",
         "type_info": "Bpchar"
       }
@@ -50,8 +40,6 @@
       ]
     },
     "nullable": [
-      false,
-      false,
       false,
       false,
       false,

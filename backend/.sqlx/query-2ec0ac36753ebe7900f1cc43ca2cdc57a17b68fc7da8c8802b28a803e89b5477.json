@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM Objective;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "2ec0ac36753ebe7900f1cc43ca2cdc57a17b68fc7da8c8802b28a803e89b5477"
+}
