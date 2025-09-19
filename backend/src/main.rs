@@ -6,8 +6,7 @@ use axum::Router;
 use bb8_redis::{RedisConnectionManager, bb8};
 use dotenvy::dotenv;
 
-//use sqlx::PgPool;
-use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
 use std::env;
 use std::error::Error;
 
@@ -18,12 +17,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let redis_url = env::var("REDIS_URL")?;
 
     let pgpool = loop {
-        match PgPoolOptions::new()
-            .max_connections(10)
-            .acquire_timeout(std::time::Duration::from_secs(3))
-            .connect(&postgres_url)
-            .await
-        {
+        match PgPool::connect(&postgres_url).await {
             Ok(p) => break p,
             Err(e) => {
                 eprintln!("Waiting for DB... {}", e);
