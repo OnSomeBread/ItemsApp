@@ -10,9 +10,7 @@ use sqlx::PgPool;
 use std::collections::{HashMap, HashSet};
 use tokio::try_join;
 
-async fn get_redis_expire_time(_api: &str) -> i64 {
-    return 3600 * 24;
-}
+use std::time::Instant;
 
 // checks if the database is initalized
 async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
@@ -104,7 +102,12 @@ async fn items_from_db_to_items(
 
 async fn get_items(
     Query(query_parms): Query<ItemQueryParams>,
-    State(AppState { pgpool, redispool }): State<AppState>,
+    State(AppState {
+        pgpool,
+        redispool,
+        next_items_call_timer,
+        next_tasks_call_timer: _,
+    }): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let search = query_parms.search.unwrap_or(String::new());
     let asc = query_parms.asc.unwrap_or(false);
@@ -131,8 +134,8 @@ async fn get_items(
         item_type = String::new();
     }
 
-    // try not to create too many cache keys when its not needed
-    let use_redis = limit >= 30;
+    // redis performance falls off at large amounts of items
+    let use_redis = limit <= 100;
     let mut conn = if use_redis {
         redispool.get().await.ok()
     } else {
@@ -184,14 +187,26 @@ async fn get_items(
     if use_redis {
         let pool = redispool.clone();
         let items = items.clone();
+        let items_call = next_items_call_timer.clone();
 
         tokio::spawn(async move {
             if let Ok(mut conn) = pool.get().await {
                 if let Ok(data) = serde_json::to_string(&items) {
                     let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
-                    let _: redis::RedisResult<()> = conn
-                        .expire(cache_key, get_redis_expire_time("items").await)
-                        .await;
+
+                    let mut time_in_seconds = None;
+                    if let Ok(mutex_timer) = items_call.lock() {
+                        time_in_seconds = mutex_timer
+                            .as_ref()
+                            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
+
+                        drop(mutex_timer);
+                    }
+
+                    if let Some(time_in_seconds) = time_in_seconds {
+                        let _: redis::RedisResult<()> =
+                            conn.expire(cache_key, time_in_seconds).await;
+                    }
                 }
             }
         });
@@ -223,18 +238,17 @@ async fn get_item_history(
 
 async fn get_items_by_ids(
     Query(query_parms): Query<IdsQueryParams>,
-    State(AppState {
-        pgpool,
-        redispool: _,
-    }): State<AppState>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let ids = query_parms.ids.unwrap_or(Vec::new());
     let items_from_db = sqlx::query_as!(ItemFromDB, "SELECT * FROM Item WHERE _id = ANY($1)", &ids)
-        .fetch_all(&pgpool)
+        .fetch_all(&app_state.pgpool)
         .await
         .map_err(|_| BadSqlQuery(String::from("Items By IDs Query did not run successfully")))?;
 
-    Ok(Json(items_from_db_to_items(items_from_db, &pgpool).await?))
+    Ok(Json(
+        items_from_db_to_items(items_from_db, &app_state.pgpool).await?,
+    ))
 }
 
 async fn tasks_from_db_to_tasks(
@@ -292,7 +306,12 @@ async fn tasks_from_db_to_tasks(
 
 async fn get_tasks(
     Query(query_parms): Query<TaskQueryParams>,
-    State(AppState { pgpool, redispool }): State<AppState>,
+    State(AppState {
+        pgpool,
+        redispool,
+        next_items_call_timer: _,
+        next_tasks_call_timer,
+    }): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let search = query_parms.search.unwrap_or(String::new());
     let is_kappa = query_parms.is_kappa.unwrap_or(false);
@@ -315,7 +334,7 @@ async fn get_tasks(
     }
 
     // try not to create too many cache keys when its not needed
-    let use_redis = limit >= 30 && ids.is_empty();
+    let use_redis = ids.is_empty();
     let mut conn = if use_redis {
         redispool.get().await.ok()
     } else {
@@ -367,14 +386,26 @@ async fn get_tasks(
     if use_redis {
         let pool = redispool.clone();
         let tasks = tasks.clone();
+        let tasks_call = next_tasks_call_timer.clone();
 
         tokio::spawn(async move {
             if let Ok(mut conn) = pool.get().await {
                 if let Ok(data) = serde_json::to_string(&tasks) {
                     let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
-                    let _: redis::RedisResult<()> = conn
-                        .expire(cache_key, get_redis_expire_time("tasks").await)
-                        .await;
+
+                    let mut time_in_seconds = None;
+                    if let Ok(mutex_timer) = tasks_call.lock() {
+                        time_in_seconds = mutex_timer
+                            .as_ref()
+                            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
+
+                        drop(mutex_timer);
+                    }
+
+                    if let Some(time_in_seconds) = time_in_seconds {
+                        let _: redis::RedisResult<()> =
+                            conn.expire(cache_key, time_in_seconds).await;
+                    }
                 }
             }
         });
@@ -385,19 +416,18 @@ async fn get_tasks(
 
 async fn get_tasks_by_ids(
     Query(query_parms): Query<IdsQueryParams>,
-    State(AppState {
-        pgpool,
-        redispool: _,
-    }): State<AppState>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let ids: Vec<String> = query_parms.ids.unwrap_or(Vec::new());
 
     let tasks_from_db = sqlx::query_as!(TaskFromDB, "SELECT * FROM Task WHERE _id = ANY($1)", &ids)
-        .fetch_all(&pgpool)
+        .fetch_all(&app_state.pgpool)
         .await
         .unwrap();
 
-    Ok(Json(tasks_from_db_to_tasks(tasks_from_db, &pgpool).await?))
+    Ok(Json(
+        tasks_from_db_to_tasks(tasks_from_db, &app_state.pgpool).await?,
+    ))
 }
 
 // returns a HashMap which maps every task_id to a Vec<task_id, status> where status can only be
