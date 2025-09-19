@@ -167,7 +167,7 @@ pub async fn upsert_data_file(
 // inserts all of the input items into the db
 async fn upsert_items(
     items: &Vec<Item>,
-    pool: &sqlx::Pool<sqlx::Postgres>, is_api_call:bool
+    pool: &sqlx::Pool<sqlx::Postgres>, _is_api_call:bool
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;
 

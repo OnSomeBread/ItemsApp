@@ -1,9 +1,18 @@
 use crate::database_types::*;
 use crate::query_types::*;
+use AppError::*;
 use axum::{Router, extract::State, response::Json, routing::get};
 use axum_extra::extract::Query;
+//use bb8_redis::redis::AsyncTypedCommands;
+use redis::AsyncCommands;
+
+use sqlx::PgPool;
 use std::collections::{HashMap, HashSet};
 use tokio::try_join;
+
+async fn get_redis_expire_time(_api: &str) -> i64 {
+    return 3600 * 24;
+}
 
 // checks if the database is initalized
 async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
@@ -11,12 +20,10 @@ async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
         sqlx::query_scalar!("SELECT COUNT(*) FROM Item").fetch_one(&app_state.pgpool),
         sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pgpool)
     )
-    .map_err(|_| {
-        AppError::UninitalizedDatabase(String::from("The Database has not yet been initalized"))
-    })?;
+    .map_err(|_| UninitalizedDatabase(String::from("The Database has not yet been initalized")))?;
 
     match items_count.unwrap_or(0) == 0 || tasks_count.unwrap_or(0) == 0 {
-        true => Err(AppError::UninitalizedDatabase(String::from(
+        true => Err(UninitalizedDatabase(String::from(
             "The Database has not yet been initalized",
         ))),
         false => Ok(String::from("Status Ok")),
@@ -33,7 +40,7 @@ async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppErro
         sqlx::query_scalar!("SELECT COUNT(*) FROM Task WHERE lightkeeper_required = True")
             .fetch_one(&app_state.pgpool)
     )
-    .map_err(|_| AppError::BadSqlQuery(String::from("Stats Query did not run successfully")))?;
+    .map_err(|_| BadSqlQuery(String::from("Stats Query did not run successfully")))?;
 
     Ok(Json(Stats {
         items_count: items_count.unwrap_or(0),
@@ -45,7 +52,7 @@ async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppErro
 
 async fn items_from_db_to_items(
     items_from_db: Vec<ItemFromDB>,
-    app_state: AppState,
+    pgpool: &PgPool,
 ) -> Result<Vec<Item>, AppError> {
     let ids: Vec<String> = items_from_db.iter().map(|item| item._id.clone()).collect();
     let (buy_for_vec, sell_for_vec) = try_join!(
@@ -54,16 +61,16 @@ async fn items_from_db_to_items(
             "SELECT DISTINCT ON (id) * FROM BuyFor WHERE item_id = ANY($1)",
             &ids
         )
-        .fetch_all(&app_state.pgpool),
+        .fetch_all(pgpool),
         sqlx::query_as!(
             SellFor,
             "SELECT DISTINCT ON (id) * FROM SellFor WHERE item_id = ANY($1)",
             &ids
         )
-        .fetch_all(&app_state.pgpool)
+        .fetch_all(pgpool)
     )
     .map_err(|_| {
-        AppError::BadSqlQuery(String::from(
+        BadSqlQuery(String::from(
             "BuyFor and SellFor Query did not run successfully",
         ))
     })?;
@@ -97,7 +104,7 @@ async fn items_from_db_to_items(
 
 async fn get_items(
     Query(query_parms): Query<ItemQueryParams>,
-    State(app_state): State<AppState>,
+    State(AppState { pgpool, redispool }): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let search = query_parms.search.unwrap_or(String::new());
     let asc = query_parms.asc.unwrap_or(false);
@@ -110,19 +117,46 @@ async fn get_items(
         .unwrap_or(String::new())
         .to_lowercase();
     // HARDCAP LIMIT OF 500
-    let limit = std::cmp::min(query_parms.limit.unwrap_or(30), 500);
+    let limit = query_parms.limit.unwrap_or(30);
     let offset = query_parms.offset.unwrap_or(0);
 
-    let valid_sort_by: HashSet<String> = VALID_SORT_BY.iter().map(|&x| String::from(x)).collect();
-    if sort_by == String::from("any") || !valid_sort_by.contains(&sort_by) {
+    let valid_sort_by: HashSet<&str> = VALID_SORT_BY.iter().map(|&x| x).collect();
+    if sort_by == String::from("any") || !valid_sort_by.contains(sort_by.as_str()) {
         sort_by = String::from("_id");
     }
 
-    let valid_item_type: HashSet<String> =
-        VALID_ITEM_TYPES.iter().map(|&x| String::from(x)).collect();
+    let valid_item_type: HashSet<&str> = VALID_ITEM_TYPES.iter().map(|&x| x).collect();
 
-    if item_type == "any" || !valid_item_type.contains(&item_type) {
+    if item_type == "any" || !valid_item_type.contains(item_type.as_str()) {
         item_type = String::new();
+    }
+
+    // try not to create too many cache keys when its not needed
+    let use_redis = limit >= 30;
+    let mut conn = if use_redis {
+        redispool.get().await.ok()
+    } else {
+        None
+    };
+
+    let cache_key = format!(
+        "{}a{}{}{}l{}o{}",
+        search,
+        if asc { "1" } else { "0" },
+        sort_by,
+        item_type,
+        limit,
+        offset
+    );
+
+    // check if there is a cache hit from redis cache
+    if let Some(conn) = conn.as_mut() {
+        let tasks: Option<Option<String>> = conn.get(&cache_key).await.ok();
+        if let Some(tasks) = tasks {
+            if let Some(tasks) = tasks {
+                return Ok(Json(serde_json::from_str(&tasks).unwrap()));
+            }
+        }
     }
 
     let sql = format!(
@@ -140,13 +174,30 @@ async fn get_items(
         .bind(format!("%{}%", item_type))
         .bind(limit as i64)
         .bind(offset as i64)
-        .fetch_all(&app_state.pgpool)
+        .fetch_all(&pgpool)
         .await
-        .map_err(|_| AppError::BadSqlQuery("Items Query did not run successfully".into()))?;
+        .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
 
-    Ok(Json(
-        items_from_db_to_items(items_from_db, app_state).await?,
-    ))
+    let items = items_from_db_to_items(items_from_db, &pgpool).await?;
+
+    // save tasks in redis cache
+    if use_redis {
+        let pool = redispool.clone();
+        let items = items.clone();
+
+        tokio::spawn(async move {
+            if let Ok(mut conn) = pool.get().await {
+                if let Ok(data) = serde_json::to_string(&items) {
+                    let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
+                    let _: redis::RedisResult<()> = conn
+                        .expire(cache_key, get_redis_expire_time("items").await)
+                        .await;
+                }
+            }
+        });
+    }
+
+    Ok(Json(items))
 }
 
 async fn get_item_history(
@@ -165,33 +216,30 @@ async fn get_item_history(
     )
     .fetch_all(&app_state.pgpool)
     .await
-    .map_err(|_| {
-        AppError::BadSqlQuery(String::from("ItemHistory Query did not run successfully"))
-    })?;
+    .map_err(|_| BadSqlQuery(String::from("ItemHistory Query did not run successfully")))?;
 
     Ok(Json(item_history))
 }
 
 async fn get_items_by_ids(
     Query(query_parms): Query<IdsQueryParams>,
-    State(app_state): State<AppState>,
+    State(AppState {
+        pgpool,
+        redispool: _,
+    }): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let ids = query_parms.ids.unwrap_or(Vec::new());
     let items_from_db = sqlx::query_as!(ItemFromDB, "SELECT * FROM Item WHERE _id = ANY($1)", &ids)
-        .fetch_all(&app_state.pgpool)
+        .fetch_all(&pgpool)
         .await
-        .map_err(|_| {
-            AppError::BadSqlQuery(String::from("Items By IDs Query did not run successfully"))
-        })?;
+        .map_err(|_| BadSqlQuery(String::from("Items By IDs Query did not run successfully")))?;
 
-    Ok(Json(
-        items_from_db_to_items(items_from_db, app_state).await?,
-    ))
+    Ok(Json(items_from_db_to_items(items_from_db, &pgpool).await?))
 }
 
 async fn tasks_from_db_to_tasks(
     tasks_from_db: Vec<TaskFromDB>,
-    app_state: AppState,
+    pgpool: &PgPool,
 ) -> Result<Vec<Task>, AppError> {
     let ids: Vec<String> = tasks_from_db.iter().map(|task| task._id.clone()).collect();
     let (objective_vec, task_requirement_vec) = try_join!(
@@ -200,16 +248,16 @@ async fn tasks_from_db_to_tasks(
             "SELECT DISTINCT ON (id) * FROM Objective WHERE task_id = ANY($1)",
             &ids
         )
-        .fetch_all(&app_state.pgpool),
+        .fetch_all(pgpool),
         sqlx::query_as!(
             TaskRequirement,
             "SELECT DISTINCT ON (id) * FROM TaskRequirement WHERE task_id = ANY($1)",
             &ids
         )
-        .fetch_all(&app_state.pgpool)
+        .fetch_all(pgpool)
     )
     .map_err(|_| {
-        AppError::BadSqlQuery(String::from(
+        BadSqlQuery(String::from(
             "Objective and TaskRequirement Query did not run successfully",
         ))
     })?;
@@ -244,7 +292,7 @@ async fn tasks_from_db_to_tasks(
 
 async fn get_tasks(
     Query(query_parms): Query<TaskQueryParams>,
-    State(app_state): State<AppState>,
+    State(AppState { pgpool, redispool }): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let search = query_parms.search.unwrap_or(String::new());
     let is_kappa = query_parms.is_kappa.unwrap_or(false);
@@ -254,19 +302,46 @@ async fn get_tasks(
     let player_lvl = query_parms.player_lvl.unwrap_or(99);
     let limit = query_parms.limit.unwrap_or(30);
     let offset = query_parms.offset.unwrap_or(0);
-
-    // TODO FIX EXPECTED A SEQUENCE
     let ids = query_parms.ids.unwrap_or(Vec::new());
 
-    let valid_obj_types: HashSet<String> =
-        VALID_OBJ_TYPES.iter().map(|&x| String::from(x)).collect();
-    if obj_type == String::from("any") || !valid_obj_types.contains(&obj_type) {
+    let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().map(|&x| x).collect();
+    if obj_type == String::from("any") || !valid_obj_types.contains(obj_type.as_str()) {
         obj_type = String::new();
     }
 
-    let valid_traders: HashSet<String> = VALID_TRADERS.iter().map(|&x| String::from(x)).collect();
-    if trader == String::from("any") || !valid_traders.contains(&trader) {
+    let valid_traders: HashSet<&str> = VALID_TRADERS.iter().map(|&x| x).collect();
+    if trader == String::from("any") || !valid_traders.contains(trader.as_str()) {
         trader = String::new();
+    }
+
+    // try not to create too many cache keys when its not needed
+    let use_redis = limit >= 30 && ids.is_empty();
+    let mut conn = if use_redis {
+        redispool.get().await.ok()
+    } else {
+        None
+    };
+
+    let cache_key = format!(
+        "{}k{}l{}{}{}p{}l{}o{}",
+        search,
+        if is_kappa { "1" } else { "0" },
+        if is_lightkeeper { "1" } else { "0" },
+        obj_type,
+        trader,
+        player_lvl,
+        limit,
+        offset
+    );
+
+    // check if there is a cache hit from redis cache
+    if let Some(conn) = conn.as_mut() {
+        let tasks: Option<Option<String>> = conn.get(&cache_key).await.ok();
+        if let Some(tasks) = tasks {
+            if let Some(tasks) = tasks {
+                return Ok(Json(serde_json::from_str(&tasks).unwrap()));
+            }
+        }
     }
 
     let tasks_from_db = sqlx::query_as!(
@@ -282,29 +357,47 @@ async fn get_tasks(
                 limit as i64,
                 offset as i64
             )
-            .fetch_all(&app_state.pgpool)
+            .fetch_all(&pgpool)
             .await
-            .map_err(|_| AppError::BadSqlQuery(String::from("Tasks Query did not run successfully")))?;
+            .map_err(|_| BadSqlQuery(String::from("Tasks Query did not run successfully")))?;
 
-    Ok(Json(
-        tasks_from_db_to_tasks(tasks_from_db, app_state).await?,
-    ))
+    let tasks = tasks_from_db_to_tasks(tasks_from_db, &pgpool).await?;
+
+    // save tasks in redis cache
+    if use_redis {
+        let pool = redispool.clone();
+        let tasks = tasks.clone();
+
+        tokio::spawn(async move {
+            if let Ok(mut conn) = pool.get().await {
+                if let Ok(data) = serde_json::to_string(&tasks) {
+                    let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
+                    let _: redis::RedisResult<()> = conn
+                        .expire(cache_key, get_redis_expire_time("tasks").await)
+                        .await;
+                }
+            }
+        });
+    }
+
+    Ok(Json(tasks))
 }
 
 async fn get_tasks_by_ids(
     Query(query_parms): Query<IdsQueryParams>,
-    State(app_state): State<AppState>,
+    State(AppState {
+        pgpool,
+        redispool: _,
+    }): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let ids: Vec<String> = query_parms.ids.unwrap_or(Vec::new());
 
     let tasks_from_db = sqlx::query_as!(TaskFromDB, "SELECT * FROM Task WHERE _id = ANY($1)", &ids)
-        .fetch_all(&app_state.pgpool)
+        .fetch_all(&pgpool)
         .await
         .unwrap();
 
-    Ok(Json(
-        tasks_from_db_to_tasks(tasks_from_db, app_state).await?,
-    ))
+    Ok(Json(tasks_from_db_to_tasks(tasks_from_db, &pgpool).await?))
 }
 
 // returns a HashMap which maps every task_id to a Vec<task_id, status> where status can only be
@@ -318,7 +411,7 @@ async fn get_adj_list(
         .fetch_all(&app_state.pgpool)
         .await
         .map_err(|_| {
-            AppError::BadSqlQuery(String::from(
+            BadSqlQuery(String::from(
                 "TaskRequirement Query did not run successfully",
             ))
         })?;

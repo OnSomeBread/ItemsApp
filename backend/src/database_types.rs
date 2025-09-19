@@ -1,7 +1,8 @@
-use serde::Serialize;
+use redis_macros::{FromRedisValue, ToRedisArgs};
+use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::{DateTime, Utc};
 
-#[derive(Serialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct BuyFor {
     pub id: i32,
     pub price: i32,
@@ -13,7 +14,7 @@ pub struct BuyFor {
     pub item_id: String,
 }
 
-#[derive(Serialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct SellFor {
     pub id: i32,
     pub price: i32,
@@ -40,7 +41,7 @@ pub struct ItemFromDB {
     pub item_types: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone)]
 pub struct Item {
     pub _id: String,
     pub item_name: String,
@@ -75,7 +76,7 @@ impl From<ItemFromDB> for Item {
     }
 }
 
-#[derive(Serialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct Objective {
     pub id: i32,
     pub obj_type: String,
@@ -85,7 +86,7 @@ pub struct Objective {
     pub task_id: String,
 }
 
-#[derive(Serialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct TaskRequirement {
     pub id: i32,
     pub status: String,
@@ -107,7 +108,7 @@ pub struct TaskFromDB {
     pub wiki: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone)]
 pub struct Task {
     pub _id: String,
     pub task_name: String,

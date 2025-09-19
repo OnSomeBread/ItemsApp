@@ -3,7 +3,7 @@ export const DEFAULT_ITEM_QUERY_PARAMS = {
   asc: false,
   sortBy: "base_price",
   type: "any",
-  limit: 30,
+  limit: 50,
   offset: 0,
 };
 
@@ -14,7 +14,7 @@ export const DEFAULT_TASK_QUERY_PARAMS = {
   playerLvl: 99,
   objType: "any",
   trader: "any",
-  limit: 20,
+  limit: 50,
   offset: 0,
 };
 

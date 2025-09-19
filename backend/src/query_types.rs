@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 // standard error handling for all endpoints
 #[derive(Debug, serde::Serialize)]
 pub enum AppError {
+    // FailedRedisConnection(String),
     UninitalizedDatabase(String),
     BadSqlQuery(String),
 }
@@ -19,7 +20,9 @@ impl IntoResponse for AppError {
             }
             AppError::BadSqlQuery(msg) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(msg)).into_response()
-            }
+            } // AppError::FailedRedisConnection(msg) => {
+              //     (StatusCode::INTERNAL_SERVER_ERROR, Json(msg)).into_response()
+              // }
         }
     }
 }
