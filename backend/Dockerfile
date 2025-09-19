@@ -7,7 +7,7 @@ WORKDIR /ItemsApp
 RUN rustup target add x86_64-unknown-linux-musl
 COPY . .
 RUN cargo install sqlx-cli --no-default-features --features postgres
-ENV SQLX_OFFLINE true
+ENV SQLX_OFFLINE=true
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
 
