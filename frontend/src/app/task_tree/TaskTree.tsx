@@ -26,7 +26,7 @@ async function TaskTree({ searchParams }: PageProps) {
   // }
 
   const res2 = await fetch(
-    DOCKER_BACKEND + "/api/tasks?trader=" + trader + "&limit=500",
+    DOCKER_BACKEND + "/api/tasks?trader=" + trader + "&limit=1000",
     {
       cache: "no-store",
     }
