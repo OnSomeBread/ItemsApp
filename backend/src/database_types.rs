@@ -1,8 +1,6 @@
 use redis_macros::{FromRedisValue, ToRedisArgs};
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::{DateTime, Utc};
-use std::sync::{Arc, Mutex};
-use std::time::Instant;
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct BuyFor {
@@ -153,13 +151,4 @@ pub struct SavedItemData {
     pub price_rub: i32,
     pub recorded_time: DateTime<Utc>,
     pub item_id: String,
-}
-
-use bb8_redis::{RedisConnectionManager, bb8};
-#[derive(Clone)]
-pub struct AppState {
-    pub pgpool: sqlx::PgPool,
-    pub redispool: bb8::Pool<RedisConnectionManager>,
-    pub next_items_call_timer: Arc<Mutex<Option<Instant>>>,
-    pub next_tasks_call_timer: Arc<Mutex<Option<Instant>>>,
 }
