@@ -6,14 +6,22 @@ import { DOCKER_BACKEND } from "../../constants";
 import TaskTreeComponent from "../../components/TaskTreeComponent";
 
 type PageProps = {
-  searchParams: Promise<{ trader?: string }>;
+  searchParams: Promise<{
+    trader?: string;
+    isKappa?: boolean;
+    isLightkeeper?: boolean;
+  }>;
 };
 
 async function TaskTree({ searchParams }: PageProps) {
-  let { trader } = (await searchParams) ?? { trader: "Prapor" };
-  if (trader === undefined) {
-    trader = "Prapor";
-  }
+  let { trader, isKappa, isLightkeeper } = (await searchParams) ?? {
+    trader: "Prapor",
+    isKappa: false,
+    isLightkeeper: false,
+  };
+  if (trader === undefined) trader = "Prapor";
+  if (isKappa === undefined) isKappa = false;
+  if (isLightkeeper === undefined) isLightkeeper = false;
 
   const res1 = await fetch(DOCKER_BACKEND + "/api/adj_list", {
     cache: "no-store",
@@ -26,7 +34,14 @@ async function TaskTree({ searchParams }: PageProps) {
   // }
 
   const res2 = await fetch(
-    DOCKER_BACKEND + "/api/tasks?trader=" + trader + "&limit=1000",
+    DOCKER_BACKEND +
+      "/api/tasks?trader=" +
+      trader +
+      "&isKappa=" +
+      isKappa +
+      "&isLightkeeper=" +
+      isLightkeeper +
+      "&limit=1000",
     {
       cache: "no-store",
     }
@@ -67,7 +82,11 @@ async function TaskTree({ searchParams }: PageProps) {
     <div className="relative">
       <div className="absolute z-2">
         <PageSwitch />
-        <TraderSelect trader={trader} />
+        <TraderSelect
+          trader={trader}
+          isKappa={isKappa}
+          isLightkeeper={isLightkeeper}
+        />
       </div>
       <div className="absolute z-1">
         <div className="h-[100vh] w-[100vw]">
