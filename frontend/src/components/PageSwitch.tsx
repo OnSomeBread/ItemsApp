@@ -3,10 +3,11 @@ import Link from "next/link";
 function PageSwitch() {
   return (
     <nav className="mt-1 ml-4 w-100 justify-start">
-      <Link href="/items">Items page</Link>
-      <Link href="/tasks">Tasks page</Link>
-      <Link href="/task_tree">Task Tree page</Link>
-      <Link href="/items_compact">Items page compact</Link>
+      <Link href="/items">Items</Link>
+      <Link href="/items_compact">Items compact</Link>
+      <Link href="/tasks">Tasks</Link>
+      <Link href="/task_tree">Task Tree</Link>
+      <Link href="/bitcoin">BitCoin</Link>
       {/* <a onClick={() => window.history.back()}>Go Back</a> */}
     </nav>
   );
