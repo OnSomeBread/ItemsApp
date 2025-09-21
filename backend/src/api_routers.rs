@@ -5,7 +5,6 @@ use axum::{Router, extract::State, response::Json, routing::get};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
 
-use sqlx::PgPool;
 use std::collections::{HashMap, HashSet};
 use tokio::try_join;
 
@@ -341,24 +340,35 @@ async fn get_items_by_ids(
 
 async fn tasks_from_db_to_tasks(
     tasks_from_db: Vec<TaskFromDB>,
-    pgpool: &PgPool,
+    mut txn: sqlx::Transaction<'static, sqlx::Postgres>,
 ) -> Result<Vec<Task>, AppError> {
     let ids: Vec<String> = tasks_from_db.iter().map(|task| task._id.clone()).collect();
-    let (objective_vec, task_requirement_vec) = try_join!(
-        sqlx::query_as!(
-            Objective,
-            "SELECT * FROM Objective WHERE task_id = ANY($1)",
-            &ids
-        )
-        .fetch_all(pgpool),
-        sqlx::query_as!(
-            TaskRequirement,
-            "SELECT * FROM TaskRequirement WHERE task_id = ANY($1)",
-            &ids
-        )
-        .fetch_all(pgpool)
+    let objective_vec = sqlx::query_as!(
+        Objective,
+        "SELECT * FROM Objective WHERE task_id = ANY($1)",
+        &ids
     )
+    .fetch_all(&mut *txn)
+    .await
     .map_err(|_| {
+        BadSqlQuery(String::from(
+            "Objective and TaskRequirement Query did not run successfully",
+        ))
+    })?;
+    let task_requirement_vec = sqlx::query_as!(
+        TaskRequirement,
+        "SELECT * FROM TaskRequirement WHERE task_id = ANY($1)",
+        &ids
+    )
+    .fetch_all(&mut *txn)
+    .await
+    .map_err(|_| {
+        BadSqlQuery(String::from(
+            "Objective and TaskRequirement Query did not run successfully",
+        ))
+    })?;
+
+    txn.commit().await.map_err(|_| {
         BadSqlQuery(String::from(
             "Objective and TaskRequirement Query did not run successfully",
         ))
@@ -451,6 +461,11 @@ async fn get_tasks(
         }
     }
 
+    let mut txn = pgpool
+        .begin()
+        .await
+        .map_err(|_| BadSqlQuery(String::from("Tasks Query did not run successfully")))?;
+
     let tasks_from_db = sqlx::query_as!(
                 TaskFromDB,
                 "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND ($5::bool IS FALSE OR kappa_required = TRUE) AND ($6::bool IS FALSE OR lightkeeper_required = TRUE) AND EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7)ORDER BY _id ASC LIMIT $8 OFFSET $9",
@@ -464,11 +479,11 @@ async fn get_tasks(
                 limit as i64,
                 offset as i64
             )
-            .fetch_all(&pgpool)
+            .fetch_all(&mut *txn)
             .await
             .map_err(|_| BadSqlQuery(String::from("Tasks Query did not run successfully")))?;
 
-    let tasks = tasks_from_db_to_tasks(tasks_from_db, &pgpool).await?;
+    let tasks = tasks_from_db_to_tasks(tasks_from_db, txn).await?;
 
     // save tasks in redis cache
     if use_redis {
@@ -507,15 +522,16 @@ async fn get_tasks_by_ids(
     State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let ids: Vec<String> = query_parms.ids.unwrap_or(Vec::new());
-
+    let mut txn =
+        app_state.pgpool.begin().await.map_err(|_| {
+            BadSqlQuery(String::from("Tasks by ids Query did not run successfully"))
+        })?;
     let tasks_from_db = sqlx::query_as!(TaskFromDB, "SELECT * FROM Task WHERE _id = ANY($1)", &ids)
-        .fetch_all(&app_state.pgpool)
+        .fetch_all(&mut *txn)
         .await
-        .unwrap();
+        .map_err(|_| BadSqlQuery(String::from("Tasks by ids Query did not run successfully")))?;
 
-    Ok(Json(
-        tasks_from_db_to_tasks(tasks_from_db, &app_state.pgpool).await?,
-    ))
+    Ok(Json(tasks_from_db_to_tasks(tasks_from_db, txn).await?))
 }
 
 // returns a HashMap which maps every task_id to a Vec<task_id, status> where status can only be
