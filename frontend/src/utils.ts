@@ -22,11 +22,8 @@ export function getBestSell(item: Item) {
 export function getBestBuy(item: Item) {
   let bestBuy: Buy | null = null;
   for (const trader of item.buys) {
-    if (
-      bestBuy === null ||
-      (trader.price_rub < bestBuy.price_rub &&
-        trader.trader_name !== "Flea Market")
-    ) {
+    if (trader.trader_name === "Flea Market") continue;
+    if (bestBuy === null || trader.price_rub < bestBuy.price_rub) {
       bestBuy = trader;
     }
   }
