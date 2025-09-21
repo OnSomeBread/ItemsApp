@@ -34,6 +34,8 @@ pub struct Stats {
     pub tasks_count: i64,
     pub kappa_required_count: i64,
     pub lightkeeper_required_count: i64,
+    pub time_till_items_refresh_secs: i64,
+    pub time_till_tasks_refresh_secs: i64,
 }
 
 #[derive(Deserialize)]
@@ -80,6 +82,8 @@ pub const VALID_SORT_BY: &'static [&'static str] = &[
     "base_price",
     "avg_24h_price",
     "change_last_48h_percent",
+    // "instant_profit",
+    // "per_slot",
     // "fleamarket",
 ];
 

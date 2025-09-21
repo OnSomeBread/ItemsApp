@@ -2,7 +2,7 @@ use redis_macros::{FromRedisValue, ToRedisArgs};
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::{DateTime, Utc};
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone, sqlx::Type)]
 pub struct BuyFor {
     pub id: i32,
     pub price: i32,
@@ -14,7 +14,7 @@ pub struct BuyFor {
     pub item_id: String,
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone, sqlx::Type)]
 pub struct SellFor {
     pub id: i32,
     pub price: i32,
@@ -41,7 +41,7 @@ pub struct ItemFromDB {
     pub item_types: String,
 }
 
-#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct Item {
     pub _id: String,
     pub item_name: String,

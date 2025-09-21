@@ -1,10 +1,8 @@
 use crate::database_types::*;
 use crate::init_app_state::AppState;
-use crate::query_types::*;
-use AppError::*;
+use crate::query_types::{AppError::*, *};
 use axum::{Router, extract::State, response::Json, routing::get};
 use axum_extra::extract::Query;
-//use bb8_redis::redis::AsyncTypedCommands;
 use redis::AsyncCommands;
 
 use sqlx::PgPool;
@@ -41,38 +39,60 @@ async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppErro
     )
     .map_err(|_| BadSqlQuery(String::from("Stats Query did not run successfully")))?;
 
+    let mut time_in_seconds_items = None;
+    if let Ok(mutex_timer) = app_state.next_items_call_timer.lock() {
+        time_in_seconds_items = mutex_timer
+            .as_ref()
+            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
+    }
+
+    let mut time_in_seconds_tasks = None;
+    if let Ok(mutex_timer) = app_state.next_items_call_timer.lock() {
+        time_in_seconds_tasks = mutex_timer
+            .as_ref()
+            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
+    }
+
     Ok(Json(Stats {
         items_count: items_count.unwrap_or(0),
         tasks_count: tasks_count.unwrap_or(0),
         kappa_required_count: kappa_required_count.unwrap_or(0),
         lightkeeper_required_count: lightkeeper_required_count.unwrap_or(0),
+        time_till_items_refresh_secs: time_in_seconds_items.unwrap_or(0),
+        time_till_tasks_refresh_secs: time_in_seconds_tasks.unwrap_or(0),
     }))
 }
 
 async fn items_from_db_to_items(
     items_from_db: Vec<ItemFromDB>,
-    pgpool: &PgPool,
+    mut txn: sqlx::Transaction<'static, sqlx::Postgres>,
 ) -> Result<Vec<Item>, AppError> {
     let ids: Vec<String> = items_from_db.iter().map(|item| item._id.clone()).collect();
-    let (buy_for_vec, sell_for_vec) = try_join!(
-        sqlx::query_as!(
-            BuyFor,
-            "SELECT DISTINCT ON (id) * FROM BuyFor WHERE item_id = ANY($1)",
-            &ids
-        )
-        .fetch_all(pgpool),
-        sqlx::query_as!(
-            SellFor,
-            "SELECT DISTINCT ON (id) * FROM SellFor WHERE item_id = ANY($1)",
-            &ids
-        )
-        .fetch_all(pgpool)
+    let buy_for_vec = sqlx::query_as!(BuyFor, "SELECT * FROM BuyFor WHERE item_id = ANY($1)", &ids)
+        .fetch_all(&mut *txn)
+        .await
+        .map_err(|_| {
+            BadSqlQuery(String::from(
+                "BuyFor and SellFor Query did not run successfully",
+            ))
+        })?;
+
+    let sell_for_vec = sqlx::query_as!(
+        SellFor,
+        "SELECT * FROM SellFor WHERE item_id = ANY($1)",
+        &ids
     )
+    .fetch_all(&mut *txn)
+    .await
     .map_err(|_| {
         BadSqlQuery(String::from(
             "BuyFor and SellFor Query did not run successfully",
         ))
     })?;
+
+    txn.commit()
+        .await
+        .map_err(|_| BadSqlQuery(String::from("Item Query did not run successfully")))?;
 
     let mut hm: HashMap<String, (Vec<BuyFor>, Vec<SellFor>)> = HashMap::new();
     buy_for_vec.into_iter().for_each(|buy| {
@@ -101,6 +121,12 @@ async fn items_from_db_to_items(
         .collect())
 }
 
+// grabs items from the Item table based off of the query params
+// there are 2 types of queries the first approach is to query for
+// Item, BuyFor, SellFor as 3 separate queries which runs quickly
+// for multiple runs then slows down presumibly from the extra connections
+// the second approach is to query all at once as a join which does not have
+// the connections issue and is much easier to work with but is also much slower
 async fn get_items(
     Query(query_parms): Query<ItemQueryParams>,
     State(AppState {
@@ -114,19 +140,18 @@ async fn get_items(
     let asc = query_parms.asc.unwrap_or(false);
     let mut sort_by = query_parms
         .sort_by
-        .unwrap_or(String::from("_id"))
+        .unwrap_or(String::from("base_price"))
         .to_lowercase();
     let mut item_type = query_parms
         .item_type
         .unwrap_or(String::new())
         .to_lowercase();
-    // HARDCAP LIMIT OF 500
-    let limit = query_parms.limit.unwrap_or(30);
+    let limit = std::cmp::min(query_parms.limit.unwrap_or(30), 100);
     let offset = query_parms.offset.unwrap_or(0);
 
     let valid_sort_by: HashSet<&str> = VALID_SORT_BY.iter().map(|&x| x).collect();
     if sort_by == String::from("any") || !valid_sort_by.contains(sort_by.as_str()) {
-        sort_by = String::from("_id");
+        sort_by = String::from("base_price");
     }
 
     let valid_item_type: HashSet<&str> = VALID_ITEM_TYPES.iter().map(|&x| x).collect();
@@ -163,6 +188,60 @@ async fn get_items(
         }
     }
 
+    // if sort_by == "instant_profit" {
+    // max(price + price * fee% - min(trader_buy_price))
+    // max(min(trader_buy_price) - price + price * fee%)
+    // max(abs(min(trader_buy_price) - (price + price * fee%))
+
+    // welp doing this is much cleaner but far slower than the main query ¯\_(ツ)_/¯
+    // let items_test: Vec<Item> = sqlx::query_as!(
+    //         Item,
+    //         r#"SELECT i.*,
+    //         COALESCE(ARRAY_AGG((b.*)) FILTER (WHERE b.item_id IS NOT NULL), '{}') AS "buys!:Vec<BuyFor>",
+    //         COALESCE(ARRAY_AGG((s.*)) FILTER (WHERE s.item_id IS NOT NULL), '{}') AS "sells!:Vec<SellFor>"
+    //         FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id LEFT JOIN SellFor s ON i._id = s.item_id
+
+    //         WHERE i.item_name ILIKE $1 AND i.item_types ILIKE $2
+    //         GROUP BY i._id ORDER BY i.base_price DESC LIMIT $3 OFFSET $4;"#,
+    //         format!("%{}%", search),
+    //         format!("%{}%", item_type),
+    //         limit as i64,
+    //         offset as i64
+    //     ).fetch_all(&pgpool).await
+    //     .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
+    // return Ok(Json(items_test));
+
+    // THIS QUERY REQUIRES INDEX ON item_id FOR BOTH buyfor and sellfor but is faster than above approach
+    // let items_test: Vec<Item> = sqlx::query_as!(
+    //     Item,
+    //     r#"SELECT i.*,
+    //         COALESCE(buys.buys, '{}') AS "buys!:Vec<BuyFor>",
+    //         COALESCE(sells.sells, '{}') AS "sells!:Vec<SellFor>"
+    //         FROM Item i
+    //         LEFT JOIN LATERAL (
+    //             SELECT ARRAY_AGG(b.*) AS buys
+    //             FROM BuyFor b
+    //             WHERE b.item_id = i._id
+    //         ) buys ON TRUE
+    //         LEFT JOIN LATERAL (
+    //             SELECT ARRAY_AGG(s.*) AS sells
+    //             FROM SellFor s
+    //             WHERE s.item_id = i._id
+    //         ) sells ON TRUE
+    //         WHERE i.item_name ILIKE $1 AND i.item_types ILIKE $2
+    //         ORDER BY i.base_price DESC LIMIT $3 OFFSET $4;"#,
+    //     format!("%{}%", search),
+    //     format!("%{}%", item_type),
+    //     limit as i64,
+    //     offset as i64
+    // )
+    // .fetch_all(&pgpool)
+    // .await
+    // .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
+    // return Ok(Json(items_test));
+
+    // } else {
+
     let sql = format!(
         "SELECT * FROM Item 
         WHERE item_name ILIKE $1 
@@ -173,16 +252,22 @@ async fn get_items(
         if asc { "ASC" } else { "DESC" },
     );
 
-    let items_from_db: Vec<ItemFromDB> = sqlx::query_as::<_, ItemFromDB>(&sql)
+    let mut txn = pgpool
+        .begin()
+        .await
+        .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
+
+    let items_from_db: Vec<ItemFromDB> = sqlx::query_as(&sql)
         .bind(format!("%{}%", search))
         .bind(format!("%{}%", item_type))
         .bind(limit as i64)
         .bind(offset as i64)
-        .fetch_all(&pgpool)
+        .fetch_all(&mut *txn)
         .await
         .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
+    // }
 
-    let items = items_from_db_to_items(items_from_db, &pgpool).await?;
+    let items = items_from_db_to_items(items_from_db, txn).await?;
 
     // save tasks in redis cache
     if use_redis {
@@ -242,14 +327,16 @@ async fn get_items_by_ids(
     State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let ids = query_parms.ids.unwrap_or(Vec::new());
+    let mut txn =
+        app_state.pgpool.begin().await.map_err(|_| {
+            BadSqlQuery(String::from("Items By IDs Query did not run successfully"))
+        })?;
     let items_from_db = sqlx::query_as!(ItemFromDB, "SELECT * FROM Item WHERE _id = ANY($1)", &ids)
-        .fetch_all(&app_state.pgpool)
+        .fetch_all(&mut *txn)
         .await
         .map_err(|_| BadSqlQuery(String::from("Items By IDs Query did not run successfully")))?;
 
-    Ok(Json(
-        items_from_db_to_items(items_from_db, &app_state.pgpool).await?,
-    ))
+    Ok(Json(items_from_db_to_items(items_from_db, txn).await?))
 }
 
 async fn tasks_from_db_to_tasks(
@@ -260,13 +347,13 @@ async fn tasks_from_db_to_tasks(
     let (objective_vec, task_requirement_vec) = try_join!(
         sqlx::query_as!(
             Objective,
-            "SELECT DISTINCT ON (id) * FROM Objective WHERE task_id = ANY($1)",
+            "SELECT * FROM Objective WHERE task_id = ANY($1)",
             &ids
         )
         .fetch_all(pgpool),
         sqlx::query_as!(
             TaskRequirement,
-            "SELECT DISTINCT ON (id) * FROM TaskRequirement WHERE task_id = ANY($1)",
+            "SELECT * FROM TaskRequirement WHERE task_id = ANY($1)",
             &ids
         )
         .fetch_all(pgpool)
