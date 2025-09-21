@@ -18,6 +18,7 @@ pub async fn init_app_state(
     postgres_url: String,
     redis_url: String,
 ) -> Result<AppState, Box<dyn Error>> {
+    // PGOPTIONS CAUSES BACKEND NOT TO CONNECT TO DB
     let pgpool = loop {
         match PgPool::connect(&postgres_url).await {
             Ok(p) => break p,
