@@ -22,10 +22,11 @@ export type Buy = {
 };
 
 export type ItemHistory = {
-  _id: string;
   avg_24h_price: number;
   change_last_48h_percent: number;
-  time: Date;
+  price_rub: number;
+  recorded_time: Date;
+  item_id: string;
 };
 
 export type Item = {

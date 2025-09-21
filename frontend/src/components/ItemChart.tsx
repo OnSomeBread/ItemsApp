@@ -23,7 +23,7 @@ function ItemChart({ itemHistory }: Props) {
       >
         <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
         <XAxis
-          dataKey="time"
+          dataKey="recorded_time"
           tickFormatter={(t: string) => new Date(t).toLocaleTimeString()}
         />
         <YAxis
@@ -39,7 +39,7 @@ function ItemChart({ itemHistory }: Props) {
         />
         <Line
           type="monotone"
-          dataKey="fleaMarket"
+          dataKey="avg_24h_price"
           stroke="#8884d8"
           dot={false}
         />
