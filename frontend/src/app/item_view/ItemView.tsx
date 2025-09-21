@@ -24,6 +24,7 @@ async function ItemView({ searchParams }: PageProps) {
     }
   );
   const itemHistory = (await res2.json()) as ItemHistory[];
+  item.buys = item.buys.filter((buy) => buy.trader_name !== "Flea Market");
 
   return (
     <>
@@ -75,22 +76,20 @@ async function ItemView({ searchParams }: PageProps) {
             <>
               <br />
               <p>Buy Prices</p>
-              {item.buys
-                .filter((buyFor) => buyFor.trader_name !== "Flea Market")
-                .map((buyFor) => (
-                  <p key={buyFor.trader_name}>
-                    {"buy " +
-                      buyFor.buy_limit +
-                      " from " +
-                      buyFor.trader_name +
-                      " lvl " +
-                      buyFor.min_trader_level +
-                      ": " +
-                      buyFor.price.toLocaleString("en-us") +
-                      " " +
-                      buyFor.currency}
-                  </p>
-                ))}
+              {item.buys.map((buyFor) => (
+                <p key={buyFor.trader_name}>
+                  {"buy " +
+                    buyFor.buy_limit +
+                    " from " +
+                    buyFor.trader_name +
+                    " lvl " +
+                    buyFor.min_trader_level +
+                    ": " +
+                    buyFor.price.toLocaleString("en-us") +
+                    " " +
+                    buyFor.currency}
+                </p>
+              ))}
             </>
           )}
         </div>
