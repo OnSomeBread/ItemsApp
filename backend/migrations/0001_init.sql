@@ -76,3 +76,18 @@ CREATE TABLE IF NOT EXISTS TaskRequirement(
     task_id CHAR(24) NOT NULL,
     CONSTRAINT taskRequirements FOREIGN KEY (task_id) REFERENCES Task(_id)
 );
+
+-- potential index ideas however from testing I believe the 
+-- dataset might be too small to benefit significantly from these
+
+-- CREATE INDEX ON BuyFor(item_id);
+-- CREATE INDEX ON SellFor(item_id);
+
+-- CREATE INDEX ON BuyFor(item_id, id);
+-- CREATE INDEX ON SellFor(item_id, id);
+
+-- CREATE INDEX ON Objective(task_id);
+-- CREATE INDEX ON TaskRequirement(task_id);
+
+-- CREATE INDEX ON Objective(task_id, id);
+-- CREATE INDEX ON TaskRequirement(task_id, id);
