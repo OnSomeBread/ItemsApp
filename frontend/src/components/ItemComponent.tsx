@@ -3,6 +3,7 @@ import { type ReactNode } from "react";
 import Link from "next/link";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
 import dynamic from "next/dynamic";
+import { getBestBuy, getBestSell } from "../utils";
 const ImageComponent = dynamic(() => import("./ImageComponent"));
 
 interface Props {
@@ -14,13 +15,8 @@ interface Props {
 }
 
 // goes through all of the traders and finds the trader that sells for the most
-function getBestTraderBuy(allTraders: Buy[]) {
-  let bestBuy: Buy | null = null;
-  for (const trader of allTraders) {
-    if (bestBuy === null || trader.price_rub < bestBuy.price_rub) {
-      bestBuy = trader;
-    }
-  }
+function getBestTraderBuy(item: Item) {
+  const bestBuy: Buy | null = getBestBuy(item);
 
   if (bestBuy === null) return <p className="h-8">Cannot be bought</p>;
 
@@ -41,13 +37,8 @@ function getBestTraderBuy(allTraders: Buy[]) {
 }
 
 // goes through all of the traders and finds the trader that sells for the most
-function getBestTraderSell(allTraders: Sell[]) {
-  let bestSell: Sell | null = null;
-  for (const trader of allTraders) {
-    if (bestSell === null || trader.price_rub > bestSell.price_rub) {
-      bestSell = trader;
-    }
-  }
+function getBestTraderSell(item: Item) {
+  const bestSell: Sell | null = getBestSell(item);
 
   if (bestSell === null) return <p className="h-8">Cannot be sold</p>;
 
@@ -96,8 +87,8 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
 
       {fields.includes("traders") && (
         <>
-          {getBestTraderBuy(item.buys)}
-          {getBestTraderSell(item.sells)}
+          {getBestTraderBuy(item)}
+          {getBestTraderSell(item)}
         </>
       )}
 

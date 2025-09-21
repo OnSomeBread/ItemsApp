@@ -2,7 +2,8 @@
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Buy, Item, ItemQueryParams, Sell } from "../types";
+import { Item, ItemQueryParams } from "../types";
+import { getBestBuy, getBestSell } from "../utils";
 import ItemSearchBar from "./ItemSearchBar";
 import dynamic from "next/dynamic";
 const ImageComponent = dynamic(() => import("./ImageComponent"));
@@ -109,7 +110,7 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
                     </Link>
                   </td>
                   <td>
-                    <p>{item.base_price} RUB</p>
+                    <p>{item.base_price.toLocaleString("en-us")} RUB</p>
                   </td>
                   <td>
                     {bestBuy !== null && (
@@ -130,7 +131,8 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
                   <td>
                     {bestSell !== null && (
                       <p>
-                        {bestSell.trader_name}: {bestSell.price_rub} RUB
+                        {bestSell.trader_name}:{" "}
+                        {bestSell.price_rub.toLocaleString("en-us")} RUB
                       </p>
                     )}
                   </td>
@@ -146,25 +148,5 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
     </>
   );
 }
-
-const getBestSell = (item: Item) => {
-  let bestSell: Sell | null = null;
-  for (const trader of item.sells) {
-    if (bestSell === null || trader.price_rub > bestSell.price_rub) {
-      bestSell = trader;
-    }
-  }
-  return bestSell;
-};
-
-const getBestBuy = (item: Item) => {
-  let bestBuy: Buy | null = null;
-  for (const trader of item.buys) {
-    if (bestBuy === null || trader.price_rub < bestBuy.price_rub) {
-      bestBuy = trader;
-    }
-  }
-  return bestBuy;
-};
 
 export default ItemScrollCompact;

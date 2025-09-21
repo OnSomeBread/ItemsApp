@@ -59,8 +59,9 @@ function ItemCart() {
     allItems?.forEach((item) => {
       let bestBuyPrice = Number.MAX_SAFE_INTEGER;
       let bestSellPrice = 0;
-      for (const sell of item.buys) {
-        bestBuyPrice = Math.min(bestBuyPrice, sell.price_rub);
+      for (const buy of item.buys) {
+        if (buy.trader_name === "Flea Market") continue;
+        bestBuyPrice = Math.min(bestBuyPrice, buy.price_rub);
       }
       for (const sell of item.sells) {
         bestSellPrice = Math.max(bestSellPrice, sell.price_rub);
