@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT ON (id) * FROM BuyFor WHERE item_id = ANY($1)",
+  "query": "SELECT * FROM BuyFor WHERE item_id = ANY($1)",
   "describe": {
     "columns": [
       {
@@ -60,5 +60,5 @@
       false
     ]
   },
-  "hash": "5e2608dfba90287114326d4e9266b91ac61057b1e73181f46f64d68f941475da"
+  "hash": "e75dcda36ed50a509c4788f6646812072f4f808be801af37a4ee598013640e71"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT ON (id) * FROM Objective WHERE task_id = ANY($1)",
+  "query": "SELECT * FROM TaskRequirement WHERE task_id = ANY($1)",
   "describe": {
     "columns": [
       {
@@ -10,26 +10,16 @@
       },
       {
         "ordinal": 1,
-        "name": "obj_type",
+        "name": "status",
         "type_info": "Varchar"
       },
       {
         "ordinal": 2,
-        "name": "obj_description",
-        "type_info": "Text"
+        "name": "req_task_id",
+        "type_info": "Bpchar"
       },
       {
         "ordinal": 3,
-        "name": "map_name",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 4,
-        "name": "map_wiki",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 5,
         "name": "task_id",
         "type_info": "Bpchar"
       }
@@ -43,10 +33,8 @@
       false,
       false,
       false,
-      false,
-      false,
       false
     ]
   },
-  "hash": "31ed45018a34e122b08a5a3739c42bf2feccc7ab74a6b860461bd5110d5eb1da"
+  "hash": "3164bd3b457c733d9f127b3e995db47adaa09992ca96561bf534998831671ada"
 }

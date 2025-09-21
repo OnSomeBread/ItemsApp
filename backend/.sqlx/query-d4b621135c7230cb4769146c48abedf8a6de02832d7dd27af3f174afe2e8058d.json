@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT ON (id) * FROM SellFor WHERE item_id = ANY($1)",
+  "query": "SELECT * FROM SellFor WHERE item_id = ANY($1)",
   "describe": {
     "columns": [
       {
@@ -66,5 +66,5 @@
       false
     ]
   },
-  "hash": "291337a9e2ca944fd1c5268edc52318e69fe3e45e33602a5eeb27ed84a03ba7a"
+  "hash": "d4b621135c7230cb4769146c48abedf8a6de02832d7dd27af3f174afe2e8058d"
 }
