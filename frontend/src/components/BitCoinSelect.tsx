@@ -33,11 +33,14 @@ function BitCoinSelect({ hideoutLvl, fuelType, hasSolar }: Props) {
         onChange={(e) => pushRoute("hideoutLvl", Number(e.target.value))}
         defaultValue={hideoutLvl}
       >
-        {[...Array(50).keys()].map((num) => (
+        {[...Array(49).keys()].map((num) => (
           <option key={num + 1} value={num + 1}>
             Hideout Level: {num + 1}
           </option>
         ))}
+        <option key={50} value={50}>
+          Hideout Level: Elite
+        </option>
       </select>
 
       <select
