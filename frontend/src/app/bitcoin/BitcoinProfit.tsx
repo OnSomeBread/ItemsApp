@@ -1,9 +1,16 @@
-import BitCoinProductionChart from "../../components/BitCoinProductionChart";
-import BitCoinProfitChart from "../../components/BitCoinProfitChart";
 import BitCoinSelect from "../../components/BitCoinSelect";
 import PageSwitch from "../../components/PageSwitch";
 import { DOCKER_BACKEND } from "../../constants";
 import type { Item } from "../../types";
+
+import dynamic from "next/dynamic";
+
+const BitCoinProductionChart = dynamic(
+  () => import("../../components/BitCoinProductionChart")
+);
+const BitCoinProfitChart = dynamic(
+  () => import("../../components/BitCoinProfitChart")
+);
 
 function calcBitCoinHoursToProduce(gpuCount: number) {
   return 145000 / (1 + (gpuCount - 1) * 0.041225) / 3600;

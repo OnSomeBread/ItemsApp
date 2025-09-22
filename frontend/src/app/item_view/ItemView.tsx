@@ -1,8 +1,10 @@
 import { DOCKER_BACKEND } from "../../constants";
-import ItemChart from "../../components/ItemChart";
 import type { Item, ItemHistory } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 import ImageComponent from "../../components/ImageComponent";
+import dynamic from "next/dynamic";
+
+const ItemChart = dynamic(() => import("../../components/ItemChart"));
 
 type PageProps = {
   searchParams: Promise<{ id?: string }>;
