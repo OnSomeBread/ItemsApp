@@ -3,7 +3,11 @@ import PageSwitch from "../../components/PageSwitch";
 import { type Edge } from "@xyflow/react";
 import TraderSelect from "../../components/TraderSelect";
 import { DOCKER_BACKEND } from "../../constants";
-import TaskTreeComponent from "../../components/TaskTreeComponent";
+import dynamic from "next/dynamic";
+
+const TaskTreeComponent = dynamic(
+  () => import("../../components/TaskTreeComponent")
+);
 
 type PageProps = {
   searchParams: Promise<{

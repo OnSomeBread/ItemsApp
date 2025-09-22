@@ -62,10 +62,7 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
       {fields.includes("index") && <p>{idx}</p>}
       {fields.includes("name") && (
         <p className="h-10">
-          <Link
-            href={{ pathname: "/item_view", query: "id=" + item._id }}
-            prefetch={false}
-          >
+          <Link href={{ pathname: "/item_view", query: "id=" + item._id }}>
             {item.item_name}
           </Link>
           <br />
