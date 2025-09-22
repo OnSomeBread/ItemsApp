@@ -135,8 +135,6 @@ pub const ITEMS_QUERY: &'static str = r#"
             vendor {
                 name
                 ... on FleaMarket {
-                    sellOfferFeeRate
-                    sellRequirementFeeRate
                     foundInRaidRequired
                 }
             }
