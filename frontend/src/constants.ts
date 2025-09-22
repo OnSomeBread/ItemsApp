@@ -63,7 +63,7 @@ export const ALL_ITEM_SORTBY = {
   base_price: "Base Price",
   avg_24h_price: "Average Price 24 hours",
   change_last_48h_percent: "Change Last 48 hours Percent",
-  buy_from_flea_instant_profit: "Buy From Flea To Trader Profit",
+  buy_from_flea_instant_profit: "Buy From Flea Sell To Trader Profit",
   buy_from_trader_instant_profit: "Buy From Trader Sell To Flea Profit",
   per_slot: "Per Slot To Sell",
   flea_market: "Flea Market Price",
