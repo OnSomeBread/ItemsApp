@@ -3,45 +3,47 @@ CREATE TABLE IF NOT EXISTS Item (
     _id CHAR(24) PRIMARY KEY,
     item_name VARCHAR(255) NOT NULL,
     short_name VARCHAR(128) NOT NULL,
-    avg_24h_price INT DEFAULT 0 NOT NULL,
-    base_price INT DEFAULT 0 NOT NULL,
-    change_last_48h_percent REAL DEFAULT 0 NOT NULL,
-    width INT DEFAULT 0 NOT NULL,
-    height INT DEFAULT 0 NOT NULL,
+    avg_24h_price INT NOT NULL,
+    base_price INT NOT NULL,
+    change_last_48h_percent REAL NOT NULL,
+    width INT NOT NULL,
+    height INT NOT NULL,
     wiki VARCHAR(2048) NOT NULL,
-    item_types VARCHAR(255) NOT NULL
+    item_types VARCHAR(255) NOT NULL,
+    instant_profit INT NOT NULL,
+    per_slot INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS BuyFor(
     id SERIAL PRIMARY KEY,
-    price INT DEFAULT 0 NOT NULL,
+    price INT NOT NULL,
     currency VARCHAR(24) NOT NULL,
-    price_rub INT DEFAULT 0 NOT NULL,
+    price_rub INT NOT NULL,
     trader_name VARCHAR(24) NOT NULL,
-    min_trader_level INT DEFAULT 0 NOT NULL,
-    buy_limit INT DEFAULT 0 NOT NULL,
+    min_trader_level INT NOT NULL,
+    buy_limit INT NOT NULL,
     item_id CHAR(24) NOT NULL,
     CONSTRAINT buys FOREIGN KEY (item_id) REFERENCES Item(_id)
 );
 
 CREATE TABLE IF NOT EXISTS SellFor(
     id SERIAL PRIMARY KEY,
-    price INT DEFAULT 0 NOT NULL,
+    price INT NOT NULL,
     currency VARCHAR(24) NOT NULL,
-    price_rub INT DEFAULT 0 NOT NULL,
+    price_rub INT NOT NULL,
     trader_name VARCHAR(24) NOT NULL,
-    sell_offer_fee_rate REAL DEFAULT 0 NOT NULL,
-    sell_requirement_fee_rate REAL DEFAULT 0 NOT NULL,
-    found_in_raid_required BOOL DEFAULT False NOT NULL,
+    sell_offer_fee_rate REAL NOT NULL,
+    sell_requirement_fee_rate REAL NOT NULL,
+    found_in_raid_required BOOL NOT NULL,
     item_id CHAR(24) NOT NULL,
     CONSTRAINT sells FOREIGN KEY (item_id) REFERENCES Item(_id)
 );
 
 CREATE TABLE IF NOT EXISTS SavedItemData(
     id SERIAL PRIMARY KEY,
-    avg_24h_price INT DEFAULT 0 NOT NULL,
-    change_last_48h_percent REAL DEFAULT 0 NOT NULL,
-    price_rub INT DEFAULT 0 NOT NULL,
+    avg_24h_price INT NOT NULL,
+    change_last_48h_percent REAL NOT NULL,
+    price_rub INT NOT NULL,
     recorded_time TIMESTAMPTZ NOT NULL,
     item_id CHAR(24) NOT NULL
 );
@@ -50,12 +52,12 @@ CREATE TABLE IF NOT EXISTS Task(
     _id CHAR(24) PRIMARY KEY,
     task_name VARCHAR(255) NOT NULL,
     normalized_name VARCHAR(128) NOT NULL,
-    experience INT DEFAULT 0 NOT NULL,
-    min_player_level INT DEFAULT 0 NOT NULL,
+    experience INT NOT NULL,
+    min_player_level INT NOT NULL,
     trader VARCHAR(255) NOT NULL,
     faction_name VARCHAR(24) NOT NULL,
-    kappa_required BOOL DEFAULT False NOT NULL,
-    lightkeeper_required BOOL DEFAULT False NOT NULL,
+    kappa_required BOOL NOT NULL,
+    lightkeeper_required BOOL NOT NULL,
     wiki VARCHAR(2048) NOT NULL
 );
 
