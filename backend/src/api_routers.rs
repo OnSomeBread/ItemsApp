@@ -74,6 +74,8 @@ fn get_time_in_seconds(timer: &Arc<Mutex<Option<Instant>>>) -> Option<i64> {
     }
 }
 
+// this adds buyfor and sellfor to items so that it can be returned to user
+// much faster than left later join these
 async fn items_from_db_to_items(
     items_from_db: Vec<ItemFromDB>,
     mut txn: sqlx::Transaction<'static, sqlx::Postgres>,
@@ -312,6 +314,7 @@ async fn get_items(
     Ok(Json(items))
 }
 
+// returns flea market data by timestamp for a single id
 async fn get_item_history(
     Query(query_parms): Query<ItemHistoryQueryParams>,
     State(app_state): State<AppState>,
@@ -487,6 +490,8 @@ async fn get_page_by_ids<T: Page>(
     Ok(Json(values))
 }
 
+// this adds task requirements and objectives to tasks so that it can be returned to user
+// much faster than left later join these
 async fn tasks_from_db_to_tasks(
     tasks_from_db: Vec<TaskFromDB>,
     mut txn: sqlx::Transaction<'static, sqlx::Postgres>,
