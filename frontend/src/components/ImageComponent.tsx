@@ -20,6 +20,7 @@ function ImageComponent({ imgSrc, alt, width, height, priority }: Props) {
       width={width}
       height={height}
       priority={priority}
+      fetchPriority={priority ? "high" : "auto"}
       onError={() => setSrc("/unknown.webp")}
     />
   );
