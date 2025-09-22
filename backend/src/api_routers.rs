@@ -360,7 +360,7 @@ async fn get_item_history(
     Ok(Json(item_history))
 }
 
-trait Page: Sized + Send + Sync + Serialize + DeserializeOwned + Clone + 'static {
+trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
     async fn fetch_by_ids(
         pgpool: &sqlx::PgPool,
         not_found_ids: &Vec<String>,
