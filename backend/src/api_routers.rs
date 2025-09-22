@@ -187,11 +187,6 @@ async fn get_items(
         }
     }
 
-    // if sort_by == "instant_profit" {
-    // max(price + price * fee% - min(trader_buy_price))
-    // max(min(trader_buy_price) - price + price * fee%)
-    // max(abs(min(trader_buy_price) - (price + price * fee%))
-
     // welp doing this is much cleaner but far slower than the main query ¯\_(ツ)_/¯
     // let items_test: Vec<Item> = sqlx::query_as!(
     //         Item,
@@ -239,32 +234,46 @@ async fn get_items(
     // .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
     // return Ok(Json(items_test));
 
-    // } else {
-
-    let sql = format!(
-        "SELECT * FROM Item 
-        WHERE item_name ILIKE $1 
-        AND item_types ILIKE $2 
-        ORDER BY {} {} 
-        LIMIT $3 OFFSET $4",
-        sort_by,
-        if asc { "ASC" } else { "DESC" },
-    );
-
+    let items_from_db;
     let mut txn = pgpool
         .begin()
         .await
         .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
 
-    let items_from_db: Vec<ItemFromDB> = sqlx::query_as(&sql)
-        .bind(format!("%{}%", search))
-        .bind(format!("%{}%", item_type))
-        .bind(limit as i64)
-        .bind(offset as i64)
-        .fetch_all(&mut *txn)
-        .await
-        .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
-    // }
+    if sort_by == "flea_market" {
+        let sql = format!(
+            r#"SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
+            WHERE LOWER(b.trader_name) = 'flea market' AND i.item_name ILIKE $1 AND i.item_types ILIKE $2 
+            ORDER BY b.price_rub {} LIMIT $3 OFFSET $4;"#,
+            if asc { "ASC" } else { "DESC" },
+        );
+
+        items_from_db = sqlx::query_as(&sql)
+            .bind(format!("%{}%", search))
+            .bind(format!("%{}%", item_type))
+            .bind(limit as i64)
+            .bind(offset as i64)
+            .fetch_all(&mut *txn)
+            .await
+            .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
+    } else {
+        let sql = format!(
+            r#"SELECT * FROM Item 
+            WHERE item_name ILIKE $1 AND item_types ILIKE $2 
+            ORDER BY {} {} LIMIT $3 OFFSET $4"#,
+            sort_by,
+            if asc { "ASC" } else { "DESC" },
+        );
+
+        items_from_db = sqlx::query_as(&sql)
+            .bind(format!("%{}%", search))
+            .bind(format!("%{}%", item_type))
+            .bind(limit as i64)
+            .bind(offset as i64)
+            .fetch_all(&mut *txn)
+            .await
+            .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
+    }
 
     let items = items_from_db_to_items(items_from_db, txn).await?;
 

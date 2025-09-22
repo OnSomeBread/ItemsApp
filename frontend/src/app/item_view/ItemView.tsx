@@ -47,15 +47,25 @@ async function ItemView({ searchParams }: PageProps) {
           {item.avg_24h_price !== 0 && (
             <p>
               item average 24 hour price:{" "}
-              {item.avg_24h_price.toLocaleString("en-us")}
+              {item.avg_24h_price.toLocaleString("en-us")} RUB
             </p>
           )}
-          <p>item base price: {item.base_price.toLocaleString("en-us")}</p>
+          <p>item base price: {item.base_price.toLocaleString("en-us")} RUB</p>
           <p>change last 48 hours: {item.change_last_48h_percent}%</p>
 
           <a href={item.wiki}>
             <p>{item.item_name} wiki page</p>
           </a>
+
+          <p>
+            Buy From Flea Sell To Trader Instant Profit:{" "}
+            {item.buy_from_flea_instant_profit.toLocaleString("en-us")} RUB
+          </p>
+
+          <p>
+            Buy From Trader Sell To Flea Instant Profit:{" "}
+            {item.buy_from_trader_instant_profit.toLocaleString("en-us")} RUB
+          </p>
 
           {item.sells && item.sells.length > 0 && (
             <>
@@ -94,13 +104,7 @@ async function ItemView({ searchParams }: PageProps) {
           )}
         </div>
         <div className="flex-3 p-10">
-          <p>
-            Item Price History Chart{" "}
-            <mark>
-              WARNING CURRENT WIPE DOES NOT HAVE FLEA SO IT ALWAYS DISPLAYS AT A
-              CONSTANT PRICE
-            </mark>
-          </p>
+          <p>Item Price History Chart </p>
           {itemHistory && <ItemChart itemHistory={itemHistory} />}
         </div>
       </div>

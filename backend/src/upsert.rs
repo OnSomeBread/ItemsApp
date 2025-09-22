@@ -101,8 +101,102 @@ async fn upsert_items(
         .collect();
     let types_arr: Vec<String> = items.iter().map(|x| x.item_types.join(", ")).collect();
 
+    // fn calc_flea_tax(item_base_price: i32, flea: &SellFor) -> i32 {
+    //     let v0 = item_base_price as f64;
+    //     let vr = flea.price_rub as f64;
+    //     let po = (v0 / vr).log10();
+    //     let pr = (vr / v0).log10();
+
+    //     // pulled from https://escapefromtarkov.fandom.com/wiki/Trading
+    //     let flea_tax_float = v0 * .03_f64 * 4_f64.powf(po) + vr * .03_f64 * 4_f64.powf(pr);
+
+    //     // round 2 decimal places
+    //     ((flea_tax_float * 100_f64).round() / 100_f64) as i32
+    // }
+
+    // buy from flea instant profit = max(trader_sell_price) - flea_price
+    let buy_from_flea_instant_profits: Vec<i32> = items
+        .iter()
+        .map(|item| {
+            let max_sell = item.sells.iter().max_by_key(|x| {
+                if x.vendor.trader_name == "Flea Market" {
+                    0
+                } else {
+                    x.price_rub
+                }
+            });
+
+            let max_sell_price;
+            if let Some(max_sell) = max_sell {
+                max_sell_price = max_sell.price_rub;
+            } else {
+                max_sell_price = 0;
+            }
+
+            let flea = item
+                .buys
+                .iter()
+                .find(|x| x.vendor.trader_name == "Flea Market");
+
+            if let Some(flea) = flea {
+                max_sell_price - flea.price_rub
+            } else {
+                0
+            }
+        })
+        .collect();
+
+    // sellfor already accounts for flea tax
+    // buy from trader instant profits = flea_price - flea_tax - min(trader_buy_price)
+    let buy_from_trader_instant_profits: Vec<i32> = items
+        .iter()
+        .map(|item| {
+            let min_buy = item.buys.iter().min_by_key(|x| {
+                if x.vendor.trader_name == "Flea Market" {
+                    0
+                } else {
+                    x.price_rub
+                }
+            });
+
+            let min_buy_price;
+            if let Some(min_buy) = min_buy {
+                min_buy_price = min_buy.price_rub;
+            } else {
+                return 0;
+            }
+
+            let flea = item
+                .sells
+                .iter()
+                .find(|x| x.vendor.trader_name == "Flea Market");
+
+            if let Some(flea) = flea {
+                flea.price_rub - min_buy_price
+            } else {
+                0
+            }
+        })
+        .collect();
+
+    // per slot = (max(trader_sell_price)) / (width * height)
+    let per_slots: Vec<i32> = items
+        .iter()
+        .map(|item| {
+            let max_sell = item.sells.iter().max_by_key(|x| x.price_rub);
+
+            if let Some(max_sell) = max_sell {
+                max_sell.price_rub / (item.width * item.height)
+            } else {
+                0
+            }
+        })
+        .collect();
+
     // ITEM BULK INSERT
-    sqlx::query!("INSERT INTO Item (_id, item_name, short_name, avg_24h_price, base_price, change_last_48h_percent, width, height, wiki, item_types) SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[], $4::int[], $5::int[], $6::real[], $7::int[], $8::int[], $9::text[], $10::text[]) ON CONFLICT(_id) DO UPDATE SET avg_24h_price = EXCLUDED.avg_24h_price, change_last_48h_percent = EXCLUDED.change_last_48h_percent;",
+    sqlx::query!("INSERT INTO Item (_id, item_name, short_name, avg_24h_price, base_price, change_last_48h_percent, width, height, wiki, item_types, buy_from_flea_instant_profit, buy_from_trader_instant_profit, per_slot) 
+    SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[], $4::int[], $5::int[], $6::real[], $7::int[], $8::int[], $9::text[], $10::text[], $11::int[], $12::int[], $13::int[]) 
+    ON CONFLICT(_id) DO UPDATE SET avg_24h_price = EXCLUDED.avg_24h_price, change_last_48h_percent = EXCLUDED.change_last_48h_percent, buy_from_flea_instant_profit = EXCLUDED.buy_from_flea_instant_profit, buy_from_trader_instant_profit = EXCLUDED.buy_from_trader_instant_profit, per_slot = EXCLUDED.per_slot;",
         &ids,
         &names,
         &short_names,
@@ -112,9 +206,10 @@ async fn upsert_items(
         &items.iter().map(|item| item.width).collect::<Vec<i32>>(),
         &items.iter().map(|item| item.height).collect::<Vec<i32>>(),
         &items.iter().map(|item| item.wiki.to_string()).collect::<Vec<String>>(),
-        &types_arr)
-        .execute(&mut *txn)
-        .await?;
+        &types_arr,
+        &buy_from_flea_instant_profits,
+        &buy_from_trader_instant_profits,
+        &per_slots).execute(&mut *txn).await?;
 
     let buy_for_prices: Vec<i32> = items
         .iter()
@@ -203,25 +298,6 @@ async fn upsert_items(
         })
         .collect();
 
-    let sell_for_sell_offer_fee_rate: Vec<f32> = items
-        .iter()
-        .flat_map(|x| {
-            x.sells
-                .iter()
-                .map(|y| y.vendor.sell_offer_fee_rate.unwrap_or(0.0))
-                .collect::<Vec<f32>>()
-        })
-        .collect();
-    let sell_for_sell_requirement_fee_rate: Vec<f32> = items
-        .iter()
-        .flat_map(|x| {
-            x.sells
-                .iter()
-                .map(|y| y.vendor.sell_requirement_fee_rate.unwrap_or(0.0))
-                .collect::<Vec<f32>>()
-        })
-        .collect();
-
     let sell_for_found_in_raid_required: Vec<bool> = items
         .iter()
         .flat_map(|x| {
@@ -238,13 +314,13 @@ async fn upsert_items(
         .collect::<Vec<String>>();
 
     // SELLFOR BULK INSERT
-    sqlx::query!("INSERT INTO SellFor (price, currency, price_rub, trader_name, sell_offer_fee_rate, sell_requirement_fee_rate, found_in_raid_required, item_id) SELECT * FROM UNNEST($1::int[], $2::text[], $3::int[], $4::text[], $5::real[], $6::real[], $7::bool[], $8::text[]) ON CONFLICT (id) DO UPDATE SET price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, sell_offer_fee_rate = EXCLUDED.sell_offer_fee_rate, sell_requirement_fee_rate = EXCLUDED.sell_requirement_fee_rate, found_in_raid_required = EXCLUDED.found_in_raid_required, item_id = EXCLUDED.item_id;",
+    sqlx::query!("INSERT INTO SellFor (price, currency, price_rub, trader_name, found_in_raid_required, item_id) 
+    SELECT * FROM UNNEST($1::int[], $2::text[], $3::int[], $4::text[], $5::bool[], $6::text[]) 
+    ON CONFLICT (id) DO UPDATE SET price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, found_in_raid_required = EXCLUDED.found_in_raid_required, item_id = EXCLUDED.item_id;",
         &sell_for_prices,
         &sell_for_currencys,
         &sell_for_price_rubs,
         &sell_for_traders,
-        &sell_for_sell_offer_fee_rate,
-        &sell_for_sell_requirement_fee_rate,
         &sell_for_found_in_raid_required,
         &sell_for_item_ids).execute(&mut *txn).await?;
 

@@ -21,8 +21,6 @@ pub struct SellFor {
     pub currency: String,
     pub price_rub: i32,
     pub trader_name: String,
-    pub sell_offer_fee_rate: f32,
-    pub sell_requirement_fee_rate: f32,
     pub found_in_raid_required: bool,
     pub item_id: String,
 }
@@ -39,6 +37,9 @@ pub struct ItemFromDB {
     pub height: i32,
     pub wiki: String,
     pub item_types: String,
+    pub buy_from_flea_instant_profit: i32,
+    pub buy_from_trader_instant_profit: i32,
+    pub per_slot: i32,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
@@ -53,6 +54,9 @@ pub struct Item {
     pub height: i32,
     pub wiki: String,
     pub item_types: String,
+    pub buy_from_flea_instant_profit: i32,
+    pub buy_from_trader_instant_profit: i32,
+    pub per_slot: i32,
     pub buys: Vec<BuyFor>,
     pub sells: Vec<SellFor>,
 }
@@ -70,6 +74,9 @@ impl From<ItemFromDB> for Item {
             height: item_from_db.height,
             wiki: item_from_db.wiki,
             item_types: item_from_db.item_types,
+            buy_from_flea_instant_profit: item_from_db.buy_from_flea_instant_profit,
+            buy_from_trader_instant_profit: item_from_db.buy_from_trader_instant_profit,
+            per_slot: item_from_db.per_slot,
             buys: vec![],
             sells: vec![],
         }

@@ -30,21 +30,11 @@
       },
       {
         "ordinal": 5,
-        "name": "sell_offer_fee_rate",
-        "type_info": "Float4"
-      },
-      {
-        "ordinal": 6,
-        "name": "sell_requirement_fee_rate",
-        "type_info": "Float4"
-      },
-      {
-        "ordinal": 7,
         "name": "found_in_raid_required",
         "type_info": "Bool"
       },
       {
-        "ordinal": 8,
+        "ordinal": 6,
         "name": "item_id",
         "type_info": "Bpchar"
       }
@@ -55,8 +45,6 @@
       ]
     },
     "nullable": [
-      false,
-      false,
       false,
       false,
       false,

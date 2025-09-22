@@ -5,8 +5,6 @@ export type Sell = {
   currency: string;
   price_rub: number;
   trader_name: string;
-  sell_offer_fee_rate: number;
-  sell_requirement_fee_rate: number;
   found_in_raid_required: boolean;
 };
 
@@ -43,6 +41,9 @@ export type Item = {
   height: number;
   wiki: string;
   count: number;
+  buy_from_flea_instant_profit: number;
+  buy_from_trader_instant_profit: number;
+  per_slot: number;
 };
 
 export type ItemQueryParams = {

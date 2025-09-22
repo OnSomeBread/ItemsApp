@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS Item (
     height INT NOT NULL,
     wiki VARCHAR(2048) NOT NULL,
     item_types VARCHAR(255) NOT NULL,
-    instant_profit INT NOT NULL,
+    buy_from_flea_instant_profit INT NOT NULL,
+    buy_from_trader_instant_profit INT NOT NULL,
     per_slot INT NOT NULL
 );
 
@@ -32,8 +33,6 @@ CREATE TABLE IF NOT EXISTS SellFor(
     currency VARCHAR(24) NOT NULL,
     price_rub INT NOT NULL,
     trader_name VARCHAR(24) NOT NULL,
-    sell_offer_fee_rate REAL NOT NULL,
-    sell_requirement_fee_rate REAL NOT NULL,
     found_in_raid_required BOOL NOT NULL,
     item_id CHAR(24) NOT NULL,
     CONSTRAINT sells FOREIGN KEY (item_id) REFERENCES Item(_id)

@@ -52,6 +52,21 @@
         "ordinal": 9,
         "name": "item_types",
         "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "buy_from_flea_instant_profit",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "buy_from_trader_instant_profit",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "per_slot",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
@@ -60,6 +75,9 @@
       ]
     },
     "nullable": [
+      false,
+      false,
+      false,
       false,
       false,
       false,

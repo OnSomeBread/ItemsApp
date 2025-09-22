@@ -82,9 +82,10 @@ pub const VALID_SORT_BY: &'static [&'static str] = &[
     "base_price",
     "avg_24h_price",
     "change_last_48h_percent",
-    // "instant_profit",
-    // "per_slot",
-    // "fleamarket",
+    "buy_from_flea_instant_profit",
+    "buy_from_trader_instant_profit",
+    "per_slot",
+    "flea_market",
 ];
 
 pub const VALID_ITEM_TYPES: &'static [&'static str] = &[

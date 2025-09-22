@@ -1,7 +1,7 @@
 export const DEFAULT_ITEM_QUERY_PARAMS = {
   search: "",
   asc: false,
-  sortBy: "base_price",
+  sortBy: "flea_market",
   type: "any",
   limit: 50,
   offset: 0,
@@ -63,7 +63,10 @@ export const ALL_ITEM_SORTBY = {
   base_price: "Base Price",
   avg_24h_price: "Average Price 24 hours",
   change_last_48h_percent: "Change Last 48 hours Percent",
-  // fleaMarket: "Flea Market Price",
+  buy_from_flea_instant_profit: "Buy From Sell To Trader Profit",
+  buy_from_trader_instant_profit: "Buy From Trader Sell To Flea Profit",
+  per_slot: "Per Slot To Sell",
+  flea_market: "Flea Market Price",
 };
 
 export const ALL_TRADERS = {
