@@ -100,7 +100,7 @@ jobs:
             git pull
 
             docker compose down
-            docker system prune --all --volumes --force
+            docker system prune --all --force
 
             export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
             export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
