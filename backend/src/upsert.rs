@@ -325,10 +325,10 @@ async fn upsert_items(
         &sell_for_item_ids).execute(&mut *txn).await?;
 
     // SAVEDITEMDATA BULK INSERT ONLY ON UPSERT API
-    if is_api_call {
+    if !is_api_call {
         // delete all rows that are not the 10 most recent
         sqlx::query!(
-            "DELETE FROM SavedItemData WHERE recorded_time IN (SELECT recorded_time FROM SavedItemData ORDER BY recorded_time DESC OFFSET $1);",
+            "DELETE FROM SavedItemData WHERE item_id IN (SELECT item_id FROM SavedItemData ORDER BY recorded_time DESC OFFSET $1);",
             10
         ).execute(&mut *txn).await?;
 
