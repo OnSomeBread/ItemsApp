@@ -1,7 +1,7 @@
 import ItemScrollCompact from "../../components/ItemScrollCompact";
 import PageSwitch from "../../components/PageSwitch";
 import { DEFAULT_ITEM_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
-import { Item, ItemQueryParams } from "../../types";
+import type { Item, ItemQueryParams } from "../../types";
 import { cookies } from "next/headers";
 
 type PageProps = {

@@ -1,4 +1,4 @@
-import { Buy, type Item, type Sell } from "../types";
+import type { Buy, Item, Sell } from "../types";
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";

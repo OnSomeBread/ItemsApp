@@ -1,6 +1,6 @@
 import { DOCKER_BACKEND } from "../../constants";
 import ItemChart from "../../components/ItemChart";
-import { type Item, type ItemHistory } from "../../types";
+import type { Item, ItemHistory } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 import ImageComponent from "../../components/ImageComponent";
 

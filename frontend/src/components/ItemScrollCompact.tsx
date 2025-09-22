@@ -2,7 +2,7 @@
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Item, ItemQueryParams } from "../types";
+import type { Item, ItemQueryParams } from "../types";
 import { getBestBuy, getBestSell } from "../utils";
 import ItemSearchBar from "./ItemSearchBar";
 import dynamic from "next/dynamic";

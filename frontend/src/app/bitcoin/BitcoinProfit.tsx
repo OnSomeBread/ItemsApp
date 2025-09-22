@@ -3,7 +3,7 @@ import BitCoinProfitChart from "../../components/BitCoinProfitChart";
 import BitCoinSelect from "../../components/BitCoinSelect";
 import PageSwitch from "../../components/PageSwitch";
 import { DOCKER_BACKEND } from "../../constants";
-import { Item } from "../../types";
+import type { Item } from "../../types";
 
 function calcBitCoinHoursToProduce(gpuCount: number) {
   return 145000 / (1 + (gpuCount - 1) * 0.041225) / 3600;
