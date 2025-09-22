@@ -4,6 +4,7 @@ use crate::query_types::{AppError::*, *};
 use axum::{Router, extract::State, response::Json, routing::get};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
+use std::sync::{Arc, Mutex};
 
 use std::collections::{HashMap, HashSet};
 use tokio::try_join;
@@ -60,6 +61,17 @@ async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppErro
         time_till_items_refresh_secs: time_in_seconds_items.unwrap_or(0),
         time_till_tasks_refresh_secs: time_in_seconds_tasks.unwrap_or(0),
     }))
+}
+
+// in app state there are timers to see when when a page refreshes the helps to unwrap it into a number in seconds
+fn get_time_in_seconds(timer: &Arc<Mutex<Option<Instant>>>) -> Option<i64> {
+    if let Ok(mutex_timer) = timer.lock() {
+        mutex_timer
+            .as_ref()
+            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64)
+    } else {
+        None
+    }
 }
 
 async fn items_from_db_to_items(
@@ -288,16 +300,7 @@ async fn get_items(
                 if let Ok(data) = serde_json::to_string(&items) {
                     let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
 
-                    let mut time_in_seconds = None;
-                    if let Ok(mutex_timer) = items_call.lock() {
-                        time_in_seconds = mutex_timer
-                            .as_ref()
-                            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
-
-                        drop(mutex_timer);
-                    }
-
-                    if let Some(time_in_seconds) = time_in_seconds {
+                    if let Some(time_in_seconds) = get_time_in_seconds(&items_call) {
                         let _: redis::RedisResult<()> =
                             conn.expire(cache_key, time_in_seconds).await;
                     }
@@ -318,6 +321,17 @@ async fn get_item_history(
     }
 
     let item_id = query_parms.item_id.unwrap();
+    let cache_key = item_id.clone() + "-history";
+    let mut conn = app_state.redispool.get().await.ok();
+    if let Some(conn) = conn.as_mut() {
+        let item_history: Option<Option<String>> = conn.get(&cache_key).await.ok();
+        if let Some(item_history) = item_history {
+            if let Some(item_history) = item_history {
+                return Ok(Json(serde_json::from_str(&item_history).unwrap()));
+            }
+        }
+    }
+
     let item_history = sqlx::query_as!(
         SavedItemData,
         "SELECT * FROM SavedItemData WHERE item_id = $1",
@@ -327,6 +341,22 @@ async fn get_item_history(
     .await
     .map_err(|_| BadSqlQuery(String::from("ItemHistory Query did not run successfully")))?;
 
+    let pool = app_state.redispool.clone();
+    let tokio_item_history = item_history.clone();
+    let items_call = app_state.next_items_call_timer.clone();
+
+    tokio::spawn(async move {
+        if let Ok(mut conn) = pool.get().await {
+            if let Ok(data) = serde_json::to_string(&tokio_item_history) {
+                let _: redis::RedisResult<()> = conn.set(&cache_key, data).await;
+
+                if let Some(time_in_seconds) = get_time_in_seconds(&items_call) {
+                    let _: redis::RedisResult<()> = conn.expire(&cache_key, time_in_seconds).await;
+                }
+            }
+        }
+    });
+
     Ok(Json(item_history))
 }
 
@@ -335,16 +365,69 @@ async fn get_items_by_ids(
     State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let ids = query_parms.ids.unwrap_or(Vec::new());
+
+    let mut conn = app_state.redispool.get().await.ok();
+    let mut not_found_ids = vec![];
+    let mut found_items: Vec<Item> = vec![];
+
+    // check if there is a cache hit from redis cache
+    if let Some(conn) = conn.as_mut() {
+        for id in ids {
+            let item: Option<Option<String>> = conn.get(&id).await.ok();
+            if let Some(item) = item {
+                if let Some(item) = item {
+                    found_items.push(serde_json::from_str(&item).unwrap());
+                } else {
+                    not_found_ids.push(id);
+                }
+            } else {
+                not_found_ids.push(id);
+            }
+        }
+    } else {
+        not_found_ids = ids;
+    }
+
     let mut txn =
         app_state.pgpool.begin().await.map_err(|_| {
             BadSqlQuery(String::from("Items By IDs Query did not run successfully"))
         })?;
-    let items_from_db = sqlx::query_as!(ItemFromDB, "SELECT * FROM Item WHERE _id = ANY($1)", &ids)
-        .fetch_all(&mut *txn)
-        .await
-        .map_err(|_| BadSqlQuery(String::from("Items By IDs Query did not run successfully")))?;
+    let items_from_db = sqlx::query_as!(
+        ItemFromDB,
+        "SELECT * FROM Item WHERE _id = ANY($1)",
+        &not_found_ids
+    )
+    .fetch_all(&mut *txn)
+    .await
+    .map_err(|_| BadSqlQuery(String::from("Items By IDs Query did not run successfully")))?;
 
-    Ok(Json(items_from_db_to_items(items_from_db, txn).await?))
+    let mut items = items_from_db_to_items(items_from_db, txn).await?;
+
+    let pool = app_state.redispool.clone();
+    let tokio_items = items.clone();
+    let items_call = app_state.next_items_call_timer.clone();
+
+    // store the items that have not been found in redis cache
+    tokio::spawn(async move {
+        if let Ok(mut conn) = pool.get().await {
+            for item in tokio_items {
+                if let Ok(data) = serde_json::to_string(&item) {
+                    let _: redis::RedisResult<()> = conn.set(&item._id, data).await;
+
+                    if let Some(time_in_seconds) = get_time_in_seconds(&items_call) {
+                        let _: redis::RedisResult<()> =
+                            conn.expire(&item._id, time_in_seconds).await;
+                    }
+                }
+            }
+        }
+    });
+
+    // add back the found items
+    items.extend(found_items);
+    items.sort_by_key(|item| item._id.clone());
+
+    Ok(Json(items))
 }
 
 async fn tasks_from_db_to_tasks(
@@ -505,16 +588,7 @@ async fn get_tasks(
                 if let Ok(data) = serde_json::to_string(&tasks) {
                     let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
 
-                    let mut time_in_seconds = None;
-                    if let Ok(mutex_timer) = tasks_call.lock() {
-                        time_in_seconds = mutex_timer
-                            .as_ref()
-                            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
-
-                        drop(mutex_timer);
-                    }
-
-                    if let Some(time_in_seconds) = time_in_seconds {
+                    if let Some(time_in_seconds) = get_time_in_seconds(&tasks_call) {
                         let _: redis::RedisResult<()> =
                             conn.expire(cache_key, time_in_seconds).await;
                     }
@@ -531,16 +605,70 @@ async fn get_tasks_by_ids(
     State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let ids: Vec<String> = query_parms.ids.unwrap_or(Vec::new());
+
+    let mut conn = app_state.redispool.get().await.ok();
+    let mut not_found_ids = vec![];
+    let mut found_tasks: Vec<Task> = vec![];
+
+    // check if there is a cache hit from redis cache
+    if let Some(conn) = conn.as_mut() {
+        for id in ids {
+            let task: Option<Option<String>> = conn.get(&id).await.ok();
+            if let Some(task) = task {
+                if let Some(task) = task {
+                    found_tasks.push(serde_json::from_str(&task).unwrap());
+                } else {
+                    not_found_ids.push(id);
+                }
+            } else {
+                not_found_ids.push(id);
+            }
+        }
+    } else {
+        not_found_ids = ids;
+    }
+
+    // start a transaction and fetch all of the missing task ids
     let mut txn =
         app_state.pgpool.begin().await.map_err(|_| {
             BadSqlQuery(String::from("Tasks by ids Query did not run successfully"))
         })?;
-    let tasks_from_db = sqlx::query_as!(TaskFromDB, "SELECT * FROM Task WHERE _id = ANY($1)", &ids)
-        .fetch_all(&mut *txn)
-        .await
-        .map_err(|_| BadSqlQuery(String::from("Tasks by ids Query did not run successfully")))?;
+    let tasks_from_db = sqlx::query_as!(
+        TaskFromDB,
+        "SELECT * FROM Task WHERE _id = ANY($1)",
+        &not_found_ids
+    )
+    .fetch_all(&mut *txn)
+    .await
+    .map_err(|_| BadSqlQuery(String::from("Tasks by ids Query did not run successfully")))?;
 
-    Ok(Json(tasks_from_db_to_tasks(tasks_from_db, txn).await?))
+    let mut tasks = tasks_from_db_to_tasks(tasks_from_db, txn).await?;
+
+    let pool = app_state.redispool.clone();
+    let tokio_tasks = tasks.clone();
+    let tasks_call = app_state.next_tasks_call_timer.clone();
+
+    // store the tasks that have not been found in redis cache
+    tokio::spawn(async move {
+        if let Ok(mut conn) = pool.get().await {
+            for task in tokio_tasks {
+                if let Ok(data) = serde_json::to_string(&task) {
+                    let _: redis::RedisResult<()> = conn.set(&task._id, data).await;
+
+                    if let Some(time_in_seconds) = get_time_in_seconds(&tasks_call) {
+                        let _: redis::RedisResult<()> =
+                            conn.expire(&task._id, time_in_seconds).await;
+                    }
+                }
+            }
+        }
+    });
+
+    // add back the found tasks
+    tasks.extend(found_tasks);
+    tasks.sort_by_key(|task| task._id.clone());
+
+    Ok(Json(tasks))
 }
 
 // returns a HashMap which maps every task_id to a Vec<task_id, status> where status can only be
@@ -550,6 +678,17 @@ async fn get_tasks_by_ids(
 async fn get_adj_list(
     State(app_state): State<AppState>,
 ) -> Result<Json<HashMap<String, Vec<(String, String)>>>, AppError> {
+    let cache_key = "adj_list";
+    let mut conn = app_state.redispool.get().await.ok();
+    if let Some(conn) = conn.as_mut() {
+        let adj_list: Option<Option<String>> = conn.get(&cache_key).await.ok();
+        if let Some(adj_list) = adj_list {
+            if let Some(adj_list) = adj_list {
+                return Ok(Json(serde_json::from_str(&adj_list).unwrap()));
+            }
+        }
+    }
+
     let task_requirements = sqlx::query_as!(TaskRequirement, "SELECT * FROM TaskRequirement")
         .fetch_all(&app_state.pgpool)
         .await
@@ -573,6 +712,23 @@ async fn get_adj_list(
             .entry(to_id)
             .or_insert(vec![])
             .push((from_id, String::from("unlocks")));
+    });
+
+    let pool = app_state.redispool.clone();
+    let tokio_adj_list = adj_list.clone();
+    let tasks_call = app_state.next_tasks_call_timer.clone();
+
+    // store the adj_list that have not been found in redis cache
+    tokio::spawn(async move {
+        if let Ok(mut conn) = pool.get().await {
+            if let Ok(data) = serde_json::to_string(&tokio_adj_list) {
+                let _: redis::RedisResult<()> = conn.set(&cache_key, data).await;
+
+                if let Some(time_in_seconds) = get_time_in_seconds(&tasks_call) {
+                    let _: redis::RedisResult<()> = conn.expire(&cache_key, time_in_seconds).await;
+                }
+            }
+        }
     });
 
     Ok(Json(adj_list))
