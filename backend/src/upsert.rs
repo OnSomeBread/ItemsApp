@@ -325,7 +325,7 @@ async fn upsert_items(
         &sell_for_item_ids).execute(&mut *txn).await?;
 
     // SAVEDITEMDATA BULK INSERT ONLY ON UPSERT API
-    if !is_api_call {
+    if is_api_call {
         // delete all rows that are not the 10 most recent
         sqlx::query!(
             "DELETE FROM SavedItemData WHERE item_id IN (SELECT item_id FROM SavedItemData ORDER BY recorded_time DESC OFFSET $1);",
@@ -336,7 +336,7 @@ async fn upsert_items(
             .iter()
             .map(|x| {
                 let flea_market_price = x
-                    .sells
+                    .buys
                     .iter()
                     .find(|b| b.vendor.trader_name == "Flea Market");
                 if let Some(flea_market_price) = flea_market_price {

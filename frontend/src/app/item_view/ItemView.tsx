@@ -18,7 +18,7 @@ async function ItemView({ searchParams }: PageProps) {
   const item = ((await res1.json()) as Item[])[0];
 
   const res2 = await fetch(
-    DOCKER_BACKEND + "/api/item_history?item_id=" + item._id,
+    DOCKER_BACKEND + "/api/item_history?itemId=" + item._id,
     {
       cache: "no-store",
     }
@@ -104,8 +104,9 @@ async function ItemView({ searchParams }: PageProps) {
           )}
         </div>
         <div className="flex-3 p-10">
-          <p>Item Price History Chart </p>
-          {itemHistory && <ItemChart itemHistory={itemHistory} />}
+          {itemHistory && itemHistory.length > 0 && (
+            <ItemChart itemHistory={itemHistory} />
+          )}
         </div>
       </div>
     </>

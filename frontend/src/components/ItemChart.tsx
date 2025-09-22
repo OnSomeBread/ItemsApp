@@ -1,6 +1,6 @@
 "use client";
 import {
-  CartesianGrid,
+  Label,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -21,7 +21,6 @@ function ItemChart({ itemHistory }: Props) {
         data={itemHistory}
         margin={{ top: 0, right: 40, left: 10, bottom: 0 }}
       >
-        <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
         <XAxis
           dataKey="recorded_time"
           tickFormatter={(t: string) => new Date(t).toLocaleTimeString()}
@@ -39,10 +38,11 @@ function ItemChart({ itemHistory }: Props) {
         />
         <Line
           type="monotone"
-          dataKey="avg_24h_price"
+          dataKey="price_rub"
           stroke="#8884d8"
           dot={false}
         />
+        <Label value="Item Flea Market History" position="insideTop" />
       </LineChart>
     </ResponsiveContainer>
   );

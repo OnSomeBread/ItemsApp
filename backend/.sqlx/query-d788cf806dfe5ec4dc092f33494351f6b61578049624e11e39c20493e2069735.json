@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM SavedItemData WHERE item_id IN (SELECT item_id FROM SavedItemData ORDER BY recorded_time DESC OFFSET $1);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d788cf806dfe5ec4dc092f33494351f6b61578049624e11e39c20493e2069735"
+}
