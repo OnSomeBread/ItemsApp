@@ -126,10 +126,8 @@ pub async fn get_tasks(
     // check if there is a cache hit from redis cache
     if let Some(conn) = conn.as_mut() {
         let tasks: Option<Option<String>> = conn.get(&cache_key).await.ok();
-        if let Some(tasks) = tasks {
-            if let Some(tasks) = tasks {
-                return Ok(Json(serde_json::from_str(&tasks).unwrap()));
-            }
+        if let Some(tasks) = tasks.flatten() {
+            return Ok(Json(serde_json::from_str(&tasks).unwrap()));
         }
     }
 
@@ -191,10 +189,8 @@ pub async fn get_adj_list(
     let mut conn = app_state.redispool.get().await.ok();
     if let Some(conn) = conn.as_mut() {
         let adj_list: Option<Option<String>> = conn.get(&cache_key).await.ok();
-        if let Some(adj_list) = adj_list {
-            if let Some(adj_list) = adj_list {
-                return Ok(Json(serde_json::from_str(&adj_list).unwrap()));
-            }
+        if let Some(adj_list) = adj_list.flatten() {
+            return Ok(Json(serde_json::from_str(&adj_list).unwrap()));
         }
     }
 

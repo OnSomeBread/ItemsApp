@@ -128,10 +128,8 @@ pub async fn get_items(
     // check if there is a cache hit from redis cache
     if let Some(conn) = conn.as_mut() {
         let items: Option<Option<String>> = conn.get(&cache_key).await.ok();
-        if let Some(items) = items {
-            if let Some(items) = items {
-                return Ok(Json(serde_json::from_str(&items).unwrap()));
-            }
+        if let Some(items) = items.flatten() {
+            return Ok(Json(serde_json::from_str(&items).unwrap()));
         }
     }
 
@@ -262,10 +260,8 @@ pub async fn get_item_history(
     let mut conn = app_state.redispool.get().await.ok();
     if let Some(conn) = conn.as_mut() {
         let item_history: Option<Option<String>> = conn.get(&cache_key).await.ok();
-        if let Some(item_history) = item_history {
-            if let Some(item_history) = item_history {
-                return Ok(Json(serde_json::from_str(&item_history).unwrap()));
-            }
+        if let Some(item_history) = item_history.flatten() {
+            return Ok(Json(serde_json::from_str(&item_history).unwrap()));
         }
     }
 
