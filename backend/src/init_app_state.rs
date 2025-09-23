@@ -53,6 +53,7 @@ pub async fn init_app_state(
 
     let pgpool1 = pgpool.clone();
     let pgpool2 = pgpool.clone();
+    let pgpool3 = pgpool.clone();
     let items_call = next_items_call_timer.clone();
     let tasks_call = next_tasks_call_timer.clone();
 
@@ -75,6 +76,18 @@ pub async fn init_app_state(
 
             tokio::time::sleep(tasks_refresh_time).await;
             let _ = upsert_data_api("most_recent_tasks.json", "tasks", &pgpool2).await;
+        }
+    });
+
+    // spawn background task to delete device preferences that are inactive
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(Duration::from_secs(3600 * 24)).await;
+            let _ = sqlx::query!(
+                r#"DELETE FROM DevicePreferences WHERE last_visited < NOW() - INTERVAL '30 days'"#,
+            )
+            .execute(&pgpool3)
+            .await;
         }
     });
 
