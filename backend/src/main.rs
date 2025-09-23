@@ -2,7 +2,9 @@ mod api_routers;
 mod database_types;
 mod deserialize_json_types;
 mod init_app_state;
+mod item_routes;
 mod query_types;
+mod task_routes;
 mod upsert;
 
 use axum::Router;
