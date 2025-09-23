@@ -53,9 +53,10 @@ function getBestTraderSell(item: Item) {
 
 function ItemComponent({ item, idx, children, fields, height }: Props) {
   return (
+    // border-1 border-solid board-[#ccc]
     <div
       className={
-        "flex-col justify-center items-center text-center border-1 border-solid board-[#ccc] rounded-[10px] pt-4 px-4 pb-1 w-[92%] h-" +
+        "flex-col justify-center items-center shadow-[0_0_5px_rgba(0,0,0,0.3)] shadow-gray-100 text-center  rounded-[10px] pt-4 px-4 pb-1 w-[92%] h-" +
         height.toString()
       }
     >

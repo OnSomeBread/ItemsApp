@@ -170,6 +170,7 @@ function DisplayTasks() {
             loader={<article aria-busy="true"></article>}
           >
             <motion.ul
+              className="!list-none md:p-1 md:pl-2"
               key={allTasks?.length}
               variants={containerVarients}
               initial="hidden"
@@ -177,6 +178,7 @@ function DisplayTasks() {
             >
               {allTasks?.map((task, idx) => (
                 <motion.li
+                  className="md:p-4"
                   key={task._id}
                   transition={{ duration: 0.8 }}
                   variants={{

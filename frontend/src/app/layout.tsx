@@ -4,6 +4,13 @@ export const metadata = {
   title: { default: "Items", template: "%s" },
   description:
     "Escape From Tarkov Item and Task data insights. Task dependency graph displays all of the tasks that each trader provides along with their dependency direction",
+  srcipts: [
+    {
+      src: "https://cloud.umami.is/script.js",
+      dataWebsiteId: "99a9c2b0-6cb1-4714-b582-db3d5e8e0725",
+      strategy: "afterInteractive",
+    },
+  ],
 };
 
 export default function RootLayout({
