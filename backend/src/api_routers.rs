@@ -3,10 +3,13 @@ use crate::init_app_state::AppState;
 use crate::item_routes::*;
 use crate::query_types::{AppError::*, *};
 use crate::task_routes::*;
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
 use axum::{Router, extract::State, response::Json, routing::get};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
 use serde::{Serialize, de::DeserializeOwned};
+use sqlx::types::Uuid;
 use std::sync::{Arc, Mutex};
 use tokio::try_join;
 
@@ -158,12 +161,8 @@ async fn get_page_by_ids<T: Page>(
     if let Some(conn) = conn.as_mut() {
         for id in ids {
             let item: Option<Option<String>> = conn.get(&id).await.ok();
-            if let Some(item) = item {
-                if let Some(item) = item {
-                    found_values.push(serde_json::from_str(&item).unwrap());
-                } else {
-                    not_found_ids.push(id);
-                }
+            if let Some(item) = item.flatten() {
+                found_values.push(serde_json::from_str(&item).unwrap());
             } else {
                 not_found_ids.push(id);
             }
@@ -200,6 +199,25 @@ async fn get_page_by_ids<T: Page>(
     values.sort_by_key(|v| v._id().to_owned());
 
     Ok(Json(values))
+}
+
+pub struct Device(pub Option<Uuid>);
+
+impl<S> FromRequestParts<S> for Device
+where
+    S: Send + Sync,
+{
+    type Rejection = AppError;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, AppError> {
+        let device_id = parts
+            .headers
+            .get("device-id")
+            .and_then(|h| h.to_str().ok())
+            .and_then(|id_str| Uuid::parse_str(id_str).ok());
+
+        Ok(Device(device_id))
+    }
 }
 
 fn items_router() -> Router<AppState> {
