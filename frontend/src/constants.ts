@@ -10,7 +10,7 @@ export const DEFAULT_ITEM_QUERY_PARAMS = {
 export const DEFAULT_TASK_QUERY_PARAMS = {
   search: "",
   isKappa: false,
-  isLightKeeper: false,
+  isLightkeeper: false,
   playerLvl: 99,
   objType: "any",
   trader: "any",

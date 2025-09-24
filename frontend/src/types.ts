@@ -58,7 +58,7 @@ export type ItemQueryParams = {
 export type TaskQueryParams = {
   search: string;
   isKappa: boolean;
-  isLightKeeper: boolean;
+  isLightkeeper: boolean;
   playerLvl: number;
   objType: string;
   trader: string;

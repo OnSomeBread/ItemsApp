@@ -56,12 +56,12 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         className={buttonClass}
         onClick={() => {
           changeQueryParams(
-            "isLightKeeper",
-            queryParams.isLightKeeper ? false : true
+            "isLightkeeper",
+            queryParams.isLightkeeper ? false : true
           );
         }}
       >
-        {queryParams.isLightKeeper
+        {queryParams.isLightkeeper
           ? "LightKeeper Required"
           : "Not LightKeeper Required"}
       </button>
