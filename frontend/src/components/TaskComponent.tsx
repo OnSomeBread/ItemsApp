@@ -10,7 +10,7 @@ const ImageComponent = dynamic(() => import("./ImageComponent"), {
 interface Props {
   task: Task;
   idx: number;
-  onClickButton: (arg0: string, arg1: string) => void;
+  onClickButton: (arg0: string, arg1: boolean) => void;
 }
 
 function TaskComponent({ task, idx, onClickButton }: Props) {
@@ -46,7 +46,7 @@ function TaskComponent({ task, idx, onClickButton }: Props) {
       ))}
       <motion.button
         value={task._id}
-        onClick={() => onClickButton(task._id, "prerequisite")}
+        onClick={() => onClickButton(task._id, false)}
         transition={{ duration: 0.4 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}

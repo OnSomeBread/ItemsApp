@@ -1,9 +1,6 @@
 use redis_macros::{FromRedisValue, ToRedisArgs};
 use serde::{Deserialize, Serialize};
-use sqlx::types::{
-    Uuid,
-    chrono::{DateTime, Utc},
-};
+use sqlx::types::chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone, sqlx::Type)]
 pub struct BuyFor {
@@ -163,9 +160,9 @@ pub struct SavedItemData {
     pub item_id: String,
 }
 
-#[derive(sqlx::FromRow)]
-pub struct DevicePreferences {
-    pub id: Uuid,
-    pub completed_tasks: Vec<String>,
-    pub last_visited: DateTime<Utc>,
-}
+// #[derive(sqlx::FromRow)]
+// pub struct DevicePreferences {
+//     pub id: Uuid,
+//     pub completed_tasks: Vec<String>,
+//     pub last_visited: DateTime<Utc>,
+// }

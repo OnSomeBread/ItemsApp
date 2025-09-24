@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE DevicePreferences SET completed_tasks = $1 WHERE id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4b0ea28f40f4221f6ab3a0905f660b9d1d0a61a7b660fea1cf7ae210b6524fb2"
+}

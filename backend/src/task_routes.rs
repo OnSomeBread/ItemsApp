@@ -1,4 +1,4 @@
-use crate::api_routers::get_time_in_seconds;
+use crate::api_routers::{Device, fetch_tasks_by_ids, get_time_in_seconds};
 use crate::database_types::{Objective, Task, TaskFromDB, TaskRequirement};
 use crate::init_app_state::AppState;
 use crate::query_types::*;
@@ -6,6 +6,8 @@ use crate::query_types::{AppError, AppError::*};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
+use sqlx::PgPool;
+use sqlx::types::Uuid;
 use std::collections::{HashMap, HashSet};
 
 // this adds task requirements and objectives to tasks so that it can be returned to user
@@ -75,6 +77,7 @@ pub async fn tasks_from_db_to_tasks(
 }
 
 pub async fn get_tasks(
+    device: Device,
     Query(query_parms): Query<TaskQueryParams>,
     State(AppState {
         pgpool,
@@ -91,7 +94,12 @@ pub async fn get_tasks(
     let player_lvl = query_parms.player_lvl.unwrap_or(99);
     let limit = query_parms.limit.unwrap_or(30);
     let offset = query_parms.offset.unwrap_or(0);
-    let ids = query_parms.ids.unwrap_or(Vec::new());
+    let ids; //query_parms.ids.unwrap_or(Vec::new());
+    if let Some(device_id) = device.0 {
+        ids = get_completed_task_by_device_id(&pgpool, device_id).await?;
+    } else {
+        ids = vec![];
+    }
 
     let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().map(|&x| x).collect();
     if obj_type == String::from("any") || !valid_obj_types.contains(obj_type.as_str()) {
@@ -138,7 +146,9 @@ pub async fn get_tasks(
 
     let tasks_from_db = sqlx::query_as!(
                 TaskFromDB,
-                "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND ($5::bool IS FALSE OR kappa_required = TRUE) AND ($6::bool IS FALSE OR lightkeeper_required = TRUE) AND EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7)ORDER BY _id ASC LIMIT $8 OFFSET $9",
+                "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
+                ($5::bool IS FALSE OR kappa_required = TRUE) AND ($6::bool IS FALSE OR lightkeeper_required = TRUE) AND 
+                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7)ORDER BY _id ASC LIMIT $8 OFFSET $9",
                 format!("%{}%", search),
                 format!("%{}%", trader),
                 player_lvl as i32,
@@ -182,15 +192,15 @@ pub async fn get_tasks(
 // "prerequisite" which is all the tasks that come before current task or
 // "unlocks" is all the tasks that come after current task
 // effectively mapping every task to their adjacent tasks
-pub async fn get_adj_list(
-    State(app_state): State<AppState>,
-) -> Result<Json<HashMap<String, Vec<(String, String)>>>, AppError> {
+async fn fetch_adj_list(
+    app_state: &AppState,
+) -> Result<HashMap<String, Vec<(String, bool)>>, AppError> {
     let cache_key = "adj_list";
     let mut conn = app_state.redispool.get().await.ok();
     if let Some(conn) = conn.as_mut() {
         let adj_list: Option<Option<String>> = conn.get(&cache_key).await.ok();
         if let Some(adj_list) = adj_list.flatten() {
-            return Ok(Json(serde_json::from_str(&adj_list).unwrap()));
+            return Ok(serde_json::from_str(&adj_list).unwrap());
         }
     }
 
@@ -211,12 +221,12 @@ pub async fn get_adj_list(
         adj_list
             .entry(from_id.clone())
             .or_insert(vec![])
-            .push((to_id.clone(), String::from("prerequisite")));
+            .push((to_id.clone(), false));
 
         adj_list
             .entry(to_id)
             .or_insert(vec![])
-            .push((from_id, String::from("unlocks")));
+            .push((from_id, true));
     });
 
     let pool = app_state.redispool.clone();
@@ -236,5 +246,169 @@ pub async fn get_adj_list(
         }
     });
 
-    Ok(Json(adj_list))
+    Ok(adj_list)
+}
+
+pub async fn get_adj_list(
+    State(app_state): State<AppState>,
+) -> Result<Json<HashMap<String, Vec<(String, bool)>>>, AppError> {
+    Ok(Json(fetch_adj_list(&app_state).await?))
+}
+
+async fn get_completed_task_by_device_id(
+    pgpool: &PgPool,
+    device_id: Uuid,
+) -> Result<Vec<String>, AppError> {
+    let mut txn = pgpool.begin().await.map_err(|_| {
+        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
+    })?;
+
+    sqlx::query!(
+        "INSERT INTO DevicePreferences VALUES ($1) ON CONFLICT (id) DO NOTHING;",
+        device_id
+    )
+    .execute(&mut *txn)
+    .await
+    .map_err(|_| {
+        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
+    })?;
+
+    // grab the tasks the user already has set to completed
+    let completed_tasks = sqlx::query_as!(
+        GetOnlyCompletedTasks,
+        "SELECT completed_tasks FROM DevicePreferences WHERE id = $1;",
+        device_id
+    )
+    .fetch_one(&mut *txn)
+    .await
+    .map_err(|_| AppError::BadSqlQuery("Device Preferences Query did not run successfully".into()))?
+    .completed_tasks;
+
+    txn.commit().await.map_err(|_| {
+        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
+    })?;
+
+    Ok(completed_tasks)
+}
+
+#[derive(sqlx::FromRow)]
+struct GetOnlyCompletedTasks {
+    completed_tasks: Vec<String>,
+}
+
+// get completed tasks using device id
+pub async fn get_completed_tasks(
+    device: Device,
+    State(app_state): State<AppState>,
+) -> Result<Json<Vec<Task>>, AppError> {
+    if device.0.is_none() {
+        return Err(BadRequest("Endpoint Requires a device id".into()));
+    }
+
+    let completed_tasks =
+        get_completed_task_by_device_id(&app_state.pgpool, device.0.unwrap()).await?;
+
+    Ok(Json(fetch_tasks_by_ids(&app_state, completed_tasks).await?))
+}
+
+#[derive(serde::Deserialize)]
+pub struct AffectedTask {
+    task_id: String,
+    direction: bool,
+}
+
+// performs a dfs completing all tasks either before or after depending on AffectedTask.direction
+pub async fn set_completed_task(
+    device: Device,
+    State(app_state): State<AppState>,
+    Json(task): Json<AffectedTask>,
+) -> Result<(), AppError> {
+    if device.0.is_none() {
+        return Err(BadRequest("Endpoint Requires a device id".into()));
+    }
+    let device_id = device.0.unwrap();
+    let task_id = task.task_id;
+
+    // perform a dfs on adj_list
+    let adj_list = fetch_adj_list(&app_state).await?;
+
+    let mut visited = HashSet::new();
+
+    let mut st = vec![task_id.clone()];
+    let mut marked_tasks = HashSet::new();
+    while !st.is_empty() {
+        let top = st.pop().unwrap();
+
+        if visited.contains(&top) {
+            continue;
+        }
+        marked_tasks.insert(top.clone());
+        visited.insert(top.clone());
+
+        adj_list.get(&top).map(|x| {
+            x.iter()
+                .filter(|(_, status)| *status == task.direction)
+                .for_each(|(adj_task_id, _)| st.push(adj_task_id.clone()));
+        });
+    }
+
+    let mut completed_tasks: HashSet<String> =
+        get_completed_task_by_device_id(&app_state.pgpool, device_id)
+            .await?
+            .into_iter()
+            .collect();
+
+    let result: Vec<String>;
+    // if direction == true then all tasks that come after the
+    // current task should be locked so remove them from completed tasks
+    // if direction == false then all tasks that come before the
+    // current task should be unlocked so add them to completed tasks
+    if task.direction {
+        // delete all marked tasks from completed_tasks
+        marked_tasks.iter().for_each(|id| {
+            completed_tasks.remove(id);
+        });
+        result = completed_tasks.into_iter().collect();
+    } else {
+        // combine the tasks
+        completed_tasks.extend(marked_tasks.into_iter());
+        result = completed_tasks.into_iter().collect();
+    }
+
+    // update what the user has as completed tasks
+    sqlx::query!(
+        "UPDATE DevicePreferences SET completed_tasks = $1 WHERE id = $2",
+        &result,
+        device_id,
+    )
+    .fetch_all(&app_state.pgpool)
+    .await
+    .map_err(|_| {
+        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
+    })?;
+
+    Ok(())
+}
+
+// sets the device completed tasks to empty
+pub async fn clear_completed_tasks(
+    device: Device,
+    State(app_state): State<AppState>,
+) -> Result<(), AppError> {
+    if device.0.is_none() {
+        return Err(BadRequest("Endpoint Requires a device id".into()));
+    }
+
+    sqlx::query!(
+        "UPDATE DevicePreferences SET completed_tasks = $1 WHERE id = $2",
+        &vec![],
+        device.0.unwrap()
+    )
+    .execute(&app_state.pgpool)
+    .await
+    .map_err(|_| {
+        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
+    })?;
+
+    Ok(())
 }

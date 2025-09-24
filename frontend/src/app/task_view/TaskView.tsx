@@ -31,10 +31,10 @@ async function TaskView({ searchParams }: PageProps) {
   });
 
   adjList[task._id]
-    .filter((tsk) => tsk[1] === "unlocks")
+    .filter((tsk) => tsk[1] === true)
     .forEach((tsk) => {
       params.append("ids", tsk[0]);
-      statusMap.set(tsk[0], tsk[1]);
+      statusMap.set(tsk[0], tsk[1] ? "unlocks" : "prerequisite");
     });
 
   const res3 = await fetch(

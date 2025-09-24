@@ -10,7 +10,7 @@ import {
   type Node,
   type ReactFlowInstance,
 } from "@xyflow/react";
-import type { Task } from "../types";
+import type { Task, TaskAdjList } from "../types";
 import ELK, { type ELK as ELKType } from "elkjs/lib/elk-api";
 
 let elk: ELKType | null = null;
@@ -22,10 +22,6 @@ if (typeof window !== "undefined") {
       }),
   });
 }
-
-type TaskAdjList = {
-  [key: string]: [string, string][];
-};
 
 type InitNode = {
   id: string;

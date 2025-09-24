@@ -72,7 +72,6 @@ pub struct TaskQueryParams {
     pub player_lvl: Option<u32>,
     pub limit: Option<u32>,
     pub offset: Option<u32>,
-    pub ids: Option<Vec<String>>,
 }
 
 pub const VALID_SORT_BY: &'static [&'static str] = &[

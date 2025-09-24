@@ -66,7 +66,7 @@ async function TaskTree({ searchParams }: PageProps) {
   if (adjList) {
     initNodes.forEach((node) => {
       const connections = adjList[node.id]?.filter(
-        (dir) => dir[1] === "unlocks" && idToTask.has(dir[0])
+        (dir) => dir[1] === true && idToTask.has(dir[0])
       );
       connections?.forEach((val) =>
         initEdges.push({

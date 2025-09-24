@@ -1,7 +1,12 @@
-import DisplayTasks from "./DisplayTasks";
+import { TaskQueryParams } from "../../types";
+import DisplayTasksSSR from "./DisplayTasksSSR";
 
 export const metadata = { title: "Tarkov Tasks" };
 
-export default function tasks() {
-  return <DisplayTasks />;
+type PageProps = {
+  searchParams: Promise<{ queryParams?: TaskQueryParams }>;
+};
+
+export default function tasks({ searchParams }: PageProps) {
+  return <DisplayTasksSSR searchParams={searchParams} />;
 }

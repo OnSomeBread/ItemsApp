@@ -5,7 +5,7 @@ use crate::query_types::{AppError::*, *};
 use crate::task_routes::*;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
-use axum::{Router, extract::State, response::Json, routing::get};
+use axum::{Router, extract::State, response::Json, routing::get, routing::post};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
 use serde::{Serialize, de::DeserializeOwned};
@@ -78,7 +78,7 @@ pub fn get_time_in_seconds(timer: &Arc<Mutex<Option<Instant>>>) -> Option<i64> {
     }
 }
 
-trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
+pub trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
     async fn fetch_by_ids(
         pgpool: &sqlx::PgPool,
         not_found_ids: &Vec<String>,
@@ -146,13 +146,10 @@ impl Page for Task {
     }
 }
 
-// returns ids from respective page
-async fn get_page_by_ids<T: Page>(
-    Query(query_parms): Query<IdsQueryParams>,
-    State(app_state): State<AppState>,
-) -> Result<Json<Vec<T>>, AppError> {
-    let ids = query_parms.ids.unwrap_or(Vec::new());
-
+pub async fn fetch_tasks_by_ids<T: Page>(
+    app_state: &AppState,
+    ids: Vec<String>,
+) -> Result<Vec<T>, AppError> {
     let mut conn = app_state.redispool.get().await.ok();
     let mut not_found_ids = vec![];
     let mut found_values: Vec<T> = vec![];
@@ -197,8 +194,17 @@ async fn get_page_by_ids<T: Page>(
     // add back the found items
     values.extend(found_values);
     values.sort_by_key(|v| v._id().to_owned());
+    Ok(values)
+}
 
-    Ok(Json(values))
+// returns ids from respective page
+async fn get_page_by_ids<T: Page>(
+    Query(query_parms): Query<IdsQueryParams>,
+    State(app_state): State<AppState>,
+) -> Result<Json<Vec<T>>, AppError> {
+    let ids = query_parms.ids.unwrap_or(Vec::new());
+
+    Ok(Json(fetch_tasks_by_ids(&app_state, ids).await?))
 }
 
 pub struct Device(pub Option<Uuid>);
@@ -212,7 +218,7 @@ where
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, AppError> {
         let device_id = parts
             .headers
-            .get("device-id")
+            .get("x-device-id")
             .and_then(|h| h.to_str().ok())
             .and_then(|id_str| Uuid::parse_str(id_str).ok());
 
@@ -232,6 +238,9 @@ fn tasks_router() -> Router<AppState> {
         .route("/tasks", get(get_tasks))
         .route("/task_ids", get(get_page_by_ids::<Task>))
         .route("/adj_list", get(get_adj_list))
+        .route("/get_completed", get(get_completed_tasks))
+        .route("/set_complete", post(set_completed_task))
+        .route("/clear_completed_tasks", get(clear_completed_tasks))
 }
 
 pub fn api_router() -> Router<AppState> {

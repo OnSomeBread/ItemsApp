@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO DevicePreferences VALUES ($1) ON CONFLICT (id) DO NOTHING;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "205d423eea8b5e1f68c24bd1b9573dd0550c9c42cd74864f3beb01f15ba6b7f2"
+}
