@@ -19,6 +19,14 @@ function getBestTraderBuy(item: Item) {
   const bestBuy: Buy | null = getBestBuy(item);
 
   if (bestBuy === null) return <p className="h-8">Cannot be bought</p>;
+  if (bestBuy.trader_name === "Flea Market")
+    return (
+      <p className="h-8">
+        buy from :{" "}
+        {bestBuy.trader_name + " " + bestBuy.price_rub.toLocaleString("en-us")}{" "}
+        RUB
+      </p>
+    );
 
   return (
     <p className="h-8">

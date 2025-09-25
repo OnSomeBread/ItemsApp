@@ -12,7 +12,10 @@ export function clearPageLocalStorage(page: string) {
 export function getBestSell(item: Item) {
   let bestSell: Sell | null = null;
   for (const trader of item.sells) {
-    if (bestSell === null || trader.price_rub > bestSell.price_rub) {
+    if (
+      (bestSell === null || trader.price_rub > bestSell.price_rub) &&
+      trader.trader_name !== "Flea Market"
+    ) {
       bestSell = trader;
     }
   }
@@ -22,7 +25,6 @@ export function getBestSell(item: Item) {
 export function getBestBuy(item: Item) {
   let bestBuy: Buy | null = null;
   for (const trader of item.buys) {
-    if (trader.trader_name === "Flea Market") continue;
     if (bestBuy === null || trader.price_rub < bestBuy.price_rub) {
       bestBuy = trader;
     }

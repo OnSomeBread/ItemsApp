@@ -79,9 +79,11 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
             <tr>
               <th>Icon</th>
               <th>Name</th>
-              <th>Base Price</th>
               <th>Buy For</th>
               <th>Sell For</th>
+              <th>From Flea To Trader Profit</th>
+              <th>From Trader To Flea Profit</th>
+              <th>Per Slot to Flea</th>
               <th>Wiki page</th>
             </tr>
           </thead>
@@ -101,32 +103,36 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
                       height={16}
                     />
                   </td>
-                  <td>
+                  <td className="w-100">
                     <Link
-                      className="w-100"
                       href={{ pathname: "/item_view", query: "id=" + item._id }}
                     >
                       {item.item_name}
                     </Link>
                   </td>
                   <td>
-                    <p>{item.base_price.toLocaleString("en-us")} RUB</p>
-                  </td>
-                  <td>
-                    {bestBuy !== null && (
-                      <p>
-                        {"buy " +
-                          bestBuy.buy_limit +
-                          " from " +
-                          bestBuy.trader_name +
-                          " lvl " +
-                          bestBuy.min_trader_level +
-                          ": " +
-                          bestBuy.price.toLocaleString("en-us") +
-                          " " +
-                          bestBuy.currency}
-                      </p>
-                    )}
+                    {bestBuy !== null &&
+                      bestBuy.trader_name !== "Flea Market" && (
+                        <p>
+                          {"buy " +
+                            bestBuy.buy_limit +
+                            " from " +
+                            bestBuy.trader_name +
+                            " lvl " +
+                            bestBuy.min_trader_level +
+                            ": " +
+                            bestBuy.price.toLocaleString("en-us") +
+                            " " +
+                            bestBuy.currency}
+                        </p>
+                      )}
+                    {bestBuy !== null &&
+                      bestBuy.trader_name === "Flea Market" && (
+                        <p>
+                          {bestBuy.trader_name}:{" "}
+                          {bestBuy.price_rub.toLocaleString("en-us")} RUB
+                        </p>
+                      )}
                   </td>
                   <td>
                     {bestSell !== null && (
@@ -135,6 +141,25 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
                         {bestSell.price_rub.toLocaleString("en-us")} RUB
                       </p>
                     )}
+                  </td>
+                  <td>
+                    <p>
+                      {item.buy_from_flea_instant_profit.toLocaleString(
+                        "en-us"
+                      )}{" "}
+                      RUB
+                    </p>
+                  </td>
+                  <td>
+                    <p>
+                      {item.buy_from_trader_instant_profit.toLocaleString(
+                        "en-us"
+                      )}{" "}
+                      RUB
+                    </p>
+                  </td>
+                  <td>
+                    <p>{item.per_slot.toLocaleString("en-us")} RUB</p>
                   </td>
                   <td>
                     <a href={item.wiki}>wiki link</a>
