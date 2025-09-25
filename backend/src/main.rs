@@ -1,6 +1,7 @@
 mod api_routers;
 mod database_types;
 mod deserialize_json_types;
+mod endpoint_tests;
 mod init_app_state;
 mod item_routes;
 mod query_types;
