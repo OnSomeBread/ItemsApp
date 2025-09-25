@@ -5,6 +5,7 @@ import TraderSelect from "../../components/TraderSelect";
 import { DOCKER_BACKEND } from "../../constants";
 import dynamic from "next/dynamic";
 import { cookies } from "next/headers";
+import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
 
 const TaskTreeComponent = dynamic(
   () => import("../../components/TaskTreeComponent")
@@ -38,7 +39,7 @@ async function TaskTree({ searchParams }: PageProps) {
   });
   const adjList = (await res1.json()) as TaskAdjList;
 
-  const deviceCookie = cookieStore.get("device_uuid");
+  const deviceCookie = cookieStore.get(DEVICE_UUID_COOKIE_NAME);
   const deviceId = deviceCookie ? deviceCookie.value : undefined;
 
   const headers: HeadersInit = {
