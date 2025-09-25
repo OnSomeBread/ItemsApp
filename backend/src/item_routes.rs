@@ -1,11 +1,10 @@
-use crate::api_routers::get_time_in_seconds;
+use crate::api_routers::RedisCache;
 use crate::database_types::{BuyFor, Item, ItemFromDB, SavedItemData, SellFor};
 use crate::init_app_state::AppState;
 use crate::query_types::*;
 use crate::query_types::{AppError, AppError::*};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
-use redis::AsyncCommands;
 use std::collections::{HashMap, HashSet};
 
 // this adds buyfor and sellfor to items so that it can be returned to user
@@ -109,12 +108,6 @@ pub async fn get_items(
 
     // redis performance falls off at large amounts of items
     let use_redis = limit <= 100;
-    let mut conn = if use_redis {
-        redispool.get().await.ok()
-    } else {
-        None
-    };
-
     let cache_key = format!(
         "{}a{}{}{}l{}o{}",
         search,
@@ -125,11 +118,9 @@ pub async fn get_items(
         offset
     );
 
-    // check if there is a cache hit from redis cache
-    if let Some(conn) = conn.as_mut() {
-        let items: Option<Option<String>> = conn.get(&cache_key).await.ok();
-        if let Some(items) = items.flatten() {
-            return Ok(Json(serde_json::from_str(&items).unwrap()));
+    if use_redis {
+        if let Some(values) = Item::get_vec(&cache_key, &redispool).await? {
+            return Ok(Json(values));
         }
     }
 
@@ -225,22 +216,13 @@ pub async fn get_items(
 
     // save tasks in redis cache
     if use_redis {
-        let pool = redispool.clone();
-        let items = items.clone();
-        let items_call = next_items_call_timer.clone();
-
-        tokio::spawn(async move {
-            if let Ok(mut conn) = pool.get().await {
-                if let Ok(data) = serde_json::to_string(&items) {
-                    let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
-
-                    if let Some(time_in_seconds) = get_time_in_seconds(&items_call) {
-                        let _: redis::RedisResult<()> =
-                            conn.expire(cache_key, time_in_seconds).await;
-                    }
-                }
-            }
-        });
+        Item::set_vec(
+            cache_key,
+            items.clone(),
+            redispool,
+            next_items_call_timer.clone(),
+        )
+        .await;
     }
 
     Ok(Json(items))
@@ -257,12 +239,9 @@ pub async fn get_item_history(
 
     let item_id = query_parms.item_id.unwrap();
     let cache_key = item_id.clone() + "-history";
-    let mut conn = app_state.redispool.get().await.ok();
-    if let Some(conn) = conn.as_mut() {
-        let item_history: Option<Option<String>> = conn.get(&cache_key).await.ok();
-        if let Some(item_history) = item_history.flatten() {
-            return Ok(Json(serde_json::from_str(&item_history).unwrap()));
-        }
+
+    if let Some(values) = SavedItemData::get_vec(&cache_key, &app_state.redispool).await? {
+        return Ok(Json(values));
     }
 
     let item_history = sqlx::query_as!(
@@ -274,21 +253,13 @@ pub async fn get_item_history(
     .await
     .map_err(|_| BadSqlQuery(String::from("ItemHistory Query did not run successfully")))?;
 
-    let pool = app_state.redispool.clone();
-    let tokio_item_history = item_history.clone();
-    let items_call = app_state.next_items_call_timer.clone();
-
-    tokio::spawn(async move {
-        if let Ok(mut conn) = pool.get().await {
-            if let Ok(data) = serde_json::to_string(&tokio_item_history) {
-                let _: redis::RedisResult<()> = conn.set(&cache_key, data).await;
-
-                if let Some(time_in_seconds) = get_time_in_seconds(&items_call) {
-                    let _: redis::RedisResult<()> = conn.expire(&cache_key, time_in_seconds).await;
-                }
-            }
-        }
-    });
+    SavedItemData::set_vec(
+        cache_key,
+        item_history.clone(),
+        app_state.redispool,
+        app_state.next_items_call_timer.clone(),
+    )
+    .await;
 
     Ok(Json(item_history))
 }
