@@ -4,6 +4,7 @@ import { type Edge } from "@xyflow/react";
 import TraderSelect from "../../components/TraderSelect";
 import { DOCKER_BACKEND } from "../../constants";
 import dynamic from "next/dynamic";
+import { cookies } from "next/headers";
 
 const TaskTreeComponent = dynamic(
   () => import("../../components/TaskTreeComponent")
@@ -14,23 +15,36 @@ type PageProps = {
     trader?: string;
     isKappa?: boolean;
     isLightkeeper?: boolean;
+    includeCompleted?: boolean;
   }>;
 };
 
 async function TaskTree({ searchParams }: PageProps) {
-  let { trader, isKappa, isLightkeeper } = (await searchParams) ?? {
-    trader: "Prapor",
-    isKappa: false,
-    isLightkeeper: false,
-  };
+  const cookieStore = await cookies();
+  let { trader, isKappa, isLightkeeper, includeCompleted } =
+    (await searchParams) ?? {
+      trader: "Prapor",
+      isKappa: false,
+      isLightkeeper: false,
+      includeCompleted: true,
+    };
   if (trader === undefined) trader = "Prapor";
   if (isKappa === undefined) isKappa = false;
   if (isLightkeeper === undefined) isLightkeeper = false;
+  if (includeCompleted === undefined) includeCompleted = true;
 
   const res1 = await fetch(DOCKER_BACKEND + "/api/adj_list", {
     cache: "no-store",
   });
   const adjList = (await res1.json()) as TaskAdjList;
+
+  const deviceCookie = cookieStore.get("device_uuid");
+  const deviceId = deviceCookie ? deviceCookie.value : undefined;
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(deviceId ? { "x-device-id": deviceId } : {}),
+  };
 
   const res2 = await fetch(
     DOCKER_BACKEND +
@@ -40,9 +54,12 @@ async function TaskTree({ searchParams }: PageProps) {
       isKappa +
       "&isLightkeeper=" +
       isLightkeeper +
+      "&includeCompleted=" +
+      includeCompleted +
       "&limit=1000",
     {
       cache: "no-store",
+      headers,
     }
   );
   const allTasks = (await res2.json()) as Task[];
@@ -85,6 +102,7 @@ async function TaskTree({ searchParams }: PageProps) {
           trader={trader}
           isKappa={isKappa}
           isLightkeeper={isLightkeeper}
+          includeCompleted={includeCompleted}
         />
       </div>
       <div className="absolute z-1">

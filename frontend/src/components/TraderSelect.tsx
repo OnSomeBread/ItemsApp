@@ -7,9 +7,15 @@ interface Props {
   trader: string;
   isKappa: boolean;
   isLightkeeper: boolean;
+  includeCompleted: boolean;
 }
 
-function TraderSelect({ trader, isKappa, isLightkeeper }: Props) {
+function TraderSelect({
+  trader,
+  isKappa,
+  isLightkeeper,
+  includeCompleted,
+}: Props) {
   const router = useRouter();
   return (
     <>
@@ -22,7 +28,9 @@ function TraderSelect({ trader, isKappa, isLightkeeper }: Props) {
               "&isKappa=" +
               isKappa +
               "&isLightkeeper=" +
-              isLightkeeper
+              isLightkeeper +
+              "&includeCompleted=" +
+              includeCompleted
           )
         }
         defaultValue={trader}
@@ -47,7 +55,9 @@ function TraderSelect({ trader, isKappa, isLightkeeper }: Props) {
                 "&isKappa=" +
                 e.target.checked +
                 "&isLightkeeper=" +
-                isLightkeeper
+                isLightkeeper +
+                "&includeCompleted=" +
+                includeCompleted
             )
           }
         />
@@ -64,6 +74,27 @@ function TraderSelect({ trader, isKappa, isLightkeeper }: Props) {
                 "&isKappa=" +
                 isKappa +
                 "&isLightkeeper=" +
+                e.target.checked +
+                "&includeCompleted=" +
+                includeCompleted
+            )
+          }
+        />
+      </label>
+      <label className="pl-4">
+        Include Completed Tasks?{" "}
+        <input
+          type="checkbox"
+          defaultChecked={includeCompleted}
+          onChange={(e) =>
+            router.push(
+              "/task_tree?trader=" +
+                trader +
+                "&isKappa=" +
+                isKappa +
+                "&isLightkeeper=" +
+                isLightkeeper +
+                "&includeCompleted=" +
                 e.target.checked
             )
           }

@@ -94,9 +94,10 @@ pub async fn get_tasks(
     let player_lvl = query_parms.player_lvl.unwrap_or(99);
     let limit = query_parms.limit.unwrap_or(30);
     let offset = query_parms.offset.unwrap_or(0);
+    let include_completed = query_parms.include_completed.unwrap_or(true);
     let ids; //query_parms.ids.unwrap_or(Vec::new());
-    if let Some(device_id) = device.0 {
-        ids = get_completed_task_by_device_id(&pgpool, device_id).await?;
+    if include_completed && device.0.is_some() {
+        ids = get_completed_task_by_device_id(&pgpool, device.0.unwrap()).await?;
     } else {
         ids = vec![];
     }

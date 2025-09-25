@@ -72,6 +72,7 @@ pub struct TaskQueryParams {
     pub player_lvl: Option<u32>,
     pub limit: Option<u32>,
     pub offset: Option<u32>,
+    pub include_completed: Option<bool>,
 }
 
 pub const VALID_SORT_BY: &'static [&'static str] = &[
