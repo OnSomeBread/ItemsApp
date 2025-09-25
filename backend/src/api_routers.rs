@@ -53,7 +53,7 @@ async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppErro
     }
 
     let mut time_in_seconds_tasks = None;
-    if let Ok(mutex_timer) = app_state.next_items_call_timer.lock() {
+    if let Ok(mutex_timer) = app_state.next_tasks_call_timer.lock() {
         time_in_seconds_tasks = mutex_timer
             .as_ref()
             .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
