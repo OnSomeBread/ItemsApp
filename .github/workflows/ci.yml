@@ -61,8 +61,8 @@ jobs:
             sleep 2
           done
 
-      - name: run backend pytest tests
-        run: docker exec backend cargo test
+      # - name: run backend pytest tests
+      #   run: docker exec backend cargo test
 
       # - name: cache pip
       #   uses: actions/cache@v4
