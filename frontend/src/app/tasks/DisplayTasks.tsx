@@ -8,7 +8,7 @@ type PageProps = {
   searchParams: Promise<{ queryParams?: TaskQueryParams }>;
 };
 
-async function DisplayTasksSSR({ searchParams }: PageProps) {
+async function DisplayTasks({ searchParams }: PageProps) {
   const cookieStore = await cookies();
   let { queryParams } = (await searchParams) ?? {
     id: cookieStore.has("tasks-query")
@@ -57,4 +57,4 @@ async function DisplayTasksSSR({ searchParams }: PageProps) {
   );
 }
 
-export default DisplayTasksSSR;
+export default DisplayTasks;
