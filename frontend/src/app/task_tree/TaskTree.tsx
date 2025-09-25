@@ -32,11 +32,6 @@ async function TaskTree({ searchParams }: PageProps) {
   });
   const adjList = (await res1.json()) as TaskAdjList;
 
-  // TODO grab all of the tasks that were marked completed
-  // for (const key of Object.keys(localStorage)) {
-  //   if (key.startsWith("task")) params.append("ids", key.slice("task-".length));
-  // }
-
   const res2 = await fetch(
     DOCKER_BACKEND +
       "/api/tasks?trader=" +

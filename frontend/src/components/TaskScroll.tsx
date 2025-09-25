@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import TaskSearchBar from "./TaskSearchBar";
 import { motion } from "framer-motion";
 import TaskComponent from "./TaskComponent";
-import { DOCKER_BACKEND } from "../constants";
 
 interface Props {
   initTasks: Task[];
@@ -36,7 +35,7 @@ function TaskScroll({
   }, [changedTasksToggle]);
 
   const fetchNewCompletedTasks = () => {
-    fetch(DOCKER_BACKEND + "/api/get_completed", {
+    fetch("/api/get_completed", {
       cache: "no-store",
       headers,
     })
@@ -60,7 +59,7 @@ function TaskScroll({
     });
     params.append("offset", offset.toString());
 
-    fetch(DOCKER_BACKEND + "/api/tasks?" + params.toString(), {
+    fetch("/api/tasks?" + params.toString(), {
       cache: "no-store",
       headers,
     })
@@ -115,16 +114,16 @@ function TaskScroll({
       direction: direction,
     };
 
-    fetch(DOCKER_BACKEND + "/api/set_complete", {
+    fetch("/api/set_complete", {
       method: "POST",
       cache: "no-store",
       headers,
       body: JSON.stringify(data),
     })
-      .then()
+      .then(() => {
+        setChangedTasksToggle((prev) => !prev);
+      })
       .catch((err) => console.error(err));
-
-    setChangedTasksToggle((prev) => !prev);
   };
 
   return (
@@ -133,7 +132,7 @@ function TaskScroll({
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}
         onClear={() => {
-          fetch(DOCKER_BACKEND + "/api/clear_completed_tasks", {
+          fetch("/api/clear_completed_tasks", {
             cache: "no-store",
             headers,
           })
@@ -201,7 +200,6 @@ function TaskScroll({
                       show: { opacity: 1 },
                     }}
                     onClick={() => {
-                      //setOffset(0);
                       onClickComplete(task._id, true);
                     }}
                   >
