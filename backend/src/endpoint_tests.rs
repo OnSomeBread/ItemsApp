@@ -23,6 +23,7 @@ trait Test: DeserializeOwned {
 
     fn get_base() -> String;
     fn get_id(&self) -> &str;
+    fn get_name(&self) -> &str;
 
     fn get_ids(values: &Vec<Self>) -> Vec<String> {
         values.into_iter().map(|x| x.get_id().to_string()).collect()
@@ -53,7 +54,7 @@ trait Test: DeserializeOwned {
 
     async fn ids_testing() {
         let values_from_base =
-            Self::get_request_vec(format!("{}{}{}", URL, Self::get_base(), "?limit=30")).await;
+            Self::get_request_vec(format!("{}{}{}", URL, Self::get_base(), "?")).await;
         let ids = Self::get_ids(&values_from_base);
         let mut final_str = String::new();
         ids.iter().for_each(|v| {
@@ -61,6 +62,7 @@ trait Test: DeserializeOwned {
             final_str += v.as_str()
         });
 
+        // removes inital &
         final_str.replace_range(0..1, "");
 
         let values_from_ids =
@@ -68,6 +70,59 @@ trait Test: DeserializeOwned {
 
         assert!(values_from_base.len() > 0 && values_from_ids.len() > 0);
         assert!(Self::get_ids(&values_from_base) == Self::get_ids(&values_from_ids));
+    }
+
+    async fn search_testing() {
+        // test for strings that could break the backend
+        let test_strings: &'static [&'static str] = &[
+            r#"' OR 1=1 -- Test User'"#,
+            r#"'"#,
+            r#""#,
+            r#"OR 1=1 --"#,
+            r#"Test User"#,
+            r#"!@#$%^&*().,;:'"?"#,
+            r#"1' or '1' = '1"#,
+            r#"1'; DROP TABLE users; --"#,
+            r#"" or ""=""#,
+            r#"검색 텍스트"#,
+        ];
+
+        for t in test_strings {
+            // get_request_vec already asserts request code is 200 also this does not get optimized out by the compiler
+            let _ =
+                Self::get_request_vec(format!("{}{}{}{}", URL, Self::get_base(), "?search=", t))
+                    .await;
+        }
+
+        let values =
+            Self::get_request_vec(format!("{}{}{}", URL, Self::get_base(), "?search=a")).await;
+
+        assert!(values.len() > 0);
+        assert!(
+            values
+                .iter()
+                .all(|x| x.get_name().contains("a") || x.get_name().contains("A"))
+        );
+    }
+
+    async fn limit_and_offset_testing() {
+        let values =
+            Self::get_request_vec(format!("{}{}{}", URL, Self::get_base(), "?limit=100")).await;
+        assert!(values.len() == 100);
+
+        let mut build_values = vec![];
+        for n in (0..100).step_by(10) {
+            build_values.extend(
+                Self::get_request_vec(format!(
+                    "{}{}{}{}",
+                    URL,
+                    Self::get_base(),
+                    "?limit=10&offset=",
+                    n
+                ))
+                .await,
+            );
+        }
     }
 }
 
@@ -79,6 +134,10 @@ impl Test for Item {
     fn get_id(&self) -> &str {
         &self._id
     }
+
+    fn get_name(&self) -> &str {
+        &self.item_name
+    }
 }
 
 impl Test for Task {
@@ -88,9 +147,23 @@ impl Test for Task {
     fn get_id(&self) -> &str {
         &self._id
     }
+    fn get_name(&self) -> &str {
+        &self.task_name
+    }
 }
 
 const URL: &'static str = "http://127.0.0.1:8000/api";
+
+#[tokio::test]
+async fn test_health() {
+    let res = Client::new()
+        .get(format!("{}{}", URL, "/health"))
+        .send()
+        .await
+        .expect("health endpoint failed");
+
+    assert!(res.status().is_success());
+}
 
 #[tokio::test]
 async fn test_items_valid_sort_by_endpoint() {
@@ -119,13 +192,6 @@ async fn test_items_asc_endpoint() {
     let desc = Item::get_request_vec(format!("{}{}", URL, "/items?asc=false&limit=100")).await;
     assert!(asc.len() > 0 && desc.len() > 0);
     assert!(Item::get_ids(&asc) != Item::get_ids(&desc));
-}
-
-#[tokio::test]
-async fn test_ids_endpoint() {
-    // this tests enforces that ids grab the correct data
-    Item::ids_testing().await;
-    Task::ids_testing().await;
 }
 
 #[tokio::test]
@@ -163,4 +229,25 @@ async fn test_task_kappa_lightkeeper_endpoint() {
         Task::get_ids(&neither) != Task::get_ids(&kappa)
             && Task::get_ids(&neither) != Task::get_ids(&lightkeeper)
     );
+}
+
+#[tokio::test]
+async fn test_ids_endpoint() {
+    // this tests enforces that ids grab the correct data
+    Item::ids_testing().await;
+    Task::ids_testing().await;
+}
+
+#[tokio::test]
+async fn test_search() {
+    // this tests enforces that search does not break backend and works correctly
+    Item::search_testing().await;
+    Task::search_testing().await;
+}
+
+#[tokio::test]
+async fn test_limit_and_offset() {
+    // this tests enforces that limit and offset grab the correct values
+    Item::limit_and_offset_testing().await;
+    Task::limit_and_offset_testing().await;
 }
