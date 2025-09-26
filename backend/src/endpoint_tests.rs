@@ -169,7 +169,7 @@ async fn test_health() {
 async fn test_items_valid_sort_by_endpoint() {
     // this tests enforces that all valid sortby have a unique non empty output
     Item::valid_param_unique_testing(
-        "sortBy",
+        "sort_by",
         VALID_SORT_BY.iter().map(|x| x.to_string()).collect(),
     )
     .await;
@@ -198,7 +198,7 @@ async fn test_items_asc_endpoint() {
 async fn test_tasks_valid_obj_types_endpoint() {
     // this tests enforces that all valid obj types have a unique non empty output
     Task::valid_param_unique_testing(
-        "objType",
+        "obj_type",
         VALID_OBJ_TYPES.iter().map(|x| x.to_string()).collect(),
     )
     .await;
@@ -220,8 +220,11 @@ async fn test_task_kappa_lightkeeper_endpoint() {
 
     let (neither, kappa, lightkeeper) = tokio::join!(
         Task::get_request_vec(format!("{}{}", URL, "/tasks?limit=1000")),
-        Task::get_request_vec(format!("{}{}", URL, "/tasks?isKappa=true&limit=1000")),
-        Task::get_request_vec(format!("{}{}", URL, "/tasks?isLightkeeper=true&limit=1000"))
+        Task::get_request_vec(format!("{}{}", URL, "/tasks?is_kappa=true&limit=1000")),
+        Task::get_request_vec(format!(
+            "{}{}",
+            URL, "/tasks?is_lightkeeper=true&limit=1000"
+        ))
     );
 
     assert!(neither.len() > 0 && kappa.len() > 0 && lightkeeper.len() > 0);
