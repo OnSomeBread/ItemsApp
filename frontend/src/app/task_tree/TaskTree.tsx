@@ -57,7 +57,7 @@ async function TaskTree({ searchParams }: PageProps) {
       isLightkeeper +
       "&includeCompleted=" +
       includeCompleted +
-      "&limit=1000",
+      "&limit=1000&save=false",
     {
       cache: "no-store",
       headers,

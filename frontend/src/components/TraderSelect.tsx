@@ -17,22 +17,31 @@ function TraderSelect({
   includeCompleted,
 }: Props) {
   const router = useRouter();
+  const pushRoute = (replace_key: string, replace_value: string | boolean) => {
+    const mapping = new Map<string, string | boolean>();
+    mapping.set("trader", trader);
+    mapping.set("isKappa", isKappa);
+    mapping.set("isLightkeeper", isLightkeeper);
+    mapping.set("includeCompleted", includeCompleted);
+    mapping.set("save", false);
+
+    const params = new URLSearchParams();
+    for (const [key, value] of mapping.entries()) {
+      if (key === replace_key) {
+        params.append(replace_key, replace_value.toString());
+      } else {
+        params.append(key, value.toString());
+      }
+    }
+
+    router.push("/task_tree?" + params.toString());
+  };
+
   return (
     <>
       <select
         className="!mt-2 !ml-4 !w-80"
-        onChange={(e) =>
-          router.push(
-            "/task_tree?trader=" +
-              e.target.value +
-              "&isKappa=" +
-              isKappa +
-              "&isLightkeeper=" +
-              isLightkeeper +
-              "&includeCompleted=" +
-              includeCompleted
-          )
-        }
+        onChange={(e) => pushRoute("trader", e.target.value)}
         defaultValue={trader}
       >
         {Object.entries(ALL_TRADERS)
@@ -48,18 +57,7 @@ function TraderSelect({
         <input
           type="checkbox"
           defaultChecked={isKappa}
-          onChange={(e) =>
-            router.push(
-              "/task_tree?trader=" +
-                trader +
-                "&isKappa=" +
-                e.target.checked +
-                "&isLightkeeper=" +
-                isLightkeeper +
-                "&includeCompleted=" +
-                includeCompleted
-            )
-          }
+          onChange={(e) => pushRoute("isKappa", e.target.checked)}
         />
       </label>
       <label className="pl-4">
@@ -67,18 +65,7 @@ function TraderSelect({
         <input
           type="checkbox"
           defaultChecked={isLightkeeper}
-          onChange={(e) =>
-            router.push(
-              "/task_tree?trader=" +
-                trader +
-                "&isKappa=" +
-                isKappa +
-                "&isLightkeeper=" +
-                e.target.checked +
-                "&includeCompleted=" +
-                includeCompleted
-            )
-          }
+          onChange={(e) => pushRoute("isLightkeeper", e.target.checked)}
         />
       </label>
       <label className="pl-4">
@@ -86,18 +73,7 @@ function TraderSelect({
         <input
           type="checkbox"
           defaultChecked={includeCompleted}
-          onChange={(e) =>
-            router.push(
-              "/task_tree?trader=" +
-                trader +
-                "&isKappa=" +
-                isKappa +
-                "&isLightkeeper=" +
-                isLightkeeper +
-                "&includeCompleted=" +
-                e.target.checked
-            )
-          }
+          onChange={(e) => pushRoute("includeCompleted", e.target.checked)}
         />
       </label>
     </>
