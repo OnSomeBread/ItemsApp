@@ -14,25 +14,25 @@ const TaskTreeComponent = dynamic(
 type PageProps = {
   searchParams: Promise<{
     trader?: string;
-    isKappa?: boolean;
-    isLightkeeper?: boolean;
-    includeCompleted?: boolean;
+    is_kappa?: boolean;
+    is_lightkeeper?: boolean;
+    include_completed?: boolean;
   }>;
 };
 
 async function TaskTree({ searchParams }: PageProps) {
   const cookieStore = await cookies();
-  let { trader, isKappa, isLightkeeper, includeCompleted } =
+  let { trader, is_kappa, is_lightkeeper, include_completed } =
     (await searchParams) ?? {
       trader: "Prapor",
-      isKappa: false,
-      isLightkeeper: false,
-      includeCompleted: true,
+      is_kappa: false,
+      is_lightkeeper: false,
+      include_completed: true,
     };
   if (trader === undefined) trader = "Prapor";
-  if (isKappa === undefined) isKappa = false;
-  if (isLightkeeper === undefined) isLightkeeper = false;
-  if (includeCompleted === undefined) includeCompleted = true;
+  if (is_kappa === undefined) is_kappa = false;
+  if (is_lightkeeper === undefined) is_lightkeeper = false;
+  if (include_completed === undefined) include_completed = true;
 
   const res1 = await fetch(DOCKER_BACKEND + "/api/adj_list", {
     cache: "no-store",
@@ -52,11 +52,11 @@ async function TaskTree({ searchParams }: PageProps) {
       "/api/tasks?trader=" +
       trader +
       "&is_kappa=" +
-      isKappa +
+      is_kappa +
       "&is_lightkeeper=" +
-      isLightkeeper +
+      is_lightkeeper +
       "&include_completed=" +
-      includeCompleted +
+      include_completed +
       "&limit=1000&save=false",
     {
       cache: "no-store",
@@ -101,9 +101,9 @@ async function TaskTree({ searchParams }: PageProps) {
         <PageSwitch />
         <TraderSelect
           trader={trader}
-          isKappa={isKappa}
-          isLightkeeper={isLightkeeper}
-          includeCompleted={includeCompleted}
+          isKappa={is_kappa}
+          isLightkeeper={is_lightkeeper}
+          includeCompleted={include_completed}
         />
       </div>
       <div className="absolute z-1">

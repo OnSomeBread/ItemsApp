@@ -23,7 +23,6 @@ function TraderSelect({
     mapping.set("is_kappa", isKappa);
     mapping.set("is_lightkeeper", isLightkeeper);
     mapping.set("include_completed", includeCompleted);
-    mapping.set("save", false);
 
     const params = new URLSearchParams();
     for (const [key, value] of mapping.entries()) {
