@@ -11,7 +11,7 @@ type PageProps = {
 };
 
 async function ItemView({ searchParams }: PageProps) {
-  const { id } = (await searchParams) ?? { id: undefined };
+  const id = (await searchParams)?.id;
   if (id === undefined) return <p>no item passed in</p>;
 
   const res1 = await fetch(DOCKER_BACKEND + "/api/item_ids?ids=" + id, {

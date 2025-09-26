@@ -8,7 +8,7 @@ type PageProps = {
 };
 
 async function TaskView({ searchParams }: PageProps) {
-  const { id } = (await searchParams) ?? { id: undefined };
+  const id = (await searchParams)?.id;
   if (id === undefined) return <p>no task passed in</p>;
 
   const res1 = await fetch(DOCKER_BACKEND + "/api/task_ids?ids=" + id, {

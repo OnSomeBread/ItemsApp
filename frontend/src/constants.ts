@@ -104,5 +104,10 @@ export const ALL_TASK_OBJECTIVE_TYPES = {
   skill: "Skill",
 };
 
-export const DOCKER_BACKEND: string = "http://backend:8000";
+export const dev: boolean = false;
+export const API_BASE: string = dev ? "http://localhost:8000" : "";
+export const DOCKER_BACKEND: string = dev
+  ? "http://localhost:8000"
+  : "http://backend:8000";
+
 //(process.env.NEXT_PUBLIC_BACKEND_SERVER as string) ?? "";

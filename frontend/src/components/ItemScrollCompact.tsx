@@ -7,6 +7,7 @@ import { getBestBuy, getBestSell } from "../utils";
 import ItemSearchBar from "./ItemSearchBar";
 import dynamic from "next/dynamic";
 const ImageComponent = dynamic(() => import("./ImageComponent"));
+import { API_BASE } from "../constants";
 
 interface Props {
   initItems: Item[];
@@ -34,7 +35,7 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
     });
     params.append("offset", offset.toString());
 
-    fetch("api/items?" + params.toString())
+    fetch(API_BASE + "/api/items?" + params.toString())
       .then((res1) => {
         res1
           .json()

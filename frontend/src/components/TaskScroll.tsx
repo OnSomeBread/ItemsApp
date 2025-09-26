@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import TaskSearchBar from "./TaskSearchBar";
 import { motion } from "framer-motion";
 import TaskComponent from "./TaskComponent";
+import { API_BASE } from "../constants";
 
 interface Props {
   initTasks: Task[];
@@ -22,7 +23,6 @@ function TaskScroll({
   const [allTasks, setAllTasks] = useState(initTasks);
   const [allCompletedTasks, setAllCompletedTasks] = useState(completedTasks);
   const [hasMore, setHasMore] = useState(true);
-  //const [offset, setOffset] = useState(initQueryParams.limit);
   const [loading, setLoading] = useState(false);
   const [queryParams, setQueryParams] = useState(initQueryParams);
 
@@ -35,7 +35,7 @@ function TaskScroll({
   }, [changedTasksToggle]);
 
   const fetchNewCompletedTasks = () => {
-    fetch("/api/get_completed", {
+    fetch(API_BASE + "/api/get_completed", {
       cache: "no-store",
       headers,
     })
@@ -59,7 +59,7 @@ function TaskScroll({
     });
     params.append("offset", offset.toString());
 
-    fetch("/api/tasks?" + params.toString(), {
+    fetch(API_BASE + "/api/tasks?" + params.toString(), {
       cache: "no-store",
       headers,
     })
@@ -114,7 +114,7 @@ function TaskScroll({
       direction: direction,
     };
 
-    fetch("/api/set_complete", {
+    fetch(API_BASE + "/api/set_complete", {
       method: "POST",
       cache: "no-store",
       headers,
@@ -132,7 +132,7 @@ function TaskScroll({
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}
         onClear={() => {
-          fetch("/api/clear_completed_tasks", {
+          fetch(API_BASE + "/api/clear_completed_tasks", {
             cache: "no-store",
             headers,
           })

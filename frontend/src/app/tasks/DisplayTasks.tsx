@@ -1,6 +1,7 @@
 import PageSwitch from "../../components/PageSwitch";
 import TaskScroll from "../../components/TaskScroll";
 import { DEFAULT_TASK_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
+import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
 import type { Task, TaskQueryParams } from "../../types";
 import { cookies } from "next/headers";
 
@@ -9,14 +10,8 @@ type PageProps = {
 };
 
 async function DisplayTasks({ searchParams }: PageProps) {
-  const cookieStore = await cookies();
-  let { queryParams } = (await searchParams) ?? {
-    id: cookieStore.has("tasks-query")
-      ? cookieStore.get("tasks-query")
-      : DEFAULT_TASK_QUERY_PARAMS,
-  };
-
-  if (queryParams === undefined) queryParams = DEFAULT_TASK_QUERY_PARAMS;
+  const queryParams =
+    (await searchParams)?.queryParams ?? DEFAULT_TASK_QUERY_PARAMS;
 
   const params = new URLSearchParams();
   Object.entries(queryParams).forEach(([key, value]) => {
@@ -24,7 +19,8 @@ async function DisplayTasks({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const deviceCookie = cookieStore.get("device_uuid");
+  const cookieStore = await cookies();
+  const deviceCookie = cookieStore.get(DEVICE_UUID_COOKIE_NAME);
   const deviceId = deviceCookie ? deviceCookie.value : undefined;
 
   const headers: HeadersInit = {
