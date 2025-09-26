@@ -1,6 +1,6 @@
 "use client";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Item, ItemQueryParams } from "../types";
 import { getBestBuy, getBestSell } from "../utils";
@@ -20,8 +20,14 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
   const [offset, setOffset] = useState(initQueryParams.limit);
   const [loading, setLoading] = useState(false);
   const [queryParams, setQueryParams] = useState(initQueryParams);
+  const firstRun = useRef(true);
 
   useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+
     fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...Object.values(queryParams)]);

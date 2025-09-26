@@ -1,7 +1,7 @@
 "use client";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Task, TaskQueryParams } from "../types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TaskSearchBar from "./TaskSearchBar";
 import { motion } from "framer-motion";
 import TaskComponent from "./TaskComponent";
@@ -28,8 +28,14 @@ function TaskScroll({
 
   // the actual value here doesn't matter its for the useEffect so that it can account for changed task list
   const [changedTasksToggle, setChangedTasksToggle] = useState(false);
+  const firstRun = useRef(true);
 
   useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+
     fetchTasks(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changedTasksToggle]);
