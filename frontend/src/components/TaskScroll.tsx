@@ -82,7 +82,6 @@ function TaskScroll({
 
             changeQueryParams("offset", queryParams.offset + queryParams.limit);
             setHasMore(tasks.length === queryParams.limit);
-            //setOffset((prev) => prev + queryParams.limit);
             setLoading(false);
           })
           .catch((err) => console.error(err));

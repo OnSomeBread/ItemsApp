@@ -82,14 +82,7 @@ async fn upsert_items(
     is_api_call: bool,
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;
-
-    sqlx::query!("DELETE FROM BuyFor;")
-        .execute(&mut *txn)
-        .await?;
-    sqlx::query!("DELETE FROM SellFor;")
-        .execute(&mut *txn)
-        .await?;
-    sqlx::query!("DELETE FROM Item;").execute(&mut *txn).await?;
+    sqlx::query!("DELETE FROM Item").execute(&mut *txn).await?;
 
     let ids: Vec<String> = items.iter().map(|item| item._id.to_string()).collect();
     let names: Vec<String> = items.iter().map(|x| x.item_name.to_string()).collect();
@@ -367,14 +360,7 @@ async fn upsert_tasks(
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;
-
-    sqlx::query!("DELETE FROM TaskRequirement;")
-        .execute(&mut *txn)
-        .await?;
-    sqlx::query!("DELETE FROM Objective;")
-        .execute(&mut *txn)
-        .await?;
-    sqlx::query!("DELETE FROM Task;").execute(&mut *txn).await?;
+    sqlx::query!("DELETE FROM Task").execute(&mut *txn).await?;
 
     for task in tasks {
         sqlx::query!("INSERT INTO Task (_id, task_name, normalized_name, experience, min_player_level, trader, faction_name, kappa_required, lightkeeper_required, wiki) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT(_id) DO NOTHING;",

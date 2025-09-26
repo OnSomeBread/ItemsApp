@@ -1,3 +1,4 @@
+use crate::database_types::{DeviceItemQueryParams, DeviceTaskQueryParams};
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Json, Response},
@@ -27,6 +28,16 @@ impl IntoResponse for AppError {
     }
 }
 
+pub trait AppErrorHandling<T> {
+    fn bad_sql(self, name: &'static str) -> Result<T, AppError>;
+}
+
+impl<T> AppErrorHandling<T> for Result<T, sqlx::Error> {
+    fn bad_sql(self, name: &'static str) -> Result<T, AppError> {
+        self.map_err(|_| AppError::BadSqlQuery(format!("{} Query did not run successfully", name)))
+    }
+}
+
 // return type for /stats
 #[derive(Serialize)]
 pub struct Stats {
@@ -39,7 +50,6 @@ pub struct Stats {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ItemQueryParams {
     pub search: Option<String>,
     pub asc: Option<bool>,
@@ -48,6 +58,31 @@ pub struct ItemQueryParams {
     pub item_type: Option<String>,
     pub limit: Option<u32>,
     pub offset: Option<u32>,
+    pub save: Option<bool>,
+}
+
+// impl ItemQueryParams {
+//     pub fn is_all_none(&self) -> bool {
+//         self.search.is_none()
+//             && self.asc.is_none()
+//             && self.sort_by.is_none()
+//             && self.item_type.is_none()
+//     }
+// }
+
+impl From<DeviceItemQueryParams> for ItemQueryParams {
+    fn from(parms: DeviceItemQueryParams) -> Self {
+        ItemQueryParams {
+            search: Some(parms.search),
+            asc: Some(parms.sort_asc),
+            sort_by: Some(parms.sort_by),
+            item_type: Some(parms.item_type),
+
+            limit: None,
+            offset: None,
+            save: Some(true),
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -62,7 +97,6 @@ pub struct IdsQueryParams {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct TaskQueryParams {
     pub search: Option<String>,
     pub is_kappa: Option<bool>,
@@ -73,6 +107,35 @@ pub struct TaskQueryParams {
     pub limit: Option<u32>,
     pub offset: Option<u32>,
     pub include_completed: Option<bool>,
+    pub save: Option<bool>,
+}
+
+// impl TaskQueryParams {
+//     pub fn is_all_none(&self) -> bool {
+//         self.search.is_none()
+//             && self.is_kappa.is_none()
+//             && self.is_lightkeeper.is_none()
+//             && self.obj_type.is_none()
+//             && self.trader.is_none()
+//             && self.player_lvl.is_none()
+//     }
+// }
+
+impl From<DeviceTaskQueryParams> for TaskQueryParams {
+    fn from(parms: DeviceTaskQueryParams) -> Self {
+        TaskQueryParams {
+            search: Some(parms.search),
+            is_kappa: Some(parms.is_kappa),
+            is_lightkeeper: Some(parms.is_lightkeeper),
+            obj_type: Some(parms.obj_type),
+            trader: Some(parms.trader),
+            player_lvl: Some(parms.player_lvl as u32),
+            limit: None,
+            offset: None,
+            include_completed: None,
+            save: Some(true),
+        }
+    }
 }
 
 pub const VALID_SORT_BY: &'static [&'static str] = &[

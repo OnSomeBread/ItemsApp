@@ -1,7 +1,7 @@
 export const DEFAULT_ITEM_QUERY_PARAMS = {
   search: "",
   asc: false,
-  sortBy: "flea_market",
+  sort_by: "flea_market",
   type: "any",
   limit: 40,
   offset: 0,
@@ -9,10 +9,10 @@ export const DEFAULT_ITEM_QUERY_PARAMS = {
 
 export const DEFAULT_TASK_QUERY_PARAMS = {
   search: "",
-  isKappa: false,
-  isLightkeeper: false,
-  playerLvl: 99,
-  objType: "any",
+  is_kappa: false,
+  is_lightkeeper: false,
+  player_lvl: 99,
+  obj_type: "any",
   trader: "any",
   limit: 40,
   offset: 0,

@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ItemQueryParams \n                    SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "41dd9dd6347a610818cc13d997c249a776bb748594bd3b9a83dde7d45bd81889"
+}

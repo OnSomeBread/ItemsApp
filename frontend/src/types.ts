@@ -49,7 +49,7 @@ export type Item = {
 export type ItemQueryParams = {
   search: string;
   asc: boolean;
-  sortBy: string;
+  sort_by: string;
   type: string;
   limit: number;
   offset: number;
@@ -57,10 +57,10 @@ export type ItemQueryParams = {
 
 export type TaskQueryParams = {
   search: string;
-  isKappa: boolean;
-  isLightkeeper: boolean;
-  playerLvl: number;
-  objType: string;
+  is_kappa: boolean;
+  is_lightkeeper: boolean;
+  player_lvl: number;
+  obj_type: string;
   trader: string;
   limit: number;
   offset: number;

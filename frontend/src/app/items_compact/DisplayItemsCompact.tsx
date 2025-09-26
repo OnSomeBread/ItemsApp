@@ -1,17 +1,35 @@
+import { cookies } from "next/headers";
 import ItemScrollCompact from "../../components/ItemScrollCompact";
 import PageSwitch from "../../components/PageSwitch";
 import { DEFAULT_ITEM_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
 import type { Item, ItemQueryParams } from "../../types";
+import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
 
 type PageProps = {
   searchParams: Promise<{ queryParams?: ItemQueryParams }>;
 };
 
 async function DisplayItemsCompact({ searchParams }: PageProps) {
-  const queryParams =
-    (await searchParams)?.queryParams ?? DEFAULT_ITEM_QUERY_PARAMS;
+  const cookieStore = await cookies();
+  const deviceCookie = cookieStore.get(DEVICE_UUID_COOKIE_NAME);
+  const deviceId = deviceCookie ? deviceCookie.value : undefined;
 
-  queryParams.limit = 50;
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(deviceId ? { "x-device-id": deviceId } : {}),
+  };
+
+  const res1 = await fetch(DOCKER_BACKEND + "/api/item_query_parms", {
+    cache: "no-store",
+    headers,
+  });
+  const resQueryParams = (await res1.json()) as ItemQueryParams;
+
+  const queryParams = (await searchParams)?.queryParams ?? {
+    ...DEFAULT_ITEM_QUERY_PARAMS,
+    ...resQueryParams,
+    limit: 50,
+  };
 
   const params = new URLSearchParams();
   Object.entries(queryParams).forEach(([key, value]) => {
@@ -19,10 +37,11 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/items?" + params.toString(), {
+  const res2 = await fetch(DOCKER_BACKEND + "/api/items?" + params.toString(), {
     cache: "no-store",
+    headers,
   });
-  const items = (await res1.json()) as Item[];
+  const items = (await res2.json()) as Item[];
 
   return (
     <>

@@ -43,7 +43,7 @@ async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppErro
         sqlx::query_scalar!("SELECT COUNT(*) FROM Task WHERE lightkeeper_required = True")
             .fetch_one(&app_state.pgpool)
     )
-    .map_err(|_| BadSqlQuery(String::from("Stats Query did not run successfully")))?;
+    .bad_sql("Stats")?;
 
     let mut time_in_seconds_items = None;
     if let Ok(mutex_timer) = app_state.next_items_call_timer.lock() {
@@ -96,9 +96,7 @@ impl Page for Item {
         pgpool: &sqlx::PgPool,
         not_found_ids: &Vec<String>,
     ) -> Result<Vec<Self>, AppError> {
-        let mut txn = pgpool.begin().await.map_err(|_| {
-            BadSqlQuery(String::from("Items By IDs Query did not run successfully"))
-        })?;
+        let mut txn = pgpool.begin().await.bad_sql("Items by Ids")?;
         let items_from_db = sqlx::query_as!(
             ItemFromDB,
             "SELECT * FROM Item WHERE _id = ANY($1)",
@@ -106,7 +104,7 @@ impl Page for Item {
         )
         .fetch_all(&mut *txn)
         .await
-        .map_err(|_| BadSqlQuery(String::from("Items By IDs Query did not run successfully")))?;
+        .bad_sql("Items by Ids")?;
 
         Ok(items_from_db_to_items(items_from_db, txn).await?)
     }
@@ -124,9 +122,7 @@ impl Page for Task {
         pgpool: &sqlx::PgPool,
         not_found_ids: &Vec<String>,
     ) -> Result<Vec<Self>, AppError> {
-        let mut txn = pgpool.begin().await.map_err(|_| {
-            BadSqlQuery(String::from("Tasks by ids Query did not run successfully"))
-        })?;
+        let mut txn = pgpool.begin().await.bad_sql("Tasks by Ids")?;
         let tasks_from_db = sqlx::query_as!(
             TaskFromDB,
             "SELECT * FROM Task WHERE _id = ANY($1)",
@@ -134,7 +130,7 @@ impl Page for Task {
         )
         .fetch_all(&mut *txn)
         .await
-        .map_err(|_| BadSqlQuery(String::from("Tasks by ids Query did not run successfully")))?;
+        .bad_sql("Tasks by Ids")?;
 
         Ok(tasks_from_db_to_tasks(tasks_from_db, txn).await?)
     }
@@ -275,6 +271,7 @@ fn items_router() -> Router<AppState> {
         .route("/items", get(get_items))
         .route("/item_history", get(get_item_history))
         .route("/item_ids", get(get_page_by_ids::<Item>))
+        .route("/item_query_parms", get(get_device_item_query_parms))
 }
 
 fn tasks_router() -> Router<AppState> {
@@ -285,6 +282,7 @@ fn tasks_router() -> Router<AppState> {
         .route("/get_completed", get(get_completed_tasks))
         .route("/set_complete", post(set_completed_task))
         .route("/clear_completed_tasks", get(clear_completed_tasks))
+        .route("/task_query_parms", get(get_device_task_query_parms))
 }
 
 pub fn api_router() -> Router<AppState> {

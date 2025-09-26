@@ -51,11 +51,11 @@ async function TaskTree({ searchParams }: PageProps) {
     DOCKER_BACKEND +
       "/api/tasks?trader=" +
       trader +
-      "&isKappa=" +
+      "&is_kappa=" +
       isKappa +
-      "&isLightkeeper=" +
+      "&is_lightkeeper=" +
       isLightkeeper +
-      "&includeCompleted=" +
+      "&include_completed=" +
       includeCompleted +
       "&limit=1000&save=false",
     {

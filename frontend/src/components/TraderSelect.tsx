@@ -20,9 +20,9 @@ function TraderSelect({
   const pushRoute = (replace_key: string, replace_value: string | boolean) => {
     const mapping = new Map<string, string | boolean>();
     mapping.set("trader", trader);
-    mapping.set("isKappa", isKappa);
-    mapping.set("isLightkeeper", isLightkeeper);
-    mapping.set("includeCompleted", includeCompleted);
+    mapping.set("is_kappa", isKappa);
+    mapping.set("is_lightkeeper", isLightkeeper);
+    mapping.set("include_completed", includeCompleted);
     mapping.set("save", false);
 
     const params = new URLSearchParams();
@@ -57,7 +57,7 @@ function TraderSelect({
         <input
           type="checkbox"
           defaultChecked={isKappa}
-          onChange={(e) => pushRoute("isKappa", e.target.checked)}
+          onChange={(e) => pushRoute("is_kappa", e.target.checked)}
         />
       </label>
       <label className="pl-4">
@@ -65,7 +65,7 @@ function TraderSelect({
         <input
           type="checkbox"
           defaultChecked={isLightkeeper}
-          onChange={(e) => pushRoute("isLightkeeper", e.target.checked)}
+          onChange={(e) => pushRoute("is_lightkeeper", e.target.checked)}
         />
       </label>
       <label className="pl-4">
@@ -73,7 +73,7 @@ function TraderSelect({
         <input
           type="checkbox"
           defaultChecked={includeCompleted}
-          onChange={(e) => pushRoute("includeCompleted", e.target.checked)}
+          onChange={(e) => pushRoute("include_completed", e.target.checked)}
         />
       </label>
     </>

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE TaskQueryParams \n                    SET search = $2, is_kappa = $3, is_lightkeeper = $4, \n                    player_lvl = $5, obj_type = $6, trader = $7 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6f9d72a15c3065286826750210f579f5b94f214a9502384f46a9cde361b97412"
+}

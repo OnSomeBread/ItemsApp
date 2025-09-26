@@ -45,10 +45,10 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         name="isKappaBtn"
         className={buttonClass}
         onClick={() => {
-          changeQueryParams("isKappa", queryParams.isKappa ? false : true);
+          changeQueryParams("is_kappa", queryParams.is_kappa ? false : true);
         }}
       >
-        {queryParams.isKappa ? "Kappa Required" : "Not Kappa Required"}
+        {queryParams.is_kappa ? "Kappa Required" : "Not Kappa Required"}
       </button>
       <button
         type="button"
@@ -56,20 +56,20 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         className={buttonClass}
         onClick={() => {
           changeQueryParams(
-            "isLightkeeper",
-            queryParams.isLightkeeper ? false : true
+            "is_lightkeeper",
+            queryParams.is_lightkeeper ? false : true
           );
         }}
       >
-        {queryParams.isLightkeeper
+        {queryParams.is_lightkeeper
           ? "LightKeeper Required"
           : "Not LightKeeper Required"}
       </button>
       <select
-        name="playerLvl"
+        name="player_lvl"
         className={dropdownClass}
-        defaultValue={queryParams.playerLvl}
-        onChange={(e) => changeQueryParams("playerLvl", e.target.value)}
+        defaultValue={queryParams.player_lvl}
+        onChange={(e) => changeQueryParams("player_lvl", e.target.value)}
       >
         {[...Array(100).keys()].map((num) => (
           <option key={num} value={num}>
@@ -78,10 +78,10 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         ))}
       </select>
       <select
-        name="objType"
+        name="obj_type"
         className={dropdownClass}
-        defaultValue={queryParams.objType}
-        onChange={(e) => changeQueryParams("objType", e.target.value)}
+        defaultValue={queryParams.obj_type}
+        onChange={(e) => changeQueryParams("obj_type", e.target.value)}
       >
         {Object.entries(ALL_TASK_OBJECTIVE_TYPES).map(([key, value]) => (
           <option key={key} value={key}>

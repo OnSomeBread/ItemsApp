@@ -1,5 +1,6 @@
 use redis_macros::{FromRedisValue, ToRedisArgs};
 use serde::{Deserialize, Serialize};
+use sqlx::types::Uuid;
 use sqlx::types::chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone, sqlx::Type)]
@@ -152,12 +153,38 @@ impl From<TaskFromDB> for Task {
 
 #[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
 pub struct SavedItemData {
+    #[allow(dead_code)]
+    #[serde(skip_serializing)]
     pub id: i32,
     pub avg_24h_price: i32,
     pub change_last_48h_percent: f32,
     pub price_rub: i32,
     pub recorded_time: DateTime<Utc>,
     pub item_id: String,
+}
+
+#[derive(sqlx::FromRow, Serialize)]
+pub struct DeviceItemQueryParams {
+    #[allow(dead_code)]
+    #[serde(skip_serializing)]
+    pub id: Uuid,
+    pub search: String,
+    pub sort_asc: bool,
+    pub sort_by: String,
+    pub item_type: String,
+}
+
+#[derive(sqlx::FromRow, Serialize)]
+pub struct DeviceTaskQueryParams {
+    #[allow(dead_code)]
+    #[serde(skip_serializing)]
+    pub id: Uuid,
+    pub search: String,
+    pub is_kappa: bool,
+    pub is_lightkeeper: bool,
+    pub player_lvl: i32,
+    pub obj_type: String,
+    pub trader: String,
 }
 
 // #[derive(sqlx::FromRow)]

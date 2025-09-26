@@ -1,5 +1,7 @@
-use crate::api_routers::RedisCache;
-use crate::database_types::{BuyFor, Item, ItemFromDB, SavedItemData, SellFor};
+use crate::api_routers::{Device, RedisCache};
+use crate::database_types::{
+    BuyFor, DeviceItemQueryParams, Item, ItemFromDB, SavedItemData, SellFor,
+};
 use crate::init_app_state::AppState;
 use crate::query_types::*;
 use crate::query_types::{AppError, AppError::*};
@@ -17,11 +19,7 @@ pub async fn items_from_db_to_items(
     let buy_for_vec = sqlx::query_as!(BuyFor, "SELECT * FROM BuyFor WHERE item_id = ANY($1)", &ids)
         .fetch_all(&mut *txn)
         .await
-        .map_err(|_| {
-            BadSqlQuery(String::from(
-                "BuyFor and SellFor Query did not run successfully",
-            ))
-        })?;
+        .bad_sql("BuyFor and SellFor")?;
 
     let sell_for_vec = sqlx::query_as!(
         SellFor,
@@ -30,15 +28,9 @@ pub async fn items_from_db_to_items(
     )
     .fetch_all(&mut *txn)
     .await
-    .map_err(|_| {
-        BadSqlQuery(String::from(
-            "BuyFor and SellFor Query did not run successfully",
-        ))
-    })?;
+    .bad_sql("BuyFor and SellFor")?;
 
-    txn.commit()
-        .await
-        .map_err(|_| BadSqlQuery(String::from("Item Query did not run successfully")))?;
+    txn.commit().await.bad_sql("Items")?;
 
     let mut hm: HashMap<String, (Vec<BuyFor>, Vec<SellFor>)> = HashMap::new();
     buy_for_vec.into_iter().for_each(|buy| {
@@ -74,6 +66,7 @@ pub async fn items_from_db_to_items(
 // the second approach is to query all at once as a join which does not have
 // the connections issue and is much easier to work with but is also much slower
 pub async fn get_items(
+    device: Device,
     Query(query_parms): Query<ItemQueryParams>,
     State(AppState {
         pgpool,
@@ -82,6 +75,7 @@ pub async fn get_items(
         next_tasks_call_timer: _,
     }): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
+    let save = query_parms.save.unwrap_or(true);
     let search = query_parms.search.unwrap_or(String::new());
     let asc = query_parms.asc.unwrap_or(false);
     let mut sort_by = query_parms
@@ -171,12 +165,8 @@ pub async fn get_items(
     // .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
     // return Ok(Json(items_test));
 
+    let mut txn = pgpool.begin().await.bad_sql("Items")?;
     let items_from_db;
-    let mut txn = pgpool
-        .begin()
-        .await
-        .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
-
     if sort_by == "flea_market" {
         let sql = format!(
             r#"SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
@@ -192,7 +182,7 @@ pub async fn get_items(
             .bind(offset as i64)
             .fetch_all(&mut *txn)
             .await
-            .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
+            .bad_sql("Items")?;
     } else {
         let sql = format!(
             r#"SELECT * FROM Item 
@@ -209,12 +199,39 @@ pub async fn get_items(
             .bind(offset as i64)
             .fetch_all(&mut *txn)
             .await
-            .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
+            .bad_sql("Items")?;
     }
 
     let items = items_from_db_to_items(items_from_db, txn).await?;
 
-    // save tasks in redis cache
+    // save last query
+    if let Some(device_id) = device.0 {
+        if save {
+            tokio::spawn(async move {
+                let _ = sqlx::query!(
+                    "UPDATE ItemQueryParams 
+                    SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
+                    device_id,
+                    search,
+                    asc,
+                    if sort_by.is_empty() {
+                        "base_price".to_string()
+                    } else {
+                        sort_by
+                    },
+                    if item_type.is_empty() {
+                        "any".to_string()
+                    } else {
+                        item_type
+                    },
+                )
+                .execute(&pgpool)
+                .await;
+            });
+        }
+    }
+
+    // save items in redis cache
     if use_redis {
         Item::set_vec(
             cache_key,
@@ -226,6 +243,47 @@ pub async fn get_items(
     }
 
     Ok(Json(items))
+}
+
+pub async fn get_device_item_query_parms(
+    device: Device,
+    State(app_state): State<AppState>,
+) -> Result<Json<DeviceItemQueryParams>, AppError> {
+    if device.0.is_none() {
+        return Err(BadRequest("Endpoint Requires a device id".into()));
+    }
+    let device_id = device.0.unwrap();
+
+    let mut txn = app_state.pgpool.begin().await.bad_sql("Items")?;
+
+    sqlx::query!(
+        "INSERT INTO DevicePreferences VALUES ($1) ON CONFLICT (id) DO NOTHING;",
+        device_id
+    )
+    .execute(&mut *txn)
+    .await
+    .bad_sql("Device Preferences")?;
+
+    sqlx::query!(
+        "INSERT INTO ItemQueryParams VALUES ($1) ON CONFLICT (id) DO NOTHING",
+        device_id
+    )
+    .execute(&mut *txn)
+    .await
+    .bad_sql("ItemQueryParams")?;
+
+    let v = sqlx::query_as!(
+        DeviceItemQueryParams,
+        "SELECT * FROM ItemQueryParams WHERE id = $1;",
+        device_id
+    )
+    .fetch_one(&mut *txn)
+    .await
+    .bad_sql("Items")?;
+
+    txn.commit().await.bad_sql("ItemQueryParams")?;
+
+    Ok(Json(v))
 }
 
 // returns flea market data by timestamp for a single id
@@ -251,7 +309,7 @@ pub async fn get_item_history(
     )
     .fetch_all(&app_state.pgpool)
     .await
-    .map_err(|_| BadSqlQuery(String::from("ItemHistory Query did not run successfully")))?;
+    .bad_sql("ItemHistory")?;
 
     SavedItemData::set_vec(
         cache_key,

@@ -10,15 +10,6 @@ type PageProps = {
 };
 
 async function DisplayTasks({ searchParams }: PageProps) {
-  const queryParams =
-    (await searchParams)?.queryParams ?? DEFAULT_TASK_QUERY_PARAMS;
-
-  const params = new URLSearchParams();
-  Object.entries(queryParams).forEach(([key, value]) => {
-    if (value.toString() === "") return;
-    params.append(key, value.toString());
-  });
-
   const cookieStore = await cookies();
   const deviceCookie = cookieStore.get(DEVICE_UUID_COOKIE_NAME);
   const deviceId = deviceCookie ? deviceCookie.value : undefined;
@@ -28,11 +19,29 @@ async function DisplayTasks({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
+  const res1 = await fetch(DOCKER_BACKEND + "/api/task_query_parms", {
+    cache: "no-store",
+    headers,
+  });
+  const resQueryParams = (await res1.json()) as TaskQueryParams;
+
+  const queryParams = (await searchParams)?.queryParams ?? {
+    ...DEFAULT_TASK_QUERY_PARAMS,
+    ...resQueryParams,
+  };
+
+  const params = new URLSearchParams();
+  Object.entries(queryParams).forEach(([key, value]) => {
+    if (value.toString() === "") return;
+    params.append(key, value.toString());
+  });
+
   const res2 = await fetch(DOCKER_BACKEND + "/api/tasks?" + params.toString(), {
     cache: "no-store",
     headers,
   });
   const tasks = (await res2.json()) as Task[];
+  queryParams.offset = queryParams.limit;
 
   const res3 = await fetch(DOCKER_BACKEND + "/api/get_completed", {
     cache: "no-store",

@@ -51,10 +51,10 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         {queryParams.asc ? "Ascending" : "Descending"}
       </button>
       <select
-        name="sortBy"
+        name="sort_by"
         className={dropdownClass}
-        defaultValue={queryParams.sortBy}
-        onChange={(e) => changeQueryParams("sortBy", e.target.value)}
+        defaultValue={queryParams.sort_by}
+        onChange={(e) => changeQueryParams("sort_by", e.target.value)}
       >
         {Object.entries(ALL_ITEM_SORTBY).map(([key, value]) => (
           <option key={key} value={key}>

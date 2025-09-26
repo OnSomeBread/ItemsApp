@@ -1,5 +1,5 @@
 use crate::api_routers::{Device, RedisCache, fetch_tasks_by_ids, get_time_in_seconds};
-use crate::database_types::{Objective, Task, TaskFromDB, TaskRequirement};
+use crate::database_types::{DeviceTaskQueryParams, Objective, Task, TaskFromDB, TaskRequirement};
 use crate::init_app_state::AppState;
 use crate::query_types::*;
 use crate::query_types::{AppError, AppError::*};
@@ -24,11 +24,7 @@ pub async fn tasks_from_db_to_tasks(
     )
     .fetch_all(&mut *txn)
     .await
-    .map_err(|_| {
-        BadSqlQuery(String::from(
-            "Objective and TaskRequirement Query did not run successfully",
-        ))
-    })?;
+    .bad_sql("Objective and Task Requirement")?;
     let task_requirement_vec = sqlx::query_as!(
         TaskRequirement,
         "SELECT * FROM TaskRequirement WHERE task_id = ANY($1)",
@@ -36,17 +32,11 @@ pub async fn tasks_from_db_to_tasks(
     )
     .fetch_all(&mut *txn)
     .await
-    .map_err(|_| {
-        BadSqlQuery(String::from(
-            "Objective and TaskRequirement Query did not run successfully",
-        ))
-    })?;
+    .bad_sql("Objective and Task Requirement")?;
 
-    txn.commit().await.map_err(|_| {
-        BadSqlQuery(String::from(
-            "Objective and TaskRequirement Query did not run successfully",
-        ))
-    })?;
+    txn.commit()
+        .await
+        .bad_sql("Objective and Task Requirement")?;
 
     let mut hm: HashMap<String, (Vec<Objective>, Vec<TaskRequirement>)> = HashMap::new();
     objective_vec.into_iter().for_each(|buy| {
@@ -86,6 +76,7 @@ pub async fn get_tasks(
         next_tasks_call_timer,
     }): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
+    let save = query_parms.save.unwrap_or(true);
     let search = query_parms.search.unwrap_or(String::new());
     let is_kappa = query_parms.is_kappa.unwrap_or(false);
     let is_lightkeeper = query_parms.is_lightkeeper.unwrap_or(false);
@@ -132,11 +123,7 @@ pub async fn get_tasks(
         }
     }
 
-    let mut txn = pgpool
-        .begin()
-        .await
-        .map_err(|_| BadSqlQuery(String::from("Tasks Query did not run successfully")))?;
-
+    let mut txn = pgpool.begin().await.bad_sql("Tasks")?;
     let tasks_from_db = sqlx::query_as!(
                 TaskFromDB,
                 "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
@@ -154,9 +141,38 @@ pub async fn get_tasks(
             )
             .fetch_all(&mut *txn)
             .await
-            .map_err(|_| BadSqlQuery(String::from("Tasks Query did not run successfully")))?;
+            .bad_sql("Tasks")?;
 
     let tasks = tasks_from_db_to_tasks(tasks_from_db, txn).await?;
+
+    if let Some(device_id) = device.0 {
+        if save {
+            tokio::spawn(async move {
+                let _ = sqlx::query!(
+                    "UPDATE TaskQueryParams 
+                    SET search = $2, is_kappa = $3, is_lightkeeper = $4, 
+                    player_lvl = $5, obj_type = $6, trader = $7 WHERE id = $1",
+                    device_id,
+                    search,
+                    is_kappa,
+                    is_lightkeeper,
+                    player_lvl as i32,
+                    if obj_type.is_empty() {
+                        "any".to_string()
+                    } else {
+                        obj_type
+                    },
+                    if trader.is_empty() {
+                        "any".to_string()
+                    } else {
+                        trader
+                    }
+                )
+                .execute(&pgpool)
+                .await;
+            });
+        }
+    }
 
     // save tasks in redis cache
     if use_redis {
@@ -170,6 +186,47 @@ pub async fn get_tasks(
     }
 
     Ok(Json(tasks))
+}
+
+pub async fn get_device_task_query_parms(
+    device: Device,
+    State(app_state): State<AppState>,
+) -> Result<Json<DeviceTaskQueryParams>, AppError> {
+    if device.0.is_none() {
+        return Err(BadRequest("Endpoint Requires a device id".into()));
+    }
+    let device_id = device.0.unwrap();
+
+    let mut txn = app_state.pgpool.begin().await.bad_sql("Tasks")?;
+
+    sqlx::query!(
+        "INSERT INTO DevicePreferences VALUES ($1) ON CONFLICT (id) DO NOTHING;",
+        device_id
+    )
+    .execute(&mut *txn)
+    .await
+    .bad_sql("Device Preferences")?;
+
+    sqlx::query!(
+        "INSERT INTO TaskQueryParams VALUES ($1) ON CONFLICT (id) DO NOTHING",
+        device_id
+    )
+    .execute(&mut *txn)
+    .await
+    .bad_sql("TaskQueryParams")?;
+
+    let v = sqlx::query_as!(
+        DeviceTaskQueryParams,
+        "SELECT * FROM TaskQueryParams WHERE id = $1;",
+        device_id
+    )
+    .fetch_one(&mut *txn)
+    .await
+    .bad_sql("Tasks")?;
+
+    txn.commit().await.bad_sql("TaskQueryParams")?;
+
+    Ok(Json(v))
 }
 
 // returns a HashMap which maps every task_id to a Vec<task_id, status> where status can only be
@@ -191,11 +248,7 @@ async fn fetch_adj_list(
     let task_requirements = sqlx::query_as!(TaskRequirement, "SELECT * FROM TaskRequirement")
         .fetch_all(&app_state.pgpool)
         .await
-        .map_err(|_| {
-            BadSqlQuery(String::from(
-                "TaskRequirement Query did not run successfully",
-            ))
-        })?;
+        .bad_sql("TaskRequirements")?;
 
     let mut adj_list = HashMap::new();
     task_requirements.into_iter().for_each(|req| {
@@ -243,9 +296,7 @@ async fn get_completed_task_by_device_id(
     pgpool: &PgPool,
     device_id: Uuid,
 ) -> Result<Vec<String>, AppError> {
-    let mut txn = pgpool.begin().await.map_err(|_| {
-        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
-    })?;
+    let mut txn = pgpool.begin().await.bad_sql("Device Preferences")?;
 
     sqlx::query!(
         "INSERT INTO DevicePreferences VALUES ($1) ON CONFLICT (id) DO NOTHING;",
@@ -253,9 +304,7 @@ async fn get_completed_task_by_device_id(
     )
     .execute(&mut *txn)
     .await
-    .map_err(|_| {
-        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
-    })?;
+    .bad_sql("Device Preferences")?;
 
     // grab the tasks the user already has set to completed
     let completed_tasks = sqlx::query_as!(
@@ -265,12 +314,10 @@ async fn get_completed_task_by_device_id(
     )
     .fetch_one(&mut *txn)
     .await
-    .map_err(|_| AppError::BadSqlQuery("Device Preferences Query did not run successfully".into()))?
+    .bad_sql("Device Preferences")?
     .completed_tasks;
 
-    txn.commit().await.map_err(|_| {
-        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
-    })?;
+    txn.commit().await.bad_sql("Device Preferences")?;
 
     Ok(completed_tasks)
 }
@@ -367,9 +414,7 @@ pub async fn set_completed_task(
     )
     .fetch_all(&app_state.pgpool)
     .await
-    .map_err(|_| {
-        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
-    })?;
+    .bad_sql("Device Preferences")?;
 
     Ok(())
 }
@@ -390,9 +435,7 @@ pub async fn clear_completed_tasks(
     )
     .execute(&app_state.pgpool)
     .await
-    .map_err(|_| {
-        AppError::BadSqlQuery("Device Preferences Query did not run successfully".into())
-    })?;
+    .bad_sql("Device Preferences")?;
 
     Ok(())
 }

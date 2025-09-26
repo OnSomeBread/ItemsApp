@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO TaskQueryParams VALUES ($1) ON CONFLICT (id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "13e1df5abb90b4db2ff7c80c43df08234b32853c82241171f45257eec1cc3b9a"
+}

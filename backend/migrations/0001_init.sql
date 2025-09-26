@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS BuyFor(
     min_trader_level INT NOT NULL,
     buy_limit INT NOT NULL,
     item_id CHAR(24) NOT NULL,
-    CONSTRAINT buys FOREIGN KEY (item_id) REFERENCES Item(_id)
+    CONSTRAINT buys FOREIGN KEY (item_id) REFERENCES Item(_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS SellFor(
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS SellFor(
     trader_name VARCHAR(24) NOT NULL,
     found_in_raid_required BOOL NOT NULL,
     item_id CHAR(24) NOT NULL,
-    CONSTRAINT sells FOREIGN KEY (item_id) REFERENCES Item(_id)
+    CONSTRAINT sells FOREIGN KEY (item_id) REFERENCES Item(_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS SavedItemData(
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS Objective(
     map_name VARCHAR(255) NOT NULL,
     map_wiki VARCHAR(2048) NOT NULL,
     task_id CHAR(24) NOT NULL,
-    CONSTRAINT objectives FOREIGN KEY (task_id) REFERENCES Task(_id)
+    CONSTRAINT objectives FOREIGN KEY (task_id) REFERENCES Task(_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS TaskRequirement(
@@ -75,7 +75,33 @@ CREATE TABLE IF NOT EXISTS TaskRequirement(
     status VARCHAR(128) NOT NULL,
     req_task_id CHAR(24) NOT NULL,
     task_id CHAR(24) NOT NULL,
-    CONSTRAINT taskRequirements FOREIGN KEY (task_id) REFERENCES Task(_id)
+    CONSTRAINT taskRequirements FOREIGN KEY (task_id) REFERENCES Task(_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS DevicePreferences(
+    id UUID PRIMARY KEY,
+    completed_tasks TEXT[] DEFAULT '{}' NOT NULL,
+    last_visited TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ItemQueryParams(
+    id UUID PRIMARY KEY,
+    search VARCHAR(255) DEFAULT '' NOT NULL,
+    sort_asc BOOL DEFAULT FALSE NOT NULL,
+    sort_by VARCHAR(64) DEFAULT 'flea_market' NOT NULL,
+    item_type VARCHAR(64) DEFAULT 'any' NOT NULL,
+    FOREIGN KEY (id) REFERENCES DevicePreferences(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS TaskQueryParams(
+    id UUID PRIMARY KEY,
+    search VARCHAR(255) DEFAULT '' NOT NULL,
+    is_kappa BOOL DEFAULT FALSE NOT NULL,
+    is_lightkeeper BOOL DEFAULT FALSE NOT NULL,
+    player_lvl INT DEFAULT 99 NOT NULL,
+    obj_type VARCHAR(64) DEFAULT 'any' NOT NULL,
+    trader VARCHAR(64) DEFAULT 'any' NOT NULL,
+    FOREIGN KEY (id) REFERENCES DevicePreferences(id) ON DELETE CASCADE
 );
 
 -- potential index ideas however from testing I believe the 

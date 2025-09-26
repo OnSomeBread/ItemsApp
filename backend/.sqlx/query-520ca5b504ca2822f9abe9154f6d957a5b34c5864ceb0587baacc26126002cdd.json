@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO ItemQueryParams VALUES ($1) ON CONFLICT (id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "520ca5b504ca2822f9abe9154f6d957a5b34c5864ceb0587baacc26126002cdd"
+}
