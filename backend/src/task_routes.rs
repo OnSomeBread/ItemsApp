@@ -103,6 +103,43 @@ pub async fn get_tasks(
         trader = String::new();
     }
 
+    // save query
+    if let Some(device_id) = device.0 {
+        if save {
+            let search = search.clone();
+            let is_kappa = is_kappa.clone();
+            let is_lightkeeper = is_lightkeeper.clone();
+            let player_lvl = player_lvl.clone();
+            let obj_type = obj_type.clone();
+            let trader = trader.clone();
+            let pgpool = pgpool.clone();
+            tokio::spawn(async move {
+                let _ = sqlx::query!(
+                    "UPDATE TaskQueryParams 
+                    SET search = $2, is_kappa = $3, is_lightkeeper = $4, 
+                    player_lvl = $5, obj_type = $6, trader = $7 WHERE id = $1",
+                    device_id,
+                    search,
+                    is_kappa,
+                    is_lightkeeper,
+                    player_lvl as i32,
+                    if obj_type.is_empty() {
+                        "any".to_string()
+                    } else {
+                        obj_type
+                    },
+                    if trader.is_empty() {
+                        "any".to_string()
+                    } else {
+                        trader
+                    }
+                )
+                .execute(&pgpool)
+                .await;
+            });
+        }
+    }
+
     let cache_key = format!(
         "{}k{}l{}{}{}p{}l{}o{}",
         search,
@@ -144,35 +181,6 @@ pub async fn get_tasks(
             .bad_sql("Tasks")?;
 
     let tasks = tasks_from_db_to_tasks(tasks_from_db, txn).await?;
-
-    if let Some(device_id) = device.0 {
-        if save {
-            tokio::spawn(async move {
-                let _ = sqlx::query!(
-                    "UPDATE TaskQueryParams 
-                    SET search = $2, is_kappa = $3, is_lightkeeper = $4, 
-                    player_lvl = $5, obj_type = $6, trader = $7 WHERE id = $1",
-                    device_id,
-                    search,
-                    is_kappa,
-                    is_lightkeeper,
-                    player_lvl as i32,
-                    if obj_type.is_empty() {
-                        "any".to_string()
-                    } else {
-                        obj_type
-                    },
-                    if trader.is_empty() {
-                        "any".to_string()
-                    } else {
-                        trader
-                    }
-                )
-                .execute(&pgpool)
-                .await;
-            });
-        }
-    }
 
     // save tasks in redis cache
     if use_redis {

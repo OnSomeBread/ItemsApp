@@ -100,6 +100,38 @@ pub async fn get_items(
         item_type = String::new();
     }
 
+    // save query
+    if let Some(device_id) = device.0 {
+        if save {
+            let search = search.clone();
+            let asc = asc.clone();
+            let sort_by = sort_by.clone();
+            let item_type = item_type.clone();
+            let pgpool = pgpool.clone();
+            tokio::spawn(async move {
+                let _ = sqlx::query!(
+                    "UPDATE ItemQueryParams 
+                    SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
+                    device_id,
+                    search,
+                    asc,
+                    if sort_by.is_empty() {
+                        "base_price".to_string()
+                    } else {
+                        sort_by
+                    },
+                    if item_type.is_empty() {
+                        "any".to_string()
+                    } else {
+                        item_type
+                    },
+                )
+                .execute(&pgpool)
+                .await;
+            });
+        }
+    }
+
     // redis performance falls off at large amounts of items
     let use_redis = limit <= 100;
     let cache_key = format!(
@@ -203,33 +235,6 @@ pub async fn get_items(
     }
 
     let items = items_from_db_to_items(items_from_db, txn).await?;
-
-    // save last query
-    if let Some(device_id) = device.0 {
-        if save {
-            tokio::spawn(async move {
-                let _ = sqlx::query!(
-                    "UPDATE ItemQueryParams 
-                    SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
-                    device_id,
-                    search,
-                    asc,
-                    if sort_by.is_empty() {
-                        "base_price".to_string()
-                    } else {
-                        sort_by
-                    },
-                    if item_type.is_empty() {
-                        "any".to_string()
-                    } else {
-                        item_type
-                    },
-                )
-                .execute(&pgpool)
-                .await;
-            });
-        }
-    }
 
     // save items in redis cache
     if use_redis {
