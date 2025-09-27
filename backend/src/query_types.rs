@@ -34,7 +34,7 @@ pub trait AppErrorHandling<T> {
 
 impl<T> AppErrorHandling<T> for Result<T, sqlx::Error> {
     fn bad_sql(self, name: &'static str) -> Result<T, AppError> {
-        self.map_err(|_| AppError::BadSqlQuery(format!("{} Query did not run successfully", name)))
+        self.map_err(|_| AppError::BadSqlQuery(format!("{name} Query did not run successfully")))
     }
 }
 
@@ -129,6 +129,7 @@ impl From<DeviceTaskQueryParams> for TaskQueryParams {
             is_lightkeeper: Some(parms.is_lightkeeper),
             obj_type: Some(parms.obj_type),
             trader: Some(parms.trader),
+            #[allow(clippy::cast_sign_loss)]
             player_lvl: Some(parms.player_lvl as u32),
             limit: None,
             offset: None,
@@ -138,7 +139,7 @@ impl From<DeviceTaskQueryParams> for TaskQueryParams {
     }
 }
 
-pub const VALID_SORT_BY: &'static [&'static str] = &[
+pub const VALID_SORT_BY: &[&str] = &[
     "_id",
     "item_name",
     "short_name",
@@ -151,7 +152,7 @@ pub const VALID_SORT_BY: &'static [&'static str] = &[
     "flea_market",
 ];
 
-pub const VALID_ITEM_TYPES: &'static [&'static str] = &[
+pub const VALID_ITEM_TYPES: &[&str] = &[
     "any",
     "ammo",
     "ammobox",
@@ -179,7 +180,7 @@ pub const VALID_ITEM_TYPES: &'static [&'static str] = &[
     "wearable",
 ];
 
-pub const VALID_OBJ_TYPES: &'static [&'static str] = &[
+pub const VALID_OBJ_TYPES: &[&str] = &[
     "shoot",
     "plantquestitem",
     "giveitem",
@@ -200,7 +201,7 @@ pub const VALID_OBJ_TYPES: &'static [&'static str] = &[
     "skill",
 ];
 
-pub const VALID_TRADERS: &'static [&'static str] = &[
+pub const VALID_TRADERS: &[&str] = &[
     "prapor",
     "therapist",
     "fence",

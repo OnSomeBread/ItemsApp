@@ -25,8 +25,8 @@ trait Test: DeserializeOwned {
     fn get_id(&self) -> &str;
     fn get_name(&self) -> &str;
 
-    fn get_ids(values: &Vec<Self>) -> Vec<String> {
-        values.into_iter().map(|x| x.get_id().to_string()).collect()
+    fn get_ids(values: &[Self]) -> Vec<String> {
+        values.iter().map(|x| x.get_id().to_string()).collect()
     }
 
     async fn valid_param_unique_testing(key: &'static str, valid_options: Vec<String>) {
@@ -44,7 +44,7 @@ trait Test: DeserializeOwned {
             ))
             .await;
 
-            assert!(data.len() > 0);
+            assert!(!data.is_empty());
 
             let ids: Vec<String> = Self::get_ids(&data);
             assert!(!prev_requests.contains(&ids));
@@ -57,10 +57,10 @@ trait Test: DeserializeOwned {
             Self::get_request_vec(format!("{}{}{}", URL, Self::get_base(), "?")).await;
         let ids = Self::get_ids(&values_from_base);
         let mut final_str = String::new();
-        ids.iter().for_each(|v| {
+        for v in &ids {
             final_str += "&ids=";
-            final_str += v.as_str()
-        });
+            final_str += v.as_str();
+        }
 
         // removes inital &
         final_str.replace_range(0..1, "");
@@ -68,23 +68,23 @@ trait Test: DeserializeOwned {
         let values_from_ids =
             Self::get_request_vec(format!("{}{}{}{}", URL, Self::get_base(), "?", final_str)).await;
 
-        assert!(values_from_base.len() > 0 && values_from_ids.len() > 0);
+        assert!(!values_from_base.is_empty() && !values_from_ids.is_empty());
         assert!(Self::get_ids(&values_from_base) == Self::get_ids(&values_from_ids));
     }
 
     async fn search_testing() {
         // test for strings that could break the backend
         let test_strings: &'static [&'static str] = &[
-            r#"' OR 1=1 -- Test User'"#,
-            r#"'"#,
-            r#""#,
-            r#"OR 1=1 --"#,
-            r#"Test User"#,
+            "' OR 1=1 -- Test User'",
+            "'",
+            "",
+            "OR 1=1 --",
+            "Test User",
             r#"!@#$%^&*().,;:'"?"#,
-            r#"1' or '1' = '1"#,
-            r#"1'; DROP TABLE users; --"#,
+            "1' or '1' = '1",
+            "1'; DROP TABLE users; --",
             r#"" or ""=""#,
-            r#"검색 텍스트"#,
+            "검색 텍스트",
         ];
 
         for t in test_strings {
@@ -97,11 +97,11 @@ trait Test: DeserializeOwned {
         let values =
             Self::get_request_vec(format!("{}{}{}", URL, Self::get_base(), "?search=a")).await;
 
-        assert!(values.len() > 0);
+        assert!(!values.is_empty());
         assert!(
             values
                 .iter()
-                .all(|x| x.get_name().contains("a") || x.get_name().contains("A"))
+                .all(|x| x.get_name().contains('a') || x.get_name().contains('A'))
         );
     }
 
@@ -128,7 +128,7 @@ trait Test: DeserializeOwned {
 
 impl Test for Item {
     fn get_base() -> String {
-        return String::from("/items");
+        String::from("/items")
     }
 
     fn get_id(&self) -> &str {
@@ -142,7 +142,7 @@ impl Test for Item {
 
 impl Test for Task {
     fn get_base() -> String {
-        return String::from("/tasks");
+        String::from("/tasks")
     }
     fn get_id(&self) -> &str {
         &self._id
@@ -152,7 +152,7 @@ impl Test for Task {
     }
 }
 
-const URL: &'static str = "http://127.0.0.1:8000/api";
+const URL: &str = "http://127.0.0.1:8000/api";
 
 #[tokio::test]
 async fn test_health() {
@@ -170,7 +170,7 @@ async fn test_items_valid_sort_by_endpoint() {
     // this tests enforces that all valid sortby have a unique non empty output
     Item::valid_param_unique_testing(
         "sort_by",
-        VALID_SORT_BY.iter().map(|x| x.to_string()).collect(),
+        VALID_SORT_BY.iter().map(|x| (*x).to_string()).collect(),
     )
     .await;
 }
@@ -180,7 +180,7 @@ async fn test_items_valid_item_types_endpoint() {
     // this tests enforces that all valid item types have a unique non empty output
     Item::valid_param_unique_testing(
         "type",
-        VALID_ITEM_TYPES.iter().map(|x| x.to_string()).collect(),
+        VALID_ITEM_TYPES.iter().map(|x| (*x).to_string()).collect(),
     )
     .await;
 }
@@ -190,7 +190,7 @@ async fn test_items_asc_endpoint() {
     // this tests enforces that asc and desc have a unique non empty output
     let asc = Item::get_request_vec(format!("{}{}", URL, "/items?asc=true&limit=100")).await;
     let desc = Item::get_request_vec(format!("{}{}", URL, "/items?asc=false&limit=100")).await;
-    assert!(asc.len() > 0 && desc.len() > 0);
+    assert!(!asc.is_empty() && !desc.is_empty());
     assert!(Item::get_ids(&asc) != Item::get_ids(&desc));
 }
 
@@ -199,7 +199,7 @@ async fn test_tasks_valid_obj_types_endpoint() {
     // this tests enforces that all valid obj types have a unique non empty output
     Task::valid_param_unique_testing(
         "obj_type",
-        VALID_OBJ_TYPES.iter().map(|x| x.to_string()).collect(),
+        VALID_OBJ_TYPES.iter().map(|x| (*x).to_string()).collect(),
     )
     .await;
 }
@@ -209,7 +209,7 @@ async fn test_tasks_valid_traders_endpoint() {
     // this tests enforces that all valid traders have a unique non empty output
     Task::valid_param_unique_testing(
         "trader",
-        VALID_TRADERS.iter().map(|x| x.to_string()).collect(),
+        VALID_TRADERS.iter().map(|x| (*x).to_string()).collect(),
     )
     .await;
 }
@@ -227,7 +227,7 @@ async fn test_task_kappa_lightkeeper_endpoint() {
         ))
     );
 
-    assert!(neither.len() > 0 && kappa.len() > 0 && lightkeeper.len() > 0);
+    assert!(!neither.is_empty() && !kappa.is_empty() && !lightkeeper.is_empty());
     assert!(
         Task::get_ids(&neither) != Task::get_ids(&kappa)
             && Task::get_ids(&neither) != Task::get_ids(&lightkeeper)

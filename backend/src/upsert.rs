@@ -1,4 +1,4 @@
-use crate::deserialize_json_types::*;
+use crate::deserialize_json_types::{ITEMS_QUERY, Item, TASKS_QUERY, Task};
 use chrono::Utc;
 use reqwest::Client;
 use serde::Deserialize;
@@ -10,7 +10,7 @@ pub async fn upsert_data_file(
     page: &str,
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
-    println!("starting {} upsert", page);
+    println!("starting {page} upsert");
     let file = std::fs::File::open(file_name)?;
     let json: Value = serde_json::from_reader(file)?;
 
@@ -46,7 +46,7 @@ pub async fn upsert_data_api(
     page: &str,
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
-    println!("starting {} upsert", page);
+    println!("starting {page} upsert");
 
     if page == "items" {
         let json = run_query(ITEMS_QUERY).await?;
@@ -76,8 +76,9 @@ pub async fn upsert_data_api(
 }
 
 // inserts all of the input items into the db
+#[allow(clippy::too_many_lines)]
 async fn upsert_items(
-    items: &Vec<Item>,
+    items: &[Item],
     pool: &sqlx::Pool<sqlx::Postgres>,
     is_api_call: bool,
 ) -> Result<(), Box<dyn Error>> {

@@ -1,4 +1,4 @@
-use crate::upsert::*;
+use crate::upsert::{upsert_data_api, upsert_data_file};
 use bb8_redis::{RedisConnectionManager, bb8};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -23,7 +23,7 @@ pub async fn init_app_state(
         match PgPool::connect(&postgres_url).await {
             Ok(p) => break p,
             Err(e) => {
-                eprintln!("Waiting for DB... {}", e);
+                eprintln!("Waiting for DB... {e}");
                 tokio::time::sleep(Duration::from_secs(2)).await;
             }
         }

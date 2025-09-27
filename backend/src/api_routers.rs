@@ -1,8 +1,17 @@
-use crate::database_types::*;
+#![allow(clippy::cast_possible_wrap)]
+
+use crate::database_types::{Item, ItemFromDB, SavedItemData, Task, TaskFromDB};
 use crate::init_app_state::AppState;
-use crate::item_routes::*;
-use crate::query_types::{AppError::*, *};
-use crate::task_routes::*;
+use crate::item_routes::{
+    get_device_item_query_parms, get_item_history, get_items, items_from_db_to_items,
+};
+use crate::query_types::{
+    AppError, AppError::UninitalizedDatabase, AppErrorHandling, IdsQueryParams, Stats,
+};
+use crate::task_routes::{
+    clear_completed_tasks, get_adj_list, get_completed_tasks, get_device_task_query_parms,
+    get_tasks, set_completed_task, tasks_from_db_to_tasks,
+};
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::{Router, extract::State, response::Json, routing::get, routing::post};
@@ -25,11 +34,12 @@ async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
     )
     .map_err(|_| UninitalizedDatabase(String::from("The Database has not yet been initalized")))?;
 
-    match items_count.unwrap_or(0) == 0 || tasks_count.unwrap_or(0) == 0 {
-        true => Err(UninitalizedDatabase(String::from(
+    if items_count.unwrap_or(0) == 0 || tasks_count.unwrap_or(0) == 0 {
+        Err(UninitalizedDatabase(String::from(
             "The Database has not yet been initalized",
-        ))),
-        false => Ok(String::from("Status Ok")),
+        )))
+    } else {
+        Ok(String::from("Status Ok"))
     }
 }
 
@@ -83,10 +93,10 @@ pub fn get_time_in_seconds(timer: &Arc<Mutex<Option<Instant>>>) -> Option<i64> {
 pub trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
     async fn fetch_by_ids(
         pgpool: &sqlx::PgPool,
-        not_found_ids: &Vec<String>,
+        not_found_ids: &[String],
     ) -> Result<Vec<Self>, AppError>;
 
-    fn _id(&self) -> &str;
+    fn id(&self) -> &str;
 
     fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>>;
 }
@@ -94,7 +104,7 @@ pub trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
 impl Page for Item {
     async fn fetch_by_ids(
         pgpool: &sqlx::PgPool,
-        not_found_ids: &Vec<String>,
+        not_found_ids: &[String],
     ) -> Result<Vec<Self>, AppError> {
         let mut txn = pgpool.begin().await.bad_sql("Items by Ids")?;
         let items_from_db = sqlx::query_as!(
@@ -106,10 +116,10 @@ impl Page for Item {
         .await
         .bad_sql("Items by Ids")?;
 
-        Ok(items_from_db_to_items(items_from_db, txn).await?)
+        items_from_db_to_items(items_from_db, txn).await
     }
 
-    fn _id(&self) -> &str {
+    fn id(&self) -> &str {
         &self._id
     }
 
@@ -120,7 +130,7 @@ impl Page for Item {
 impl Page for Task {
     async fn fetch_by_ids(
         pgpool: &sqlx::PgPool,
-        not_found_ids: &Vec<String>,
+        not_found_ids: &[String],
     ) -> Result<Vec<Self>, AppError> {
         let mut txn = pgpool.begin().await.bad_sql("Tasks by Ids")?;
         let tasks_from_db = sqlx::query_as!(
@@ -132,10 +142,10 @@ impl Page for Task {
         .await
         .bad_sql("Tasks by Ids")?;
 
-        Ok(tasks_from_db_to_tasks(tasks_from_db, txn).await?)
+        tasks_from_db_to_tasks(tasks_from_db, txn).await
     }
 
-    fn _id(&self) -> &str {
+    fn id(&self) -> &str {
         &self._id
     }
 
@@ -170,19 +180,19 @@ pub async fn fetch_tasks_by_ids<T: Page>(
 
     let pool = app_state.redispool.clone();
     let tokio_values = values.clone();
-    let api_call_timer = T::get_app_state_timer(&app_state);
+    let api_call_timer = T::get_app_state_timer(app_state);
 
     // store the items that have not been found in redis cache
     tokio::spawn(async move {
         if let Ok(mut conn) = pool.get().await {
             for value in tokio_values {
                 if let Ok(data) = serde_json::to_string(&value) {
-                    let value_id = value._id();
-                    let _: redis::RedisResult<()> = conn.set(&value_id, data).await;
+                    let value_id = value.id();
+                    let _: redis::RedisResult<()> = conn.set(value_id, data).await;
 
                     if let Some(time_in_seconds) = get_time_in_seconds(&api_call_timer) {
                         let _: redis::RedisResult<()> =
-                            conn.expire(&value_id, time_in_seconds).await;
+                            conn.expire(value_id, time_in_seconds).await;
                     }
                 }
             }
@@ -191,7 +201,7 @@ pub async fn fetch_tasks_by_ids<T: Page>(
 
     // add back the found items
     values.extend(found_values);
-    values.sort_by_key(|v| v._id().to_owned());
+    values.sort_by_key(|v| v.id().to_owned());
     Ok(values)
 }
 
@@ -248,14 +258,13 @@ pub trait RedisCache: DeserializeOwned + Serialize + Send + 'static {
         api_call: Arc<Mutex<Option<Instant>>>,
     ) {
         tokio::spawn(async move {
-            if let Ok(mut conn) = redispool.get().await {
-                if let Ok(data) = serde_json::to_string(&input_vec) {
-                    let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
+            if let Ok(mut conn) = redispool.get().await
+                && let Ok(data) = serde_json::to_string(&input_vec)
+            {
+                let _: redis::RedisResult<()> = conn.set(cache_key.clone(), data).await;
 
-                    if let Some(time_in_seconds) = get_time_in_seconds(&api_call) {
-                        let _: redis::RedisResult<()> =
-                            conn.expire(cache_key, time_in_seconds).await;
-                    }
+                if let Some(time_in_seconds) = get_time_in_seconds(&api_call) {
+                    let _: redis::RedisResult<()> = conn.expire(cache_key, time_in_seconds).await;
                 }
             }
         });

@@ -3,8 +3,10 @@ use crate::database_types::{
     BuyFor, DeviceItemQueryParams, Item, ItemFromDB, SavedItemData, SellFor,
 };
 use crate::init_app_state::AppState;
-use crate::query_types::*;
-use crate::query_types::{AppError, AppError::*};
+use crate::query_types::{AppError, AppError::BadRequest};
+use crate::query_types::{
+    AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, VALID_ITEM_TYPES, VALID_SORT_BY,
+};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use std::collections::{HashMap, HashSet};
@@ -33,27 +35,27 @@ pub async fn items_from_db_to_items(
     txn.commit().await.bad_sql("Items")?;
 
     let mut hm: HashMap<String, (Vec<BuyFor>, Vec<SellFor>)> = HashMap::new();
-    buy_for_vec.into_iter().for_each(|buy| {
+    for buy in buy_for_vec {
         hm.entry(buy.item_id.clone())
             .or_insert((vec![], vec![]))
             .0
-            .push(buy)
-    });
+            .push(buy);
+    }
 
-    sell_for_vec.into_iter().for_each(|sell| {
+    for sell in sell_for_vec {
         hm.entry(sell.item_id.clone())
             .or_insert((vec![], vec![]))
             .1
-            .push(sell)
-    });
+            .push(sell);
+    }
 
     Ok(items_from_db
         .into_iter()
         .map(|item_from_db| {
             let mut item = Item::from(item_from_db);
             let (buys, sells) = hm.entry(item._id.clone()).or_insert((vec![], vec![]));
-            item.buys = buys.drain(..).collect();
-            item.sells = sells.drain(..).collect();
+            item.buys = std::mem::take(buys);
+            item.sells = std::mem::take(sells);
             item
         })
         .collect())
@@ -65,6 +67,7 @@ pub async fn items_from_db_to_items(
 // for multiple runs then slows down presumibly from the extra connections
 // the second approach is to query all at once as a join which does not have
 // the connections issue and is much easier to work with but is also much slower
+#[allow(clippy::too_many_lines)]
 pub async fn get_items(
     device: Device,
     Query(query_parms): Query<ItemQueryParams>,
@@ -89,47 +92,44 @@ pub async fn get_items(
     let limit = std::cmp::min(query_parms.limit.unwrap_or(30), 100);
     let offset = query_parms.offset.unwrap_or(0);
 
-    let valid_sort_by: HashSet<&str> = VALID_SORT_BY.iter().map(|&x| x).collect();
-    if sort_by == String::from("any") || !valid_sort_by.contains(sort_by.as_str()) {
+    let valid_sort_by: HashSet<&str> = VALID_SORT_BY.iter().copied().collect();
+    if sort_by == "any" || !valid_sort_by.contains(sort_by.as_str()) {
         sort_by = String::from("base_price");
     }
 
-    let valid_item_type: HashSet<&str> = VALID_ITEM_TYPES.iter().map(|&x| x).collect();
+    let valid_item_type: HashSet<&str> = VALID_ITEM_TYPES.iter().copied().collect();
 
     if item_type == "any" || !valid_item_type.contains(item_type.as_str()) {
         item_type = String::new();
     }
 
     // save query
-    if let Some(device_id) = device.0 {
-        if save {
-            let search = search.clone();
-            let asc = asc.clone();
-            let sort_by = sort_by.clone();
-            let item_type = item_type.clone();
-            let pgpool = pgpool.clone();
-            tokio::spawn(async move {
-                let _ = sqlx::query!(
-                    "UPDATE ItemQueryParams 
+    if save && let Some(device_id) = device.0 {
+        let search = search.clone();
+        let sort_by = sort_by.clone();
+        let item_type = item_type.clone();
+        let pgpool = pgpool.clone();
+        tokio::spawn(async move {
+            let _ = sqlx::query!(
+                "UPDATE ItemQueryParams
                     SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
-                    device_id,
-                    search,
-                    asc,
-                    if sort_by.is_empty() {
-                        "base_price".to_string()
-                    } else {
-                        sort_by
-                    },
-                    if item_type.is_empty() {
-                        "any".to_string()
-                    } else {
-                        item_type
-                    },
-                )
-                .execute(&pgpool)
-                .await;
-            });
-        }
+                device_id,
+                search,
+                asc,
+                if sort_by.is_empty() {
+                    "base_price".to_string()
+                } else {
+                    sort_by
+                },
+                if item_type.is_empty() {
+                    "any".to_string()
+                } else {
+                    item_type
+                },
+            )
+            .execute(&pgpool)
+            .await;
+        });
     }
 
     // redis performance falls off at large amounts of items
@@ -144,29 +144,11 @@ pub async fn get_items(
         offset
     );
 
-    if use_redis {
-        if let Some(values) = Item::get_vec(&cache_key, &redispool).await? {
-            return Ok(Json(values));
-        }
+    if use_redis && let Some(values) = Item::get_vec(&cache_key, &redispool).await? {
+        return Ok(Json(values));
     }
 
     // welp doing this is much cleaner but far slower than the main query ¯\_(ツ)_/¯
-    // let items_test: Vec<Item> = sqlx::query_as!(
-    //         Item,
-    //         r#"SELECT i.*,
-    //         COALESCE(ARRAY_AGG((b.*)) FILTER (WHERE b.item_id IS NOT NULL), '{}') AS "buys!:Vec<BuyFor>",
-    //         COALESCE(ARRAY_AGG((s.*)) FILTER (WHERE s.item_id IS NOT NULL), '{}') AS "sells!:Vec<SellFor>"
-    //         FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id LEFT JOIN SellFor s ON i._id = s.item_id
-
-    //         WHERE i.item_name ILIKE $1 AND i.item_types ILIKE $2
-    //         GROUP BY i._id ORDER BY i.base_price DESC LIMIT $3 OFFSET $4;"#,
-    //         format!("%{}%", search),
-    //         format!("%{}%", item_type),
-    //         limit as i64,
-    //         offset as i64
-    //     ).fetch_all(&pgpool).await
-    //     .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
-    // return Ok(Json(items_test));
 
     // THIS QUERY REQUIRES INDEX ON item_id FOR BOTH buyfor and sellfor but is faster than above approach
     // let items_test: Vec<Item> = sqlx::query_as!(
@@ -198,41 +180,40 @@ pub async fn get_items(
     // return Ok(Json(items_test));
 
     let mut txn = pgpool.begin().await.bad_sql("Items")?;
-    let items_from_db;
-    if sort_by == "flea_market" {
+    let items_from_db = if sort_by == "flea_market" {
         let sql = format!(
-            r#"SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
+            "SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
             WHERE LOWER(b.trader_name) = 'flea market' AND i.item_name ILIKE $1 AND i.item_types ILIKE $2 
-            ORDER BY b.price_rub {} LIMIT $3 OFFSET $4;"#,
+            ORDER BY b.price_rub {} LIMIT $3 OFFSET $4;",
             if asc { "ASC" } else { "DESC" },
         );
 
-        items_from_db = sqlx::query_as(&sql)
-            .bind(format!("%{}%", search))
-            .bind(format!("%{}%", item_type))
-            .bind(limit as i64)
-            .bind(offset as i64)
+        sqlx::query_as(&sql)
+            .bind(format!("%{search}%"))
+            .bind(format!("%{item_type}%"))
+            .bind(i64::from(limit))
+            .bind(i64::from(offset))
             .fetch_all(&mut *txn)
             .await
-            .bad_sql("Items")?;
+            .bad_sql("Items")?
     } else {
         let sql = format!(
-            r#"SELECT * FROM Item 
+            "SELECT * FROM Item 
             WHERE item_name ILIKE $1 AND item_types ILIKE $2 
-            ORDER BY {} {} LIMIT $3 OFFSET $4"#,
+            ORDER BY {} {} LIMIT $3 OFFSET $4",
             sort_by,
             if asc { "ASC" } else { "DESC" },
         );
 
-        items_from_db = sqlx::query_as(&sql)
-            .bind(format!("%{}%", search))
-            .bind(format!("%{}%", item_type))
-            .bind(limit as i64)
-            .bind(offset as i64)
+        sqlx::query_as(&sql)
+            .bind(format!("%{search}%"))
+            .bind(format!("%{item_type}%"))
+            .bind(i64::from(limit))
+            .bind(i64::from(offset))
             .fetch_all(&mut *txn)
             .await
-            .bad_sql("Items")?;
-    }
+            .bad_sql("Items")?
+    };
 
     let items = items_from_db_to_items(items_from_db, txn).await?;
 

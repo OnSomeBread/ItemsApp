@@ -1,8 +1,8 @@
 use crate::api_routers::{Device, RedisCache, fetch_tasks_by_ids, get_time_in_seconds};
 use crate::database_types::{DeviceTaskQueryParams, Objective, Task, TaskFromDB, TaskRequirement};
 use crate::init_app_state::AppState;
-use crate::query_types::*;
-use crate::query_types::{AppError, AppError::*};
+use crate::query_types::{AppError, AppError::BadRequest};
+use crate::query_types::{AppErrorHandling, TaskQueryParams, VALID_OBJ_TYPES, VALID_TRADERS};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
@@ -39,19 +39,19 @@ pub async fn tasks_from_db_to_tasks(
         .bad_sql("Objective and Task Requirement")?;
 
     let mut hm: HashMap<String, (Vec<Objective>, Vec<TaskRequirement>)> = HashMap::new();
-    objective_vec.into_iter().for_each(|buy| {
+    for buy in objective_vec {
         hm.entry(buy.task_id.clone())
             .or_insert((vec![], vec![]))
             .0
-            .push(buy)
-    });
+            .push(buy);
+    }
 
-    task_requirement_vec.into_iter().for_each(|sell| {
+    for sell in task_requirement_vec {
         hm.entry(sell.task_id.clone())
             .or_insert((vec![], vec![]))
             .1
-            .push(sell)
-    });
+            .push(sell);
+    }
 
     Ok(tasks_from_db
         .into_iter()
@@ -59,13 +59,14 @@ pub async fn tasks_from_db_to_tasks(
             let mut task = Task::from(task_from_db);
             let (objectives, task_requirements) =
                 hm.entry(task._id.clone()).or_insert((vec![], vec![]));
-            task.objectives = objectives.drain(..).collect();
-            task.task_requirements = task_requirements.drain(..).collect();
+            task.objectives = std::mem::take(objectives);
+            task.task_requirements = std::mem::take(task_requirements);
             task
         })
         .collect())
 }
 
+#[allow(clippy::too_many_lines)]
 pub async fn get_tasks(
     device: Device,
     Query(query_parms): Query<TaskQueryParams>,
@@ -82,62 +83,57 @@ pub async fn get_tasks(
     let is_lightkeeper = query_parms.is_lightkeeper.unwrap_or(false);
     let mut obj_type = query_parms.obj_type.unwrap_or(String::new()).to_lowercase();
     let mut trader = query_parms.trader.unwrap_or(String::new()).to_lowercase();
-    let player_lvl = query_parms.player_lvl.unwrap_or(99);
+    #[allow(clippy::cast_possible_wrap)]
+    let player_lvl = query_parms.player_lvl.unwrap_or(99) as i32;
     let limit = query_parms.limit.unwrap_or(30);
     let offset = query_parms.offset.unwrap_or(0);
     let include_completed = query_parms.include_completed.unwrap_or(true);
-    let ids; //query_parms.ids.unwrap_or(Vec::new());
-    if include_completed && device.0.is_some() {
-        ids = get_completed_task_by_device_id(&pgpool, device.0.unwrap()).await?;
+    let ids = if include_completed && device.0.is_some() {
+        get_completed_task_by_device_id(&pgpool, device.0.unwrap()).await?
     } else {
-        ids = vec![];
-    }
+        vec![]
+    };
 
-    let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().map(|&x| x).collect();
-    if obj_type == String::from("any") || !valid_obj_types.contains(obj_type.as_str()) {
+    let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().copied().collect();
+    if obj_type == "any" || !valid_obj_types.contains(obj_type.as_str()) {
         obj_type = String::new();
     }
 
-    let valid_traders: HashSet<&str> = VALID_TRADERS.iter().map(|&x| x).collect();
-    if trader == String::from("any") || !valid_traders.contains(trader.as_str()) {
+    let valid_traders: HashSet<&str> = VALID_TRADERS.iter().copied().collect();
+    if trader == "any" || !valid_traders.contains(trader.as_str()) {
         trader = String::new();
     }
 
     // save query
-    if let Some(device_id) = device.0 {
-        if save {
-            let search = search.clone();
-            let is_kappa = is_kappa.clone();
-            let is_lightkeeper = is_lightkeeper.clone();
-            let player_lvl = player_lvl.clone();
-            let obj_type = obj_type.clone();
-            let trader = trader.clone();
-            let pgpool = pgpool.clone();
-            tokio::spawn(async move {
-                let _ = sqlx::query!(
-                    "UPDATE TaskQueryParams 
+    if save && let Some(device_id) = device.0 {
+        let search = search.clone();
+        let obj_type = obj_type.clone();
+        let trader = trader.clone();
+        let pgpool = pgpool.clone();
+        tokio::spawn(async move {
+            let _ = sqlx::query!(
+                "UPDATE TaskQueryParams 
                     SET search = $2, is_kappa = $3, is_lightkeeper = $4, 
                     player_lvl = $5, obj_type = $6, trader = $7 WHERE id = $1",
-                    device_id,
-                    search,
-                    is_kappa,
-                    is_lightkeeper,
-                    player_lvl as i32,
-                    if obj_type.is_empty() {
-                        "any".to_string()
-                    } else {
-                        obj_type
-                    },
-                    if trader.is_empty() {
-                        "any".to_string()
-                    } else {
-                        trader
-                    }
-                )
-                .execute(&pgpool)
-                .await;
-            });
-        }
+                device_id,
+                search,
+                is_kappa,
+                is_lightkeeper,
+                player_lvl,
+                if obj_type.is_empty() {
+                    "any".to_string()
+                } else {
+                    obj_type
+                },
+                if trader.is_empty() {
+                    "any".to_string()
+                } else {
+                    trader
+                }
+            )
+            .execute(&pgpool)
+            .await;
+        });
     }
 
     let cache_key = format!(
@@ -154,10 +150,8 @@ pub async fn get_tasks(
 
     // try not to create too many cache keys when its not needed
     let use_redis = ids.is_empty();
-    if use_redis {
-        if let Some(values) = Task::get_vec(&cache_key, &redispool).await? {
-            return Ok(Json(values));
-        }
+    if use_redis && let Some(values) = Task::get_vec(&cache_key, &redispool).await? {
+        return Ok(Json(values));
     }
 
     let mut txn = pgpool.begin().await.bad_sql("Tasks")?;
@@ -168,13 +162,13 @@ pub async fn get_tasks(
                 EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7)ORDER BY _id ASC LIMIT $8 OFFSET $9",
                 format!("%{}%", search),
                 format!("%{}%", trader),
-                player_lvl as i32,
+                player_lvl,
                 &ids,
                 is_kappa,
                 is_lightkeeper,
                 format!("%{}%", obj_type),
-                limit as i64,
-                offset as i64
+                i64::from(limit),
+                i64::from(offset)
             )
             .fetch_all(&mut *txn)
             .await
@@ -247,7 +241,7 @@ async fn fetch_adj_list(
     let cache_key = "adj_list";
     let mut conn = app_state.redispool.get().await.ok();
     if let Some(conn) = conn.as_mut() {
-        let adj_list: Option<Option<String>> = conn.get(&cache_key).await.ok();
+        let adj_list: Option<Option<String>> = conn.get(cache_key).await.ok();
         if let Some(adj_list) = adj_list.flatten() {
             return Ok(serde_json::from_str(&adj_list).unwrap());
         }
@@ -259,7 +253,7 @@ async fn fetch_adj_list(
         .bad_sql("TaskRequirements")?;
 
     let mut adj_list = HashMap::new();
-    task_requirements.into_iter().for_each(|req| {
+    for req in task_requirements {
         let from_id = req.task_id;
         let to_id = req.req_task_id;
 
@@ -272,7 +266,7 @@ async fn fetch_adj_list(
             .entry(to_id)
             .or_insert(vec![])
             .push((from_id, true));
-    });
+    }
 
     let pool = app_state.redispool.clone();
     let tokio_adj_list = adj_list.clone();
@@ -280,13 +274,13 @@ async fn fetch_adj_list(
 
     // store the adj_list that have not been found in redis cache
     tokio::spawn(async move {
-        if let Ok(mut conn) = pool.get().await {
-            if let Ok(data) = serde_json::to_string(&tokio_adj_list) {
-                let _: redis::RedisResult<()> = conn.set(&cache_key, data).await;
+        if let Ok(mut conn) = pool.get().await
+            && let Ok(data) = serde_json::to_string(&tokio_adj_list)
+        {
+            let _: redis::RedisResult<()> = conn.set(cache_key, data).await;
 
-                if let Some(time_in_seconds) = get_time_in_seconds(&tasks_call) {
-                    let _: redis::RedisResult<()> = conn.expire(&cache_key, time_in_seconds).await;
-                }
+            if let Some(time_in_seconds) = get_time_in_seconds(&tasks_call) {
+                let _: redis::RedisResult<()> = conn.expire(cache_key, time_in_seconds).await;
             }
         }
     });
@@ -375,20 +369,18 @@ pub async fn set_completed_task(
 
     let mut st = vec![task_id.clone()];
     let mut marked_tasks = HashSet::new();
-    while !st.is_empty() {
-        let top = st.pop().unwrap();
-
+    while let Some(top) = st.pop() {
         if visited.contains(&top) {
             continue;
         }
         marked_tasks.insert(top.clone());
         visited.insert(top.clone());
 
-        adj_list.get(&top).map(|x| {
+        if let Some(x) = adj_list.get(&top) {
             x.iter()
                 .filter(|(_, status)| *status == task.direction)
                 .for_each(|(adj_task_id, _)| st.push(adj_task_id.clone()));
-        });
+        }
     }
 
     let mut completed_tasks: HashSet<String> =
@@ -397,22 +389,21 @@ pub async fn set_completed_task(
             .into_iter()
             .collect();
 
-    let result: Vec<String>;
     // if direction == true then all tasks that come after the
     // current task should be locked so remove them from completed tasks
     // if direction == false then all tasks that come before the
     // current task should be unlocked so add them to completed tasks
-    if task.direction {
+    let result: Vec<String> = if task.direction {
         // delete all marked tasks from completed_tasks
-        marked_tasks.iter().for_each(|id| {
+        for id in &marked_tasks {
             completed_tasks.remove(id);
-        });
-        result = completed_tasks.into_iter().collect();
+        }
+        completed_tasks.into_iter().collect()
     } else {
         // combine the tasks
         completed_tasks.extend(marked_tasks.into_iter());
-        result = completed_tasks.into_iter().collect();
-    }
+        completed_tasks.into_iter().collect()
+    };
 
     // update what the user has as completed tasks
     sqlx::query!(

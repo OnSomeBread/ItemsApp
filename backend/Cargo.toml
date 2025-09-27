@@ -3,6 +3,11 @@ name = "backend-rust"
 version = "0.1.0"
 edition = "2024"
 
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+used_underscore_binding = "allow"
+struct_field_names = "allow"
+
 [dependencies]
 axum = {version = "0.8.4", features=["macros", "json"]}
 axum-extra = { version = "0.10.1", features=["query"] }

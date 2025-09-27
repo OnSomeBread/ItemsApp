@@ -115,7 +115,7 @@ pub struct Task {
     pub task_requirements: Vec<TaskRequirement>,
 }
 
-pub const ITEMS_QUERY: &'static str = r#"
+pub const ITEMS_QUERY: &str = "
 {
     items {
         id
@@ -153,9 +153,9 @@ pub const ITEMS_QUERY: &'static str = r#"
         }
     }
 }
-"#;
+";
 
-pub const TASKS_QUERY: &'static str = r#"
+pub const TASKS_QUERY: &str = "
 {
     tasks {
         taskRequirements {
@@ -191,4 +191,4 @@ pub const TASKS_QUERY: &'static str = r#"
         }
     }
 }
-"#;
+";
