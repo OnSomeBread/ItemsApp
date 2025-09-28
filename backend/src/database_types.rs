@@ -64,7 +64,7 @@ pub struct Item {
 
 impl From<ItemFromDB> for Item {
     fn from(item_from_db: ItemFromDB) -> Self {
-        Item {
+        Self {
             _id: item_from_db._id,
             item_name: item_from_db.item_name,
             short_name: item_from_db.short_name,
@@ -134,7 +134,7 @@ pub struct Task {
 
 impl From<TaskFromDB> for Task {
     fn from(task_from_db: TaskFromDB) -> Self {
-        Task {
+        Self {
             _id: task_from_db._id,
             task_name: task_from_db.task_name,
             normalized_name: task_from_db.normalized_name,

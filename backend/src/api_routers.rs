@@ -81,13 +81,11 @@ async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppErro
 
 // in app state there are timers to see when when a page refreshes the helps to unwrap it into a number in seconds
 pub fn get_time_in_seconds(timer: &Arc<Mutex<Option<Instant>>>) -> Option<i64> {
-    if let Ok(mutex_timer) = timer.lock() {
+    timer.lock().map_or(None, |mutex_timer| {
         mutex_timer
             .as_ref()
             .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64)
-    } else {
-        None
-    }
+    })
 }
 
 pub trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
@@ -230,7 +228,7 @@ where
             .and_then(|h| h.to_str().ok())
             .and_then(|id_str| Uuid::parse_str(id_str).ok());
 
-        Ok(Device(device_id))
+        Ok(Self(device_id))
     }
 }
 

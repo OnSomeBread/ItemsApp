@@ -81,7 +81,7 @@ pub async fn get_tasks(
     let search = query_parms.search.unwrap_or(String::new());
     let is_kappa = query_parms.is_kappa.unwrap_or(false);
     let is_lightkeeper = query_parms.is_lightkeeper.unwrap_or(false);
-    let mut obj_type = query_parms.obj_type.unwrap_or(String::new()).to_lowercase();
+    let mut obj_type = query_parms.obj_type.unwrap_or(String::new());
     let mut trader = query_parms.trader.unwrap_or(String::new()).to_lowercase();
     #[allow(clippy::cast_possible_wrap)]
     let player_lvl = query_parms.player_lvl.unwrap_or(99) as i32;
@@ -95,7 +95,9 @@ pub async fn get_tasks(
     };
 
     let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().copied().collect();
-    if obj_type == "any" || !valid_obj_types.contains(obj_type.as_str()) {
+    if obj_type.to_lowercase() == "any"
+        || !valid_obj_types.contains(obj_type.to_lowercase().as_str())
+    {
         obj_type = String::new();
     }
 
@@ -393,17 +395,17 @@ pub async fn set_completed_task(
     // current task should be locked so remove them from completed tasks
     // if direction == false then all tasks that come before the
     // current task should be unlocked so add them to completed tasks
-    let result: Vec<String> = if task.direction {
+
+    if task.direction {
         // delete all marked tasks from completed_tasks
         for id in &marked_tasks {
             completed_tasks.remove(id);
         }
-        completed_tasks.into_iter().collect()
     } else {
         // combine the tasks
         completed_tasks.extend(marked_tasks.into_iter());
-        completed_tasks.into_iter().collect()
-    };
+    }
+    let result: Vec<String> = completed_tasks.into_iter().collect();
 
     // update what the user has as completed tasks
     sqlx::query!(

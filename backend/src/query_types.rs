@@ -17,13 +17,13 @@ pub enum AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         match self {
-            AppError::UninitalizedDatabase(msg) => {
+            Self::UninitalizedDatabase(msg) => {
                 (StatusCode::SERVICE_UNAVAILABLE, Json(msg)).into_response()
             }
-            AppError::BadSqlQuery(msg) => {
+            Self::BadSqlQuery(msg) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(msg)).into_response()
             }
-            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, Json(msg)).into_response(),
+            Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, Json(msg)).into_response(),
         }
     }
 }
@@ -72,7 +72,7 @@ pub struct ItemQueryParams {
 
 impl From<DeviceItemQueryParams> for ItemQueryParams {
     fn from(parms: DeviceItemQueryParams) -> Self {
-        ItemQueryParams {
+        Self {
             search: Some(parms.search),
             asc: Some(parms.sort_asc),
             sort_by: Some(parms.sort_by),
@@ -123,7 +123,7 @@ pub struct TaskQueryParams {
 
 impl From<DeviceTaskQueryParams> for TaskQueryParams {
     fn from(parms: DeviceTaskQueryParams) -> Self {
-        TaskQueryParams {
+        Self {
             search: Some(parms.search),
             is_kappa: Some(parms.is_kappa),
             is_lightkeeper: Some(parms.is_lightkeeper),

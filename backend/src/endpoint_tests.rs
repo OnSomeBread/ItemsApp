@@ -123,6 +123,8 @@ trait Test: DeserializeOwned {
                 .await,
             );
         }
+
+        assert!(build_values.len() == 100);
     }
 }
 

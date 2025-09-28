@@ -5,8 +5,10 @@ edition = "2024"
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
 used_underscore_binding = "allow"
 struct_field_names = "allow"
+cognitive_complexity = "allow"
 
 [dependencies]
 axum = {version = "0.8.4", features=["macros", "json"]}

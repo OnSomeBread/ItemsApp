@@ -83,7 +83,7 @@ pub async fn get_items(
     let asc = query_parms.asc.unwrap_or(false);
     let mut sort_by = query_parms
         .sort_by
-        .unwrap_or(String::from("base_price"))
+        .unwrap_or_else(|| String::from("base_price"))
         .to_lowercase();
     let mut item_type = query_parms
         .item_type

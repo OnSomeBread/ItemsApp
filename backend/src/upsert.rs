@@ -132,11 +132,7 @@ async fn upsert_items(
                 .iter()
                 .find(|x| x.vendor.trader_name == "Flea Market");
 
-            if let Some(flea) = flea {
-                max_sell_price - flea.price_rub
-            } else {
-                0
-            }
+            flea.map_or(0, |flea| max_sell_price - flea.price_rub)
         })
         .collect();
 
@@ -165,11 +161,7 @@ async fn upsert_items(
                 .iter()
                 .find(|x| x.vendor.trader_name == "Flea Market");
 
-            if let Some(flea) = flea {
-                flea.price_rub - min_buy_price
-            } else {
-                0
-            }
+            flea.map_or(0, |flea| flea.price_rub - min_buy_price)
         })
         .collect();
 
@@ -179,11 +171,9 @@ async fn upsert_items(
         .map(|item| {
             let max_sell = item.sells.iter().max_by_key(|x| x.price_rub);
 
-            if let Some(max_sell) = max_sell {
+            max_sell.map_or(0, |max_sell| {
                 max_sell.price_rub / (item.width * item.height)
-            } else {
-                0
-            }
+            })
         })
         .collect();
 
