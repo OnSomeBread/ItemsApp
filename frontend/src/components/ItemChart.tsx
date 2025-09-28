@@ -32,6 +32,7 @@ function ItemChart({ itemHistory }: Props) {
               compactDisplay: "short",
             }).format(value)
           }
+          domain={["dataMin", "dataMax"]}
         />
         <Tooltip
           labelFormatter={(t: string) => new Date(t).toLocaleTimeString()}

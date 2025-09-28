@@ -317,7 +317,7 @@ async fn upsert_items(
                 (PARTITION BY item_id ORDER BY recorded_time DESC) AS rn FROM SavedItemData
                 ) t WHERE t.rn > $1
             );",
-            10
+            20
         )
         .execute(&mut *txn)
         .await?;

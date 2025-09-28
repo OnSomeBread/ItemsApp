@@ -60,7 +60,7 @@ pub async fn init_app_state(
     // spawn background task to refresh items in the database via api call
     tokio::spawn(async move {
         loop {
-            let items_refresh_time = Duration::from_secs(1800);
+            let items_refresh_time = Duration::from_secs(900);
             *items_call.lock().unwrap() = Some(Instant::now() + items_refresh_time);
 
             tokio::time::sleep(items_refresh_time).await;
