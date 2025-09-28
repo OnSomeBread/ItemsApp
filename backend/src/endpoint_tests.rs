@@ -5,7 +5,7 @@ use crate::{
 };
 use reqwest::Client;
 use serde::de::DeserializeOwned;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 trait Test: DeserializeOwned {
     async fn get_request_vec(url: String) -> Vec<Self> {
@@ -168,6 +168,31 @@ async fn test_health() {
 }
 
 #[tokio::test]
+async fn test_stats() {
+    let res = Client::new()
+        .get(format!("{}{}", URL, "/stats"))
+        .send()
+        .await
+        .expect("stats endpoint failed");
+
+    assert!(res.status().is_success());
+}
+
+#[tokio::test]
+async fn test_item_history() {
+    let res = Client::new()
+        .get(format!(
+            "{}{}",
+            URL, "/item_history?item_id=674d90b55704568fe60bc8f5"
+        ))
+        .send()
+        .await
+        .expect("item_history endpoint failed");
+
+    assert!(res.status().is_success());
+}
+
+#[tokio::test]
 async fn test_items_valid_sort_by_endpoint() {
     // this tests enforces that all valid sortby have a unique non empty output
     Item::valid_param_unique_testing(
@@ -239,7 +264,11 @@ async fn test_task_kappa_lightkeeper_endpoint() {
 #[tokio::test]
 async fn test_ids_endpoint() {
     // this tests enforces that ids grab the correct data
+    // we do this test twice since it has a unique caching set up
     Item::ids_testing().await;
+    Item::ids_testing().await;
+
+    Task::ids_testing().await;
     Task::ids_testing().await;
 }
 
@@ -255,4 +284,75 @@ async fn test_limit_and_offset() {
     // this tests enforces that limit and offset grab the correct values
     Item::limit_and_offset_testing().await;
     Task::limit_and_offset_testing().await;
+}
+
+fn perform_dfs(
+    start_id: String,
+    ids: &HashSet<String>,
+    adj_list: &HashMap<String, Vec<(String, bool)>>,
+) {
+    let mut st = vec![start_id];
+    let mut visited = HashSet::new();
+    while let Some(id) = st.pop() {
+        if visited.contains(&id) {
+            continue;
+        }
+
+        visited.insert(id.clone());
+
+        let adj_tasks = adj_list.get(&id).expect("did not find id in adj_list");
+        for adj_task in adj_tasks.iter().filter(|task| !task.1) {
+            assert!(ids.contains(&adj_task.0));
+            st.push(adj_task.0.clone());
+        }
+    }
+
+    // there are some tasks that are not required but have following tasks that are
+    // all of these also have active status instead of required
+    assert!(ids.len() - visited.len() < 10);
+}
+
+// this tests to make sure that the adj_list handles kappa required and lightkeeper required tasks correctly
+#[tokio::test]
+async fn test_adj_list() {
+    let res = Client::new()
+        .get(format!("{}{}", URL, "/adj_list"))
+        .send()
+        .await
+        .expect("adj_list endpoint failed");
+
+    assert!(res.status().is_success());
+
+    let adj_list: HashMap<String, Vec<(String, bool)>> =
+        res.json().await.expect("adjlist endpoint failed");
+
+    let (collector_vec, kappa, knockknock_vec, lightkeeper) = tokio::join!(
+        Task::get_request_vec(format!(
+            "{}{}",
+            URL, "/tasks?search=collector&is_kappa=true&limit=1"
+        )),
+        Task::get_request_vec(format!("{}{}", URL, "/tasks?is_kappa=true&limit=1000")),
+        Task::get_request_vec(format!(
+            "{}{}",
+            URL, "/tasks?search=knock-knock&is_lightkeeper=true&limit=1"
+        )),
+        Task::get_request_vec(format!(
+            "{}{}",
+            URL, "/tasks?is_lightkeeper=true&limit=1000"
+        ))
+    );
+
+    // the collector is the final kappa task
+    let collector = collector_vec[0].clone();
+    assert!(collector._id == "5c51aac186f77432ea65c552");
+
+    let kappa_ids: HashSet<String> = Task::get_ids(&kappa).into_iter().collect();
+    perform_dfs(collector._id, &kappa_ids, &adj_list);
+
+    // knock knock is the task where you meet the lightkeeper
+    let knockknock = knockknock_vec[0].clone();
+    assert!(knockknock._id == "625d7005a4eb80027c4f2e09");
+
+    let lightkeeper_ids: HashSet<String> = Task::get_ids(&lightkeeper).into_iter().collect();
+    perform_dfs(knockknock._id, &lightkeeper_ids, &adj_list);
 }
