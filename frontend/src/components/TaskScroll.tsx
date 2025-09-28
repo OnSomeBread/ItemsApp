@@ -22,7 +22,9 @@ function TaskScroll({
 }: Props) {
   const [allTasks, setAllTasks] = useState(initTasks);
   const [allCompletedTasks, setAllCompletedTasks] = useState(completedTasks);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(
+    initTasks.length === initQueryParams.limit
+  );
   const [loading, setLoading] = useState(false);
   const [queryParams, setQueryParams] = useState(initQueryParams);
 

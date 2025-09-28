@@ -16,7 +16,9 @@ interface Props {
 
 function ItemScrollCompact({ initItems, initQueryParams }: Props) {
   const [allItems, setAllItems] = useState(initItems);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(
+    initItems.length === initQueryParams.limit
+  );
   const [offset, setOffset] = useState(initQueryParams.limit);
   const [loading, setLoading] = useState(false);
   const [queryParams, setQueryParams] = useState(initQueryParams);
