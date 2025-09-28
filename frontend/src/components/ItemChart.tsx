@@ -35,6 +35,7 @@ function ItemChart({ itemHistory }: Props) {
         />
         <Tooltip
           labelFormatter={(t: string) => new Date(t).toLocaleTimeString()}
+          formatter={(t: string) => Number(t).toLocaleString("en-us")}
         />
         <Line
           type="monotone"

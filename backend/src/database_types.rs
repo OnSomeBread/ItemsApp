@@ -153,8 +153,6 @@ impl From<TaskFromDB> for Task {
 
 #[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
 pub struct SavedItemData {
-    #[allow(dead_code)]
-    #[serde(skip_serializing)]
     pub id: i32,
     pub avg_24h_price: i32,
     pub change_last_48h_percent: f32,

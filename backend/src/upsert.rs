@@ -312,9 +312,15 @@ async fn upsert_items(
     if is_api_call {
         // delete all rows that are not the 10 most recent
         sqlx::query!(
-            "DELETE FROM SavedItemData WHERE item_id IN (SELECT item_id FROM SavedItemData ORDER BY recorded_time DESC OFFSET $1);",
+            "DELETE FROM SavedItemData WHERE id IN (
+                SELECT id FROM (SELECT id, ROW_NUMBER() OVER 
+                (PARTITION BY item_id ORDER BY recorded_time DESC) AS rn FROM SavedItemData
+                ) t WHERE t.rn > $1
+            );",
             10
-        ).execute(&mut *txn).await?;
+        )
+        .execute(&mut *txn)
+        .await?;
 
         let best_flea_prices: Vec<i32> = items
             .iter()
