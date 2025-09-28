@@ -181,7 +181,7 @@ async fn test_items_valid_sort_by_endpoint() {
 async fn test_items_valid_item_types_endpoint() {
     // this tests enforces that all valid item types have a unique non empty output
     Item::valid_param_unique_testing(
-        "type",
+        "item_type",
         VALID_ITEM_TYPES.iter().map(|x| (*x).to_string()).collect(),
     )
     .await;
@@ -190,8 +190,8 @@ async fn test_items_valid_item_types_endpoint() {
 #[tokio::test]
 async fn test_items_asc_endpoint() {
     // this tests enforces that asc and desc have a unique non empty output
-    let asc = Item::get_request_vec(format!("{}{}", URL, "/items?asc=true&limit=100")).await;
-    let desc = Item::get_request_vec(format!("{}{}", URL, "/items?asc=false&limit=100")).await;
+    let asc = Item::get_request_vec(format!("{}{}", URL, "/items?sort_asc=true&limit=100")).await;
+    let desc = Item::get_request_vec(format!("{}{}", URL, "/items?sort_asc=false&limit=100")).await;
     assert!(!asc.is_empty() && !desc.is_empty());
     assert!(Item::get_ids(&asc) != Item::get_ids(&desc));
 }
