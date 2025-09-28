@@ -48,9 +48,9 @@ export type Item = {
 
 export type ItemQueryParams = {
   search: string;
-  asc: boolean;
+  sort_asc: boolean;
   sort_by: string;
-  type: string;
+  item_type: string;
   limit: number;
   offset: number;
 };

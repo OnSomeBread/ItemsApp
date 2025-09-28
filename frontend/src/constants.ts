@@ -1,8 +1,8 @@
 export const DEFAULT_ITEM_QUERY_PARAMS = {
   search: "",
-  asc: false,
+  sort_asc: false,
   sort_by: "flea_market",
-  type: "any",
+  item_type: "any",
   limit: 40,
   offset: 0,
 };

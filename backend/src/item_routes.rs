@@ -80,7 +80,7 @@ pub async fn get_items(
 ) -> Result<Json<Vec<Item>>, AppError> {
     let save = query_parms.save.unwrap_or(true);
     let search = query_parms.search.unwrap_or(String::new());
-    let asc = query_parms.asc.unwrap_or(false);
+    let sort_asc = query_parms.sort_asc.unwrap_or(false);
     let mut sort_by = query_parms
         .sort_by
         .unwrap_or_else(|| String::from("base_price"))
@@ -114,7 +114,7 @@ pub async fn get_items(
                     SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
                 device_id,
                 search,
-                asc,
+                sort_asc,
                 if sort_by.is_empty() {
                     "base_price".to_string()
                 } else {
@@ -136,7 +136,7 @@ pub async fn get_items(
     let cache_key = format!(
         "{}a{}{}{}l{}o{}",
         search,
-        if asc { "1" } else { "0" },
+        if sort_asc { "1" } else { "0" },
         sort_by,
         item_type,
         limit,
@@ -183,7 +183,7 @@ pub async fn get_items(
             "SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
             WHERE LOWER(b.trader_name) = 'flea market' AND i.item_name ILIKE $1 AND i.item_types ILIKE $2 
             ORDER BY b.price_rub {} LIMIT $3 OFFSET $4;",
-            if asc { "ASC" } else { "DESC" },
+            if sort_asc { "ASC" } else { "DESC" },
         );
 
         sqlx::query_as(&sql)
@@ -200,7 +200,7 @@ pub async fn get_items(
             WHERE item_name ILIKE $1 AND item_types ILIKE $2 
             ORDER BY {} {} LIMIT $3 OFFSET $4",
             sort_by,
-            if asc { "ASC" } else { "DESC" },
+            if sort_asc { "ASC" } else { "DESC" },
         );
 
         sqlx::query_as(&sql)

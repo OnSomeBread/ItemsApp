@@ -52,9 +52,8 @@ pub struct Stats {
 #[derive(Deserialize)]
 pub struct ItemQueryParams {
     pub search: Option<String>,
-    pub asc: Option<bool>,
+    pub sort_asc: Option<bool>,
     pub sort_by: Option<String>,
-    #[serde(rename = "type")]
     pub item_type: Option<String>,
     pub limit: Option<u32>,
     pub offset: Option<u32>,
@@ -74,7 +73,7 @@ impl From<DeviceItemQueryParams> for ItemQueryParams {
     fn from(parms: DeviceItemQueryParams) -> Self {
         Self {
             search: Some(parms.search),
-            asc: Some(parms.sort_asc),
+            sort_asc: Some(parms.sort_asc),
             sort_by: Some(parms.sort_by),
             item_type: Some(parms.item_type),
 
