@@ -85,7 +85,6 @@ impl From<DeviceItemQueryParams> for ItemQueryParams {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ItemHistoryQueryParams {
     pub item_id: Option<String>,
 }

@@ -20,7 +20,7 @@ async function ItemView({ searchParams }: PageProps) {
   const item = ((await res1.json()) as Item[])[0];
 
   const res2 = await fetch(
-    DOCKER_BACKEND + "/api/item_history?itemId=" + item._id,
+    DOCKER_BACKEND + "/api/item_history?item_id=" + item._id,
     {
       cache: "no-store",
     }
