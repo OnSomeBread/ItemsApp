@@ -22,7 +22,7 @@ function getBestTraderBuy(item: Item) {
   if (bestBuy.trader_name === "Flea Market")
     return (
       <p className="h-8">
-        buy from :{" "}
+        Buy From:{" "}
         {bestBuy.trader_name + " " + bestBuy.price_rub.toLocaleString("en-us")}{" "}
         RUB
       </p>
