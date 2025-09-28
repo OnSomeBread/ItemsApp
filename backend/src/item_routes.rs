@@ -98,7 +98,6 @@ pub async fn get_items(
     }
 
     let valid_item_type: HashSet<&str> = VALID_ITEM_TYPES.iter().copied().collect();
-
     if item_type == "any" || !valid_item_type.contains(item_type.as_str()) {
         item_type = String::new();
     }
@@ -149,7 +148,6 @@ pub async fn get_items(
     }
 
     // welp doing this is much cleaner but far slower than the main query ¯\_(ツ)_/¯
-
     // THIS QUERY REQUIRES INDEX ON item_id FOR BOTH buyfor and sellfor but is faster than above approach
     // let items_test: Vec<Item> = sqlx::query_as!(
     //     Item,

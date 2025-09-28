@@ -94,6 +94,7 @@ pub async fn get_tasks(
         vec![]
     };
 
+    // .to_lowercase happens here instead of above because I need the casing to be kept to pass to frontend
     let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().copied().collect();
     if obj_type.to_lowercase() == "any"
         || !valid_obj_types.contains(obj_type.to_lowercase().as_str())
