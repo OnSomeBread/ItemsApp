@@ -12,9 +12,10 @@ import { API_BASE } from "../constants";
 interface Props {
   initItems: Item[];
   initQueryParams: ItemQueryParams;
+  headers: HeadersInit;
 }
 
-function ItemScrollCompact({ initItems, initQueryParams }: Props) {
+function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
   const [allItems, setAllItems] = useState(initItems);
   const [hasMore, setHasMore] = useState(
     initItems.length === initQueryParams.limit
@@ -43,7 +44,10 @@ function ItemScrollCompact({ initItems, initQueryParams }: Props) {
     });
     params.append("offset", offset.toString());
 
-    fetch(API_BASE + "/api/items?" + params.toString())
+    fetch(API_BASE + "/api/items?" + params.toString(), {
+      cache: "no-store",
+      headers,
+    })
       .then((res1) => {
         res1
           .json()
