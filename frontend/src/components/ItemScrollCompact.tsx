@@ -96,12 +96,76 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
           <thead>
             <tr>
               <th className="font-medium">Icon</th>
-              <th className="font-medium">Name</th>
+              <th
+                className="font-medium"
+                onClick={() => {
+                  setOffset(0);
+                  setQueryParams((prev) => {
+                    return {
+                      ...prev,
+                      sort_asc: !prev.sort_asc,
+                      sort_by: "item_name",
+                    };
+                  });
+                }}
+              >
+                Name{" "}
+                {queryParams.sort_by === "item_name" &&
+                  (queryParams.sort_asc ? "⭡" : "⭣")}
+              </th>
               <th className="font-medium">Buy For</th>
               <th className="font-medium">Sell For</th>
-              <th className="font-medium">Flea ➝ Trader</th>
-              <th className="font-medium">Trader ➝ Flea</th>
-              <th className="font-medium">Per Slot</th>
+              <th
+                className="font-medium"
+                onClick={() => {
+                  setOffset(0);
+                  setQueryParams((prev) => {
+                    return {
+                      ...prev,
+                      sort_asc: !prev.sort_asc,
+                      sort_by: "buy_from_flea_instant_profit",
+                    };
+                  });
+                }}
+              >
+                Flea ➝ Trader{" "}
+                {queryParams.sort_by === "buy_from_flea_instant_profit" &&
+                  (queryParams.sort_asc ? "⭡" : "⭣")}
+              </th>
+              <th
+                className="font-medium"
+                onClick={() => {
+                  setOffset(0);
+                  setQueryParams((prev) => {
+                    return {
+                      ...prev,
+                      sort_asc: !prev.sort_asc,
+                      sort_by: "buy_from_trader_instant_profit",
+                    };
+                  });
+                }}
+              >
+                Trader ➝ Flea{" "}
+                {queryParams.sort_by === "buy_from_trader_instant_profit" &&
+                  (queryParams.sort_asc ? "⭡" : "⭣")}
+              </th>
+              <th
+                className="font-medium"
+                onClick={() => {
+                  setOffset(0);
+                  setQueryParams((prev) => {
+                    return {
+                      ...prev,
+                      sort_asc: !prev.sort_asc,
+                      sort_by: "per_slot",
+                    };
+                  });
+                }}
+              >
+                Per Slot{" "}
+                {queryParams.sort_by === "per_slot" &&
+                  (queryParams.sort_asc ? "⭡" : "⭣")}
+              </th>
               <th className="font-medium">Wiki</th>
             </tr>
           </thead>
