@@ -23,6 +23,7 @@ function ImageComponent({ imgSrc, alt, width, height, priority }: Props) {
       fetchPriority={priority ? "high" : "auto"}
       placeholder="empty"
       onError={() => setSrc("/unknown.webp")}
+      className="rounded"
     />
   );
 }
