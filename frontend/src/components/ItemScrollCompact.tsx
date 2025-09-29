@@ -94,15 +94,15 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
       >
         <table>
           <thead>
-            <tr>
-              <th>Icon</th>
-              <th>Name</th>
-              <th>Buy For</th>
-              <th>Sell For</th>
-              <th>From Flea To Trader Profit</th>
-              <th>From Trader To Flea Profit</th>
-              <th>Per Slot to Flea</th>
-              <th>Wiki page</th>
+            <tr className="bg-gray-100 text-left">
+              <th className="p-2 font-medium">Icon</th>
+              <th className="p-2 font-medium">Name</th>
+              <th className="p-2 font-medium">Buy For</th>
+              <th className="p-2 font-medium">Sell For</th>
+              <th className="p-2 font-medium">Flea ➝ Trader</th>
+              <th className="p-2 font-medium">Trader ➝ Flea</th>
+              <th className="p-2 font-medium">Per Slot</th>
+              <th className="p-2 font-medium">Wiki</th>
             </tr>
           </thead>
           <tbody>
@@ -134,11 +134,11 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                         <p>
                           {"buy " +
                             bestBuy.buy_limit +
-                            " from " +
+                            " @ " +
                             bestBuy.trader_name +
-                            " lvl " +
+                            " " +
                             bestBuy.min_trader_level +
-                            ": " +
+                            " For " +
                             bestBuy.price.toLocaleString("en-us") +
                             " " +
                             bestBuy.currency}
@@ -146,10 +146,7 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                       )}
                     {bestBuy !== null &&
                       bestBuy.trader_name === "Flea Market" && (
-                        <p>
-                          {bestBuy.trader_name}:{" "}
-                          {bestBuy.price_rub.toLocaleString("en-us")} RUB
-                        </p>
+                        <p>{bestBuy.price_rub.toLocaleString("en-us")} RUB</p>
                       )}
                   </td>
                   <td>
@@ -161,7 +158,13 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                     )}
                   </td>
                   <td>
-                    <p>
+                    <p
+                      className={
+                        item.buy_from_flea_instant_profit > 0
+                          ? "!text-green-600"
+                          : "!text-red-600"
+                      }
+                    >
                       {item.buy_from_flea_instant_profit.toLocaleString(
                         "en-us"
                       )}{" "}
@@ -169,7 +172,13 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                     </p>
                   </td>
                   <td>
-                    <p>
+                    <p
+                      className={
+                        item.buy_from_trader_instant_profit > 0
+                          ? "!text-green-600"
+                          : "!text-red-600"
+                      }
+                    >
                       {item.buy_from_trader_instant_profit.toLocaleString(
                         "en-us"
                       )}{" "}
@@ -180,7 +189,14 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                     <p>{item.per_slot.toLocaleString("en-us")} RUB</p>
                   </td>
                   <td>
-                    <a href={item.wiki}>wiki link</a>
+                    <a
+                      href={item.wiki}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="!no-underline"
+                    >
+                      🔗
+                    </a>
                   </td>
                 </tr>
               );
