@@ -47,9 +47,11 @@ pub struct ItemStats {
 #[derive(Serialize)]
 pub struct TaskStats {
     pub tasks_count: i64,
-    pub kappa_required_count: i64,
-    pub lightkeeper_required_count: i64,
-    pub time_till_tasks_refresh_secs: i64,
+    pub kappa_completed_count: usize,
+    pub kappa_required_count: usize,
+    pub lightkeeper_completed_count: usize,
+    pub lightkeeper_required_count: usize,
+    pub time_till_tasks_refresh_secs: u64,
 }
 
 #[derive(Deserialize)]
