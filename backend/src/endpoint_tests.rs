@@ -1,29 +1,73 @@
 #![cfg(test)]
 use crate::{
-    database_types::{Item, Task},
+    database_types::{DeviceItemQueryParams, DeviceTaskQueryParams, Item, Task},
     query_types::{VALID_ITEM_TYPES, VALID_OBJ_TYPES, VALID_SORT_BY, VALID_TRADERS},
 };
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 use std::collections::{HashMap, HashSet};
 
-trait Test: DeserializeOwned {
-    async fn get_request_vec(url: String) -> Vec<Self> {
+trait QueryParms: DeserializeOwned {
+    fn get_base() -> String;
+    fn get_search(&self) -> &str;
+    async fn get() -> Self {
         let res = Client::new()
-            .get(url)
+            .get(format!("{}{}", URL, Self::get_base()))
+            .header("x-device-id", DEVICE_ID)
             .send()
             .await
-            .expect("Items endpoint did not get correctly");
+            .unwrap_or_else(|_| {
+                panic!("{}", (Self::get_base() + " endpoint did not get correctly"))
+            });
 
         assert!(res.status().is_success());
-        res.json()
-            .await
-            .expect("Item data did not serialize correctly")
+        res.json().await.unwrap_or_else(|_| {
+            panic!(
+                "{}",
+                (Self::get_base() + " endpoint did not serialize correctly")
+            )
+        })
+    }
+}
+
+impl QueryParms for DeviceItemQueryParams {
+    fn get_base() -> String {
+        "/item_query_parms".to_string()
+    }
+    fn get_search(&self) -> &str {
+        &self.search
+    }
+}
+impl QueryParms for DeviceTaskQueryParams {
+    fn get_base() -> String {
+        "/task_query_parms".to_string()
+    }
+    fn get_search(&self) -> &str {
+        &self.search
+    }
+}
+
+trait Test: DeserializeOwned {
+    type DeviceQueryParms: QueryParms;
+
+    async fn get_request_vec(url: String) -> Vec<Self> {
+        let res = Client::new().get(url).send().await.unwrap_or_else(|_| {
+            panic!("{}", (Self::get_base() + " endpoint did not get correctly"))
+        });
+
+        assert!(res.status().is_success());
+        res.json().await.unwrap_or_else(|_| {
+            panic!(
+                "{}",
+                (Self::get_base() + " endpoint did not serialize correctly")
+            )
+        })
     }
 
     fn get_base() -> String;
     fn get_id(&self) -> &str;
     fn get_name(&self) -> &str;
+    async fn get_query_parms() -> Self::DeviceQueryParms;
 
     fn get_ids(values: &[Self]) -> Vec<String> {
         values.iter().map(|x| x.get_id().to_string()).collect()
@@ -126,9 +170,43 @@ trait Test: DeserializeOwned {
 
         assert!(build_values.len() == 100);
     }
+
+    async fn device_id_testing() {
+        let search = "a";
+
+        // this adds device id to the database so that it can be saved in items
+        let _ = Self::get_query_parms().await;
+
+        let res = Client::new()
+            .get(format!("{}{}?search={}", URL, Self::get_base(), search,))
+            .header("x-device-id", DEVICE_ID)
+            .send()
+            .await
+            .unwrap_or_else(|_| {
+                panic!("{}", (Self::get_base() + " endpoint did not get correctly"))
+            });
+
+        assert!(res.status().is_success());
+        let values1: Vec<Self> = res.json().await.unwrap_or_else(|_| {
+            panic!(
+                "{}",
+                (Self::get_base() + " endpoint did not serialize correctly")
+            )
+        });
+
+        assert!(!values1.is_empty());
+
+        let query_parms = Self::get_query_parms().await;
+        assert!(query_parms.get_search() == search);
+    }
 }
 
 impl Test for Item {
+    type DeviceQueryParms = DeviceItemQueryParams;
+
+    async fn get_query_parms() -> Self::DeviceQueryParms {
+        DeviceItemQueryParams::get().await
+    }
     fn get_base() -> String {
         String::from("/items")
     }
@@ -143,6 +221,11 @@ impl Test for Item {
 }
 
 impl Test for Task {
+    type DeviceQueryParms = DeviceTaskQueryParams;
+
+    async fn get_query_parms() -> Self::DeviceQueryParms {
+        DeviceTaskQueryParams::get().await
+    }
     fn get_base() -> String {
         String::from("/tasks")
     }
@@ -155,6 +238,7 @@ impl Test for Task {
 }
 
 const URL: &str = "http://127.0.0.1:8000/api";
+const DEVICE_ID: &str = "501b8491-c3fe-4e37-9428-ce1456c1d386";
 
 #[tokio::test]
 async fn test_health() {
@@ -355,4 +439,11 @@ async fn test_adj_list() {
 
     let lightkeeper_ids: HashSet<String> = Task::get_ids(&lightkeeper).into_iter().collect();
     perform_dfs(knockknock._id, &lightkeeper_ids, &adj_list);
+}
+
+// this tests to make sure that adding the device id header works correctly
+#[tokio::test]
+async fn test_device_endpoint() {
+    Item::device_id_testing().await;
+    Task::device_id_testing().await;
 }
