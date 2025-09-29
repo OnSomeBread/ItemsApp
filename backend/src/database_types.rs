@@ -161,7 +161,7 @@ pub struct SavedItemData {
     pub item_id: String,
 }
 
-#[derive(sqlx::FromRow, Serialize)]
+#[derive(sqlx::FromRow, Serialize, Deserialize)]
 pub struct DeviceItemQueryParams {
     #[allow(dead_code)]
     #[serde(skip_serializing)]
@@ -172,7 +172,7 @@ pub struct DeviceItemQueryParams {
     pub item_type: String,
 }
 
-#[derive(sqlx::FromRow, Serialize)]
+#[derive(sqlx::FromRow, Serialize, Deserialize)]
 pub struct DeviceTaskQueryParams {
     #[allow(dead_code)]
     #[serde(skip_serializing)]
