@@ -149,7 +149,7 @@ function TaskScroll({
         }}
       />
 
-      <div className="flex w-[100%]">
+      <div className="flex w-full">
         <div className="flex-1">
           <InfiniteScroll
             dataLength={allTasks?.length ?? 0}
@@ -166,7 +166,7 @@ function TaskScroll({
             >
               {allTasks?.map((task, idx) => (
                 <motion.li
-                  className="md:p-4"
+                  className="md:px-14 md:pb-4"
                   key={task._id}
                   transition={{ duration: 0.8 }}
                   variants={{
@@ -184,12 +184,17 @@ function TaskScroll({
             </motion.ul>
           </InfiniteScroll>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto px-6">
+          {allCompletedTasks.length === 0 && (
+            <div className="italic">No tasks completed yet...</div>
+          )}
           {allCompletedTasks.length > 0 && (
             <>
-              <div>
-                <p>All Completed Tasks</p>
-                <p>(click on a task to set not completed)</p>
+              <div className="mb-4">
+                <h2 className="text-xl font-bold">Completed Tasks</h2>
+                <p className="text-sm">
+                  Click on a task to mark it as not completed
+                </p>
               </div>
 
               <motion.ul

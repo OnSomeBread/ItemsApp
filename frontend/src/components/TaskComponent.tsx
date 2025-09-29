@@ -16,19 +16,25 @@ interface Props {
 function TaskComponent({ task, idx, onClickButton }: Props) {
   return (
     <motion.div
-      className="pl-8"
       initial={{ x: -20 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.8 }}
+      className="w-full max-w-lg rounded-xl border border-gray-200 bg-neutral-800/80 p-4 shadow-sm hover:shadow-md"
     >
-      <div className="flex">
-        <div>
-          <Link href={{ pathname: "/task_view", query: "id=" + task._id }}>
+      <div className="flex items-center gap-4">
+        <div className="flex-1">
+          <Link
+            href={{ pathname: "/task_view", query: "id=" + task._id }}
+            className="text-lg font-semibold text-gray-800 hover:text-blue-600"
+          >
             {task.task_name}
           </Link>
-          <p>Minimum Player Level: {task.min_player_level}</p>
+          <p className="text-sm text-gray-500">
+            Minimum Player Level:{" "}
+            <span className="font-medium">{task.min_player_level}</span>
+          </p>
         </div>
-        <div className="relative top-2 left-4 h-12">
+        <div className="relative bottom-1 h-12">
           <ImageComponent
             imgSrc={"/" + task.trader + ".webp"}
             alt={task.trader}
@@ -39,20 +45,24 @@ function TaskComponent({ task, idx, onClickButton }: Props) {
         </div>
       </div>
 
-      {task.objectives.map((obj, index) => (
-        <p key={obj.id}>
-          {index + 1}. {obj.obj_description}
-        </p>
-      ))}
+      <ul className="mt-3 space-y-1 px-4">
+        {task.objectives.map((obj, index) => (
+          <li key={obj.id}>
+            <span className="font-semibold">{index + 1}.</span>{" "}
+            {obj.obj_description}
+          </li>
+        ))}
+      </ul>
+
       <motion.button
         value={task._id}
         onClick={() => onClickButton(task._id, false)}
         transition={{ duration: 0.4 }}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
-        className="!h-12 !rounded-[8px] !border"
+        className="w-full"
       >
-        Completed
+        Mark Completed
       </motion.button>
     </motion.div>
   );
