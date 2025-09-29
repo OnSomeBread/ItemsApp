@@ -2,13 +2,44 @@ use crate::api_routers::{Device, RedisCache, fetch_tasks_by_ids, get_time_in_sec
 use crate::database_types::{DeviceTaskQueryParams, Objective, Task, TaskFromDB, TaskRequirement};
 use crate::init_app_state::AppState;
 use crate::query_types::{AppError, AppError::BadRequest};
-use crate::query_types::{AppErrorHandling, TaskQueryParams, VALID_OBJ_TYPES, VALID_TRADERS};
+use crate::query_types::{
+    AppErrorHandling, TaskQueryParams, TaskStats, VALID_OBJ_TYPES, VALID_TRADERS,
+};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
 use sqlx::PgPool;
 use sqlx::types::Uuid;
 use std::collections::{HashMap, HashSet};
+use std::time::Instant;
+use tokio::try_join;
+
+// gives data on different interesting stats about the data stored
+pub async fn task_stats(State(app_state): State<AppState>) -> Result<Json<TaskStats>, AppError> {
+    let (tasks_count, kappa_required_count, lightkeeper_required_count) = try_join!(
+        sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pgpool),
+        sqlx::query_scalar!("SELECT COUNT(*) FROM Task WHERE kappa_required = True")
+            .fetch_one(&app_state.pgpool),
+        sqlx::query_scalar!("SELECT COUNT(*) FROM Task WHERE lightkeeper_required = True")
+            .fetch_one(&app_state.pgpool)
+    )
+    .bad_sql("Stats")?;
+
+    let mut time_in_seconds_tasks = None;
+    #[allow(clippy::cast_possible_wrap)]
+    if let Ok(mutex_timer) = app_state.next_tasks_call_timer.lock() {
+        time_in_seconds_tasks = mutex_timer
+            .as_ref()
+            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
+    }
+
+    Ok(Json(TaskStats {
+        tasks_count: tasks_count.unwrap_or(0),
+        kappa_required_count: kappa_required_count.unwrap_or(0),
+        lightkeeper_required_count: lightkeeper_required_count.unwrap_or(0),
+        time_till_tasks_refresh_secs: time_in_seconds_tasks.unwrap_or(0),
+    }))
+}
 
 // this adds task requirements and objectives to tasks so that it can be returned to user
 // much faster than left later join these

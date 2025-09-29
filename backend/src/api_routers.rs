@@ -1,16 +1,14 @@
-#![allow(clippy::cast_possible_wrap)]
-
 use crate::database_types::{Item, ItemFromDB, SavedItemData, Task, TaskFromDB};
 use crate::init_app_state::AppState;
 use crate::item_routes::{
-    get_device_item_query_parms, get_item_history, get_items, items_from_db_to_items,
+    get_device_item_query_parms, get_item_history, get_items, item_stats, items_from_db_to_items,
 };
 use crate::query_types::{
-    AppError, AppError::UninitalizedDatabase, AppErrorHandling, IdsQueryParams, Stats,
+    AppError, AppError::UninitalizedDatabase, AppErrorHandling, IdsQueryParams,
 };
 use crate::task_routes::{
     clear_completed_tasks, get_adj_list, get_completed_tasks, get_device_task_query_parms,
-    get_tasks, set_completed_task, tasks_from_db_to_tasks,
+    get_tasks, set_completed_task, task_stats, tasks_from_db_to_tasks,
 };
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
@@ -43,44 +41,9 @@ async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
     }
 }
 
-// gives data on different interesting stats about the data stored
-async fn stats(State(app_state): State<AppState>) -> Result<Json<Stats>, AppError> {
-    let (items_count, tasks_count, kappa_required_count, lightkeeper_required_count) = try_join!(
-        sqlx::query_scalar!("SELECT COUNT(*) FROM Item").fetch_one(&app_state.pgpool),
-        sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pgpool),
-        sqlx::query_scalar!("SELECT COUNT(*) FROM Task WHERE kappa_required = True")
-            .fetch_one(&app_state.pgpool),
-        sqlx::query_scalar!("SELECT COUNT(*) FROM Task WHERE lightkeeper_required = True")
-            .fetch_one(&app_state.pgpool)
-    )
-    .bad_sql("Stats")?;
-
-    let mut time_in_seconds_items = None;
-    if let Ok(mutex_timer) = app_state.next_items_call_timer.lock() {
-        time_in_seconds_items = mutex_timer
-            .as_ref()
-            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
-    }
-
-    let mut time_in_seconds_tasks = None;
-    if let Ok(mutex_timer) = app_state.next_tasks_call_timer.lock() {
-        time_in_seconds_tasks = mutex_timer
-            .as_ref()
-            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
-    }
-
-    Ok(Json(Stats {
-        items_count: items_count.unwrap_or(0),
-        tasks_count: tasks_count.unwrap_or(0),
-        kappa_required_count: kappa_required_count.unwrap_or(0),
-        lightkeeper_required_count: lightkeeper_required_count.unwrap_or(0),
-        time_till_items_refresh_secs: time_in_seconds_items.unwrap_or(0),
-        time_till_tasks_refresh_secs: time_in_seconds_tasks.unwrap_or(0),
-    }))
-}
-
 // in app state there are timers to see when when a page refreshes the helps to unwrap it into a number in seconds
 pub fn get_time_in_seconds(timer: &Arc<Mutex<Option<Instant>>>) -> Option<i64> {
+    #[allow(clippy::cast_possible_wrap)]
     timer.lock().map_or(None, |mutex_timer| {
         mutex_timer
             .as_ref()
@@ -275,6 +238,7 @@ impl RedisCache for SavedItemData {}
 
 fn items_router() -> Router<AppState> {
     Router::new()
+        .route("/item_stats", get(item_stats))
         .route("/items", get(get_items))
         .route("/item_history", get(get_item_history))
         .route("/item_ids", get(get_page_by_ids::<Item>))
@@ -283,6 +247,7 @@ fn items_router() -> Router<AppState> {
 
 fn tasks_router() -> Router<AppState> {
     Router::new()
+        .route("/task_stats", get(task_stats))
         .route("/tasks", get(get_tasks))
         .route("/task_ids", get(get_page_by_ids::<Task>))
         .route("/adj_list", get(get_adj_list))
@@ -295,7 +260,6 @@ fn tasks_router() -> Router<AppState> {
 pub fn api_router() -> Router<AppState> {
     Router::new()
         .route("/health", get(health))
-        .route("/stats", get(stats))
         .merge(items_router())
         .merge(tasks_router())
 }

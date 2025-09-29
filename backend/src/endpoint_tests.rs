@@ -254,10 +254,18 @@ async fn test_health() {
 #[tokio::test]
 async fn test_stats() {
     let res = Client::new()
-        .get(format!("{}{}", URL, "/stats"))
+        .get(format!("{}{}", URL, "/item_stats"))
         .send()
         .await
-        .expect("stats endpoint failed");
+        .expect("item_stats endpoint failed");
+
+    assert!(res.status().is_success());
+
+    let res = Client::new()
+        .get(format!("{}{}", URL, "/task_stats"))
+        .send()
+        .await
+        .expect("task_stats endpoint failed");
 
     assert!(res.status().is_success());
 }

@@ -5,11 +5,34 @@ use crate::database_types::{
 use crate::init_app_state::AppState;
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{
-    AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, VALID_ITEM_TYPES, VALID_SORT_BY,
+    AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, ItemStats, VALID_ITEM_TYPES,
+    VALID_SORT_BY,
 };
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use std::collections::{HashMap, HashSet};
+use std::time::Instant;
+
+// gives data on different interesting stats about the data stored
+pub async fn item_stats(State(app_state): State<AppState>) -> Result<Json<ItemStats>, AppError> {
+    let items_count = sqlx::query_scalar!("SELECT COUNT(*) FROM Item")
+        .fetch_one(&app_state.pgpool)
+        .await
+        .bad_sql("Item Stats")?;
+
+    let mut time_in_seconds_items = None;
+    #[allow(clippy::cast_possible_wrap)]
+    if let Ok(mutex_timer) = app_state.next_items_call_timer.lock() {
+        time_in_seconds_items = mutex_timer
+            .as_ref()
+            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
+    }
+
+    Ok(Json(ItemStats {
+        items_count: items_count.unwrap_or(0),
+        time_till_items_refresh_secs: time_in_seconds_items.unwrap_or(0),
+    }))
+}
 
 // this adds buyfor and sellfor to items so that it can be returned to user
 // much faster than left later join these

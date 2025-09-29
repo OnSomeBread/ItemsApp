@@ -38,14 +38,17 @@ impl<T> AppErrorHandling<T> for Result<T, sqlx::Error> {
     }
 }
 
-// return type for /stats
 #[derive(Serialize)]
-pub struct Stats {
+pub struct ItemStats {
     pub items_count: i64,
+    pub time_till_items_refresh_secs: i64,
+}
+
+#[derive(Serialize)]
+pub struct TaskStats {
     pub tasks_count: i64,
     pub kappa_required_count: i64,
     pub lightkeeper_required_count: i64,
-    pub time_till_items_refresh_secs: i64,
     pub time_till_tasks_refresh_secs: i64,
 }
 
