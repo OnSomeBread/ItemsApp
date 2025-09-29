@@ -94,15 +94,15 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
       >
         <table>
           <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="p-2 font-medium">Icon</th>
-              <th className="p-2 font-medium">Name</th>
-              <th className="p-2 font-medium">Buy For</th>
-              <th className="p-2 font-medium">Sell For</th>
-              <th className="p-2 font-medium">Flea ➝ Trader</th>
-              <th className="p-2 font-medium">Trader ➝ Flea</th>
-              <th className="p-2 font-medium">Per Slot</th>
-              <th className="p-2 font-medium">Wiki</th>
+            <tr>
+              <th className="font-medium">Icon</th>
+              <th className="font-medium">Name</th>
+              <th className="font-medium">Buy For</th>
+              <th className="font-medium">Sell For</th>
+              <th className="font-medium">Flea ➝ Trader</th>
+              <th className="font-medium">Trader ➝ Flea</th>
+              <th className="font-medium">Per Slot</th>
+              <th className="font-medium">Wiki</th>
             </tr>
           </thead>
           <tbody>
@@ -121,14 +121,14 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                       height={16}
                     />
                   </td>
-                  <td className="w-100">
+                  <td className="w-140">
                     <Link
                       href={{ pathname: "/item_view", query: "id=" + item._id }}
                     >
                       {item.item_name}
                     </Link>
                   </td>
-                  <td className="w-100">
+                  <td className="w-90">
                     {bestBuy !== null &&
                       bestBuy.trader_name !== "Flea Market" && (
                         <p>
@@ -149,7 +149,7 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                         <p>{bestBuy.price_rub.toLocaleString("en-us")} RUB</p>
                       )}
                   </td>
-                  <td className="w-100">
+                  <td className="w-60">
                     {bestSell !== null && (
                       <p>
                         {bestSell.trader_name}:{" "}
