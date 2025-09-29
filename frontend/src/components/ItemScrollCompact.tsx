@@ -128,7 +128,7 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                       {item.item_name}
                     </Link>
                   </td>
-                  <td>
+                  <td className="w-100">
                     {bestBuy !== null &&
                       bestBuy.trader_name !== "Flea Market" && (
                         <p>
@@ -149,7 +149,7 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                         <p>{bestBuy.price_rub.toLocaleString("en-us")} RUB</p>
                       )}
                   </td>
-                  <td>
+                  <td className="w-100">
                     {bestSell !== null && (
                       <p>
                         {bestSell.trader_name}:{" "}
@@ -157,7 +157,7 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                       </p>
                     )}
                   </td>
-                  <td>
+                  <td className="w-60">
                     <p
                       className={
                         item.buy_from_flea_instant_profit > 0
@@ -171,7 +171,7 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                       RUB
                     </p>
                   </td>
-                  <td>
+                  <td className="w-60">
                     <p
                       className={
                         item.buy_from_trader_instant_profit > 0
@@ -185,7 +185,7 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
                       RUB
                     </p>
                   </td>
-                  <td>
+                  <td className="w-60">
                     <p>{item.per_slot.toLocaleString("en-us")} RUB</p>
                   </td>
                   <td>
