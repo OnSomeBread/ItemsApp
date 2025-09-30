@@ -155,7 +155,7 @@ function TaskScroll({
       direction: direction,
     };
 
-    fetch(API_BASE + "/api/set_complete", {
+    fetch(API_BASE + "/api/tasks/set_complete", {
       method: "POST",
       cache: "no-store",
       headers,
@@ -173,7 +173,7 @@ function TaskScroll({
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}
         onClear={() => {
-          fetch(API_BASE + "/api/clear_completed_tasks", {
+          fetch(API_BASE + "/api/tasks/clear_completed_tasks", {
             cache: "no-store",
             headers,
           })
