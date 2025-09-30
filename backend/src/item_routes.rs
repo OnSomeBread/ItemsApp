@@ -21,11 +21,10 @@ pub async fn item_stats(State(app_state): State<AppState>) -> Result<Json<ItemSt
         .bad_sql("Item Stats")?;
 
     let mut time_in_seconds_items = None;
-    #[allow(clippy::cast_possible_wrap)]
     if let Ok(mutex_timer) = app_state.next_items_call_timer.lock() {
         time_in_seconds_items = mutex_timer
             .as_ref()
-            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64);
+            .map(|t| t.saturating_duration_since(Instant::now()).as_secs());
     }
 
     Ok(Json(ItemStats {
@@ -311,7 +310,7 @@ pub async fn get_item_history(
 
     let item_history = sqlx::query_as!(
         SavedItemData,
-        "SELECT * FROM SavedItemData WHERE item_id = $1",
+        "SELECT * FROM SavedItemData WHERE item_id = $1 ORDER BY recorded_time ASC",
         item_id
     )
     .fetch_all(&app_state.pgpool)

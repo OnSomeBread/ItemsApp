@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import ItemScrollCompact from "../../components/ItemScrollCompact";
 import PageSwitch from "../../components/PageSwitch";
 import { DEFAULT_ITEM_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
-import type { Item, ItemQueryParams } from "../../types";
+import type { Item, ItemQueryParams, ItemStats } from "../../types";
 import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
 
 type PageProps = {
@@ -19,11 +19,17 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/item_query_parms", {
+  const res1 = await fetch(DOCKER_BACKEND + "/api/item_stats", {
     cache: "no-store",
     headers,
   });
-  const resQueryParams = (await res1.json()) as ItemQueryParams;
+  const itemStats = (await res1.json()) as ItemStats;
+
+  const res2 = await fetch(DOCKER_BACKEND + "/api/item_query_parms", {
+    cache: "no-store",
+    headers,
+  });
+  const resQueryParams = (await res2.json()) as ItemQueryParams;
 
   const queryParams = (await searchParams)?.queryParams ?? {
     ...DEFAULT_ITEM_QUERY_PARAMS,
@@ -37,11 +43,11 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res2 = await fetch(DOCKER_BACKEND + "/api/items?" + params.toString(), {
+  const res3 = await fetch(DOCKER_BACKEND + "/api/items?" + params.toString(), {
     cache: "no-store",
     headers,
   });
-  const items = (await res2.json()) as Item[];
+  const items = (await res3.json()) as Item[];
 
   return (
     <>
@@ -51,6 +57,7 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
           initItems={items}
           initQueryParams={queryParams}
           headers={headers}
+          initItemStats={itemStats}
         />
       </div>
     </>

@@ -2,8 +2,8 @@
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { Item, ItemQueryParams } from "../types";
-import { getBestBuy, getBestSell } from "../utils";
+import type { Item, ItemQueryParams, ItemStats } from "../types";
+import { formatSecondsToTime, getBestBuy, getBestSell } from "../utils";
 import ItemSearchBar from "./ItemSearchBar";
 import dynamic from "next/dynamic";
 const ImageComponent = dynamic(() => import("./ImageComponent"));
@@ -13,10 +13,19 @@ interface Props {
   initItems: Item[];
   initQueryParams: ItemQueryParams;
   headers: HeadersInit;
+  initItemStats: ItemStats;
 }
 
-function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
+function ItemScrollCompact({
+  initItems,
+  initQueryParams,
+  headers,
+  initItemStats,
+}: Props) {
   const [allItems, setAllItems] = useState(initItems);
+  const [timer, setTimer] = useState(
+    initItemStats.time_till_items_refresh_secs
+  );
   const [hasMore, setHasMore] = useState(
     initItems.length === initQueryParams.limit
   );
@@ -34,6 +43,16 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
     fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...Object.values(queryParams)]);
+
+  useEffect(() => {
+    if (timer <= 0) return;
+
+    const interval = setInterval(() => {
+      setTimer((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const fetchItems = () => {
     if (loading) return;
@@ -86,6 +105,9 @@ function ItemScrollCompact({ initItems, initQueryParams, headers }: Props) {
         changeQueryParams={changeQueryParams}
         clearCounts={() => {}}
       />
+      <p className="h-2 pl-4">
+        {formatSecondsToTime(timer)} Time Til Item List Refresh
+      </p>
       <InfiniteScroll
         dataLength={allItems?.length ?? 0}
         next={fetchItems}

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM SavedItemData WHERE item_id = $1",
+  "query": "SELECT * FROM SavedItemData WHERE item_id = $1 ORDER BY recorded_time ASC",
   "describe": {
     "columns": [
       {
@@ -48,5 +48,5 @@
       false
     ]
   },
-  "hash": "96e303add49ac48b575a3366570fe5a3d33c27b9e7e3df94dcd6682597533253"
+  "hash": "de0f15474aa59e82b5ce617ad1aef855270d80f722803316bcdab7db88d53d4c"
 }

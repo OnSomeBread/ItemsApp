@@ -41,11 +41,12 @@ impl<T> AppErrorHandling<T> for Result<T, sqlx::Error> {
 #[derive(Serialize)]
 pub struct ItemStats {
     pub items_count: i64,
-    pub time_till_items_refresh_secs: i64,
+    pub time_till_items_refresh_secs: u64,
 }
 
 #[derive(Serialize)]
 pub struct TaskStats {
+    pub tasks_completed_count: usize,
     pub tasks_count: i64,
     pub kappa_completed_count: usize,
     pub kappa_required_count: usize,

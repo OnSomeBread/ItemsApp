@@ -58,7 +58,6 @@ pub async fn task_stats(
         .count();
 
     let mut time_in_seconds_tasks = None;
-    #[allow(clippy::cast_possible_wrap)]
     if let Ok(mutex_timer) = app_state.next_tasks_call_timer.lock() {
         time_in_seconds_tasks = mutex_timer
             .as_ref()
@@ -66,6 +65,7 @@ pub async fn task_stats(
     }
 
     Ok(Json(TaskStats {
+        tasks_completed_count: completed_tasks.len(),
         tasks_count: tasks_count.unwrap_or(0),
         kappa_completed_count,
         kappa_required_count: kappa_required.len(),

@@ -1,17 +1,19 @@
 "use client";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { Task, TaskQueryParams } from "../types";
+import type { Task, TaskQueryParams, TaskStats } from "../types";
 import { useEffect, useRef, useState } from "react";
 import TaskSearchBar from "./TaskSearchBar";
 import { motion } from "framer-motion";
 import TaskComponent from "./TaskComponent";
 import { API_BASE } from "../constants";
+import { formatSecondsToTime } from "../utils";
 
 interface Props {
   initTasks: Task[];
   completedTasks: Task[];
   headers: HeadersInit;
   initQueryParams: TaskQueryParams;
+  initTaskStats: TaskStats;
 }
 
 function TaskScroll({
@@ -19,9 +21,14 @@ function TaskScroll({
   completedTasks,
   headers,
   initQueryParams,
+  initTaskStats,
 }: Props) {
   const [allTasks, setAllTasks] = useState(initTasks);
   const [allCompletedTasks, setAllCompletedTasks] = useState(completedTasks);
+  const [taskStats, setTastStats] = useState(initTaskStats);
+  const [timer, setTimer] = useState(
+    initTaskStats.time_till_tasks_refresh_secs
+  );
   const [hasMore, setHasMore] = useState(
     initTasks.length === initQueryParams.limit
   );
@@ -42,6 +49,16 @@ function TaskScroll({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [changedTasksToggle]);
 
+  useEffect(() => {
+    if (timer <= 0) return;
+
+    const interval = setInterval(() => {
+      setTimer((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
   const fetchNewCompletedTasks = () => {
     fetch(API_BASE + "/api/get_completed", {
       cache: "no-store",
@@ -50,8 +67,24 @@ function TaskScroll({
       .then((res2) => {
         res2
           .json()
-          .then((new_completed_tasks: Task[]) => {
-            setAllCompletedTasks(new_completed_tasks);
+          .then((newCompletedTasks: Task[]) => {
+            setAllCompletedTasks(newCompletedTasks);
+          })
+          .catch((err) => console.error(err));
+      })
+      .catch((err) => console.error(err));
+  };
+
+  const fetchNewTaskStats = () => {
+    fetch(API_BASE + "/api/task_stats", {
+      cache: "no-store",
+      headers,
+    })
+      .then((res2) => {
+        res2
+          .json()
+          .then((newTaskStats: TaskStats) => {
+            setTastStats(newTaskStats);
           })
           .catch((err) => console.error(err));
       })
@@ -78,6 +111,7 @@ function TaskScroll({
             if (offset === 0) {
               setAllTasks(tasks);
               fetchNewCompletedTasks();
+              fetchNewTaskStats();
             } else {
               setAllTasks((prev) => [...(prev ?? []), ...tasks]);
             }
@@ -148,6 +182,9 @@ function TaskScroll({
           setChangedTasksToggle((prev) => !prev);
         }}
       />
+      <p className="h-2 pl-16">
+        {formatSecondsToTime(timer)} Time Til Task List Refresh
+      </p>
 
       <div className="flex w-full">
         <div className="flex-1">
@@ -194,6 +231,40 @@ function TaskScroll({
                 <h2 className="text-xl font-bold">Completed Tasks</h2>
                 <p className="text-sm">
                   Click on a task to mark it as not completed
+                </p>
+              </div>
+              <div className="flex">
+                <progress
+                  className="flex-1"
+                  value={taskStats.tasks_completed_count}
+                  max={taskStats.tasks_count}
+                />
+                <p className="relative bottom-2 flex-1 pl-5">
+                  {taskStats.tasks_completed_count}/{taskStats.tasks_count}{" "}
+                  Total Tasks Completed
+                </p>
+              </div>
+              <div className="flex">
+                <progress
+                  className="flex-1"
+                  value={taskStats.kappa_completed_count}
+                  max={taskStats.kappa_required_count}
+                />
+                <p className="relative bottom-2 flex-1 pl-5">
+                  {taskStats.kappa_completed_count}/
+                  {taskStats.kappa_required_count} Kappa Tasks Completed
+                </p>
+              </div>
+              <div className="flex">
+                <progress
+                  className="flex-1"
+                  value={taskStats.lightkeeper_completed_count}
+                  max={taskStats.lightkeeper_required_count}
+                />
+                <p className="relative bottom-2 flex-1 pl-5">
+                  {taskStats.lightkeeper_completed_count}/
+                  {taskStats.lightkeeper_required_count} Lightkeeper Tasks
+                  Completed
                 </p>
               </div>
 

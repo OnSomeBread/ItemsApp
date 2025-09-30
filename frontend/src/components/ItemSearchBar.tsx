@@ -32,7 +32,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
   const dropdownClass = "flex-1 !border !border-[#ccc] !rounded-[8px]";
 
   return (
-    <div className="flex-col gap-4 p-4 md:flex md:flex-row">
+    <div className="flex-col gap-4 px-4 pt-4 md:flex md:flex-row">
       <input
         className="flex-1 !border !border-[#ccc]"
         type="search"

@@ -102,3 +102,18 @@ export type Task = {
 export type TaskAdjList = {
   [key: string]: [string, boolean][];
 };
+
+export type ItemStats = {
+  items_count: number;
+  time_till_items_refresh_secs: number;
+};
+
+export type TaskStats = {
+  tasks_completed_count: number;
+  tasks_count: number;
+  kappa_completed_count: number;
+  kappa_required_count: number;
+  lightkeeper_completed_count: number;
+  lightkeeper_required_count: number;
+  time_till_tasks_refresh_secs: number;
+};

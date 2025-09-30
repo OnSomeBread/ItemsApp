@@ -2,7 +2,7 @@ import PageSwitch from "../../components/PageSwitch";
 import TaskScroll from "../../components/TaskScroll";
 import { DEFAULT_TASK_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
 import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
-import type { Task, TaskQueryParams } from "../../types";
+import type { Task, TaskQueryParams, TaskStats } from "../../types";
 import { cookies } from "next/headers";
 
 type PageProps = {
@@ -19,11 +19,17 @@ async function DisplayTasks({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/task_query_parms", {
+  const res1 = await fetch(DOCKER_BACKEND + "/api/task_stats", {
     cache: "no-store",
     headers,
   });
-  const resQueryParams = (await res1.json()) as TaskQueryParams;
+  const taskStats = (await res1.json()) as TaskStats;
+
+  const res2 = await fetch(DOCKER_BACKEND + "/api/task_query_parms", {
+    cache: "no-store",
+    headers,
+  });
+  const resQueryParams = (await res2.json()) as TaskQueryParams;
 
   const queryParams = (await searchParams)?.queryParams ?? {
     ...DEFAULT_TASK_QUERY_PARAMS,
@@ -36,18 +42,18 @@ async function DisplayTasks({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res2 = await fetch(DOCKER_BACKEND + "/api/tasks?" + params.toString(), {
+  const res3 = await fetch(DOCKER_BACKEND + "/api/tasks?" + params.toString(), {
     cache: "no-store",
     headers,
   });
-  const tasks = (await res2.json()) as Task[];
+  const tasks = (await res3.json()) as Task[];
   queryParams.offset = queryParams.limit;
 
-  const res3 = await fetch(DOCKER_BACKEND + "/api/get_completed", {
+  const res4 = await fetch(DOCKER_BACKEND + "/api/get_completed", {
     cache: "no-store",
     headers,
   });
-  const completedTasks = (await res3.json()) as Task[];
+  const completedTasks = (await res4.json()) as Task[];
 
   return (
     <>
@@ -57,6 +63,7 @@ async function DisplayTasks({ searchParams }: PageProps) {
         completedTasks={completedTasks}
         initQueryParams={queryParams}
         headers={headers}
+        initTaskStats={taskStats}
       />
     </>
   );
