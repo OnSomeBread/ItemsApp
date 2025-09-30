@@ -92,6 +92,8 @@ pub struct Objective {
     pub map_name: String,
     pub map_wiki: String,
     pub task_id: String,
+    pub count: i32,
+    pub needed_item_ids: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
@@ -106,8 +108,6 @@ pub struct TaskRequirement {
 pub struct TaskFromDB {
     pub _id: String,
     pub task_name: String,
-    pub normalized_name: String,
-    pub experience: i32,
     pub min_player_level: i32,
     pub trader: String,
     pub faction_name: String,
@@ -120,8 +120,6 @@ pub struct TaskFromDB {
 pub struct Task {
     pub _id: String,
     pub task_name: String,
-    pub normalized_name: String,
-    pub experience: i32,
     pub min_player_level: i32,
     pub trader: String,
     pub faction_name: String,
@@ -137,8 +135,6 @@ impl From<TaskFromDB> for Task {
         Self {
             _id: task_from_db._id,
             task_name: task_from_db.task_name,
-            normalized_name: task_from_db.normalized_name,
-            experience: task_from_db.experience,
             min_player_level: task_from_db.min_player_level,
             trader: task_from_db.trader,
             faction_name: task_from_db.faction_name,
@@ -154,8 +150,6 @@ impl From<TaskFromDB> for Task {
 #[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
 pub struct SavedItemData {
     pub id: i32,
-    pub avg_24h_price: i32,
-    pub change_last_48h_percent: f32,
     pub price_rub: i32,
     pub recorded_time: DateTime<Utc>,
     pub item_id: String,

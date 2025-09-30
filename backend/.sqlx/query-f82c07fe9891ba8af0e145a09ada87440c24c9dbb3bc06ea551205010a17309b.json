@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO Objective \n                (obj_type, obj_description, map_name, map_wiki, count, needed_item_ids, task_id) \n                VALUES($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "TextArray",
+        "Bpchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f82c07fe9891ba8af0e145a09ada87440c24c9dbb3bc06ea551205010a17309b"
+}

@@ -30,6 +30,16 @@
       },
       {
         "ordinal": 5,
+        "name": "count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "needed_item_ids",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 7,
         "name": "task_id",
         "type_info": "Bpchar"
       }
@@ -40,6 +50,8 @@
       ]
     },
     "nullable": [
+      false,
+      false,
       false,
       false,
       false,

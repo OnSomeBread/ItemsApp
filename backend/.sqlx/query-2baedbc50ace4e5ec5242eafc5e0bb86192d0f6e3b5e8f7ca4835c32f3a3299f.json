@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO SavedItemData (price_rub, recorded_time, item_id) \n            SELECT * FROM UNNEST($1::int[], $2::timestamptz[], $3::text[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4Array",
+        "TimestamptzArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2baedbc50ace4e5ec5242eafc5e0bb86192d0f6e3b5e8f7ca4835c32f3a3299f"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO Task \n        (_id, task_name, min_player_level, trader, \n        faction_name, kappa_required, lightkeeper_required, wiki) \n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT(_id) DO NOTHING;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bpchar",
+        "Varchar",
+        "Int4",
+        "Varchar",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "811bc4edd30512507d9841b90fc9c2f2f51c572c0cd508f4ef3806eac83277c4"
+}

@@ -3,7 +3,7 @@ use chrono::Utc;
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::Value;
-use std::{error::Error, io::Write};
+use std::{collections::HashSet, error::Error, io::Write};
 
 pub async fn upsert_data_file(
     file_name: &str,
@@ -246,7 +246,11 @@ async fn upsert_items(
         .collect::<Vec<String>>();
 
     // BUYFOR BULK INSERT
-    sqlx::query!("INSERT INTO BuyFor (price, currency, price_rub, trader_name, min_trader_level, buy_limit, item_id) SELECT * FROM UNNEST($1::int[], $2::text[], $3::int[], $4::text[], $5::int[], $6::int[], $7::text[]) ON CONFLICT (id) DO UPDATE SET price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, min_trader_level = EXCLUDED.min_trader_level, buy_limit = EXCLUDED.buy_limit, item_id = EXCLUDED.item_id;",
+    sqlx::query!(
+        "INSERT INTO BuyFor (price, currency, price_rub, trader_name, min_trader_level, buy_limit, item_id) 
+    SELECT * FROM UNNEST($1::int[], $2::text[], $3::int[], $4::text[], $5::int[], $6::int[], $7::text[]) 
+    ON CONFLICT (id) DO UPDATE SET 
+    price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, min_trader_level = EXCLUDED.min_trader_level, buy_limit = EXCLUDED.buy_limit, item_id = EXCLUDED.item_id;",
         &buy_for_prices,
         &buy_for_currencys,
         &buy_for_price_rubs,
@@ -298,15 +302,21 @@ async fn upsert_items(
         .collect::<Vec<String>>();
 
     // SELLFOR BULK INSERT
-    sqlx::query!("INSERT INTO SellFor (price, currency, price_rub, trader_name, found_in_raid_required, item_id) 
+    sqlx::query!(
+        "INSERT INTO SellFor
+    (price, currency, price_rub, trader_name, found_in_raid_required, item_id) 
     SELECT * FROM UNNEST($1::int[], $2::text[], $3::int[], $4::text[], $5::bool[], $6::text[]) 
-    ON CONFLICT (id) DO UPDATE SET price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, found_in_raid_required = EXCLUDED.found_in_raid_required, item_id = EXCLUDED.item_id;",
+    ON CONFLICT (id) DO UPDATE SET 
+    price = EXCLUDED.price, currency = EXCLUDED.currency, price_rub = EXCLUDED.price_rub, trader_name = EXCLUDED.trader_name, found_in_raid_required = EXCLUDED.found_in_raid_required, item_id = EXCLUDED.item_id;",
         &sell_for_prices,
         &sell_for_currencys,
         &sell_for_price_rubs,
         &sell_for_traders,
         &sell_for_found_in_raid_required,
-        &sell_for_item_ids).execute(&mut *txn).await?;
+        &sell_for_item_ids
+    )
+    .execute(&mut *txn)
+    .await?;
 
     // SAVEDITEMDATA BULK INSERT ONLY ON UPSERT API
     if is_api_call {
@@ -317,33 +327,38 @@ async fn upsert_items(
                 (PARTITION BY item_id ORDER BY recorded_time DESC) AS rn FROM SavedItemData
                 ) t WHERE t.rn > $1
             );",
-            100
+            500
         )
         .execute(&mut *txn)
         .await?;
 
+        let saved_item_ids: HashSet<String> = items
+            .iter()
+            .filter(|x| x.buys.iter().any(|b| b.vendor.trader_name == "Flea Market"))
+            .map(|x| x._id.clone())
+            .collect();
+
         let best_flea_prices: Vec<i32> = items
             .iter()
+            .filter(|x| saved_item_ids.contains(&x._id))
             .map(|x| {
-                let flea_market_price = x
-                    .buys
+                x.buys
                     .iter()
-                    .find(|b| b.vendor.trader_name == "Flea Market");
-                if let Some(flea_market_price) = flea_market_price {
-                    return flea_market_price.price_rub;
-                }
-                0
+                    .find(|b| b.vendor.trader_name == "Flea Market")
+                    .unwrap()
+                    .price_rub
             })
             .collect();
 
         sqlx::query!(
-            "INSERT INTO SavedItemData (avg_24h_price, change_last_48h_percent, price_rub, recorded_time, item_id) SELECT * FROM UNNEST($1::int[], $2::real[], $3::int[], $4::timestamptz[], $5::text[])",
-            &avg_24h_prices,
-            &change_last_48h_percents,
+            "INSERT INTO SavedItemData (price_rub, recorded_time, item_id) 
+            SELECT * FROM UNNEST($1::int[], $2::timestamptz[], $3::text[])",
             &best_flea_prices,
-            &vec![Utc::now(); items.len()],
-            &ids,
-        ).execute(&mut *txn).await?;
+            &vec![Utc::now(); saved_item_ids.len()],
+            &saved_item_ids.into_iter().collect::<Vec<String>>(),
+        )
+        .execute(&mut *txn)
+        .await?;
     }
 
     txn.commit().await?;
@@ -360,29 +375,55 @@ async fn upsert_tasks(
     sqlx::query!("DELETE FROM Task").execute(&mut *txn).await?;
 
     for task in tasks {
-        sqlx::query!("INSERT INTO Task (_id, task_name, normalized_name, experience, min_player_level, trader, faction_name, kappa_required, lightkeeper_required, wiki) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT(_id) DO NOTHING;",
+        sqlx::query!(
+            "INSERT INTO Task 
+        (_id, task_name, min_player_level, trader, 
+        faction_name, kappa_required, lightkeeper_required, wiki) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT(_id) DO NOTHING;",
             &task._id,
             &task.task_name,
-            &task.normalized_name,
-            &task.experience,
             &task.min_player_level,
             &task.trader.name,
             &task.faction_name,
             &task.kappa_required,
             &task.lightkeeper_required,
-            &task.wiki)
+            &task.wiki
+        )
+        .execute(&mut *txn)
+        .await?;
+
+        for objective in &task.objectives {
+            sqlx::query!(
+                "INSERT INTO Objective 
+                (obj_type, obj_description, map_name, map_wiki, count, needed_item_ids, task_id) 
+                VALUES($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING;",
+                &objective.obj_type,
+                &objective.obj_description,
+                &objective
+                    .maps
+                    .iter()
+                    .map(|x| x.name.clone())
+                    .collect::<Vec<String>>()
+                    .join(", "),
+                &objective
+                    .maps
+                    .iter()
+                    .map(|x| x.wiki.clone())
+                    .collect::<Vec<String>>()
+                    .join(", "),
+                &objective.count.unwrap_or(0),
+                &objective
+                    .items
+                    .clone()
+                    .unwrap_or(vec![])
+                    .iter()
+                    .map(|x| x._id.clone())
+                    .collect::<Vec<String>>(),
+                &task._id,
+            )
             .execute(&mut *txn)
             .await?;
-
-        sqlx::query!(
-            "INSERT INTO Objective (obj_type, obj_description, map_name, map_wiki, task_id) SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[], $4::text[], $5::text[]) ON CONFLICT DO NOTHING;",
-            &task.objectives.iter().map(|x| x.obj_type.clone()).collect::<Vec<String>>(),
-            &task.objectives.iter().map(|x| x.obj_description.clone()).collect::<Vec<String>>(),
-            &task.objectives.iter().map(|x| x.maps.iter().map(|x| x.name.clone()).collect::<Vec<String>>().join(", ")).collect::<Vec<String>>(),
-            &task.objectives.iter().map(|x| x.maps.iter().map(|x| x.wiki.clone()).collect::<Vec<String>>().join(", ")).collect::<Vec<String>>(),
-            &vec![task._id.to_string();task.objectives.len()],
-        ).execute(&mut *txn)
-        .await?;
+        }
 
         sqlx::query!(
             "INSERT INTO TaskRequirement (status, req_task_id, task_id) SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[]) ON CONFLICT DO NOTHING;",

@@ -10,26 +10,16 @@
       },
       {
         "ordinal": 1,
-        "name": "avg_24h_price",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 2,
-        "name": "change_last_48h_percent",
-        "type_info": "Float4"
-      },
-      {
-        "ordinal": 3,
         "name": "price_rub",
         "type_info": "Int4"
       },
       {
-        "ordinal": 4,
+        "ordinal": 2,
         "name": "recorded_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 3,
         "name": "item_id",
         "type_info": "Bpchar"
       }
@@ -40,8 +30,6 @@
       ]
     },
     "nullable": [
-      false,
-      false,
       false,
       false,
       false,

@@ -40,8 +40,6 @@ CREATE TABLE IF NOT EXISTS SellFor(
 
 CREATE TABLE IF NOT EXISTS SavedItemData(
     id SERIAL PRIMARY KEY,
-    avg_24h_price INT NOT NULL,
-    change_last_48h_percent REAL NOT NULL,
     price_rub INT NOT NULL,
     recorded_time TIMESTAMPTZ NOT NULL,
     item_id CHAR(24) NOT NULL
@@ -50,8 +48,6 @@ CREATE TABLE IF NOT EXISTS SavedItemData(
 CREATE TABLE IF NOT EXISTS Task(
     _id CHAR(24) PRIMARY KEY,
     task_name VARCHAR(255) NOT NULL,
-    normalized_name VARCHAR(128) NOT NULL,
-    experience INT NOT NULL,
     min_player_level INT NOT NULL,
     trader VARCHAR(255) NOT NULL,
     faction_name VARCHAR(24) NOT NULL,
@@ -66,6 +62,8 @@ CREATE TABLE IF NOT EXISTS Objective(
     obj_description TEXT NOT NULL,
     map_name VARCHAR(255) NOT NULL,
     map_wiki VARCHAR(2048) NOT NULL,
+    count INT NOT NULL,
+    needed_item_ids TEXT[] NOT NULL,
     task_id CHAR(24) NOT NULL,
     CONSTRAINT objectives FOREIGN KEY (task_id) REFERENCES Task(_id) ON DELETE CASCADE
 );

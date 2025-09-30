@@ -66,6 +66,12 @@ pub struct Map {
     pub wiki: String,
 }
 
+#[derive(Deserialize, Serialize, Clone)]
+pub struct NeededItem {
+    #[serde(rename = "id")]
+    pub _id: String,
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Objective {
@@ -74,6 +80,8 @@ pub struct Objective {
     #[serde(rename = "description")]
     pub obj_description: String,
     pub maps: Vec<Map>,
+    pub count: Option<i32>,
+    pub items: Option<Vec<NeededItem>>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -101,8 +109,6 @@ pub struct Task {
     pub _id: String,
     #[serde(rename = "name")]
     pub task_name: String,
-    pub normalized_name: String,
-    pub experience: i32,
     pub min_player_level: i32,
     pub trader: Trader,
     pub faction_name: String,
@@ -165,26 +171,25 @@ pub const TASKS_QUERY: &str = "
             }
         }
         name
-        experience
         id
         kappaRequired
         lightkeeperRequired
         objectives {
-            id
             type
             description
             maps {
-                id
                 name
-                description
-                normalizedName
-                players
                 wiki
+            }
+            ... on TaskObjectiveItem {
+                items {
+                id
+                }
+                count
             }
         }
         minPlayerLevel
         factionName
-        normalizedName
         wikiLink
         trader {
             name
