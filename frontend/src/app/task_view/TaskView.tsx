@@ -11,13 +11,13 @@ async function TaskView({ searchParams }: PageProps) {
   const id = (await searchParams)?.id;
   if (id === undefined) return <p>no task passed in</p>;
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/task_ids?ids=" + id, {
+  const res1 = await fetch(DOCKER_BACKEND + "/api/tasks/ids?ids=" + id, {
     cache: "no-store",
   });
 
   const task = ((await res1.json()) as Task[])[0];
 
-  const res2 = await fetch(DOCKER_BACKEND + "/api/adj_list", {
+  const res2 = await fetch(DOCKER_BACKEND + "/api/tasks/adj_list", {
     cache: "no-store",
   });
   const adjList = (await res2.json()) as TaskAdjList;
@@ -38,7 +38,7 @@ async function TaskView({ searchParams }: PageProps) {
     });
 
   const res3 = await fetch(
-    DOCKER_BACKEND + "/api/task_ids?" + params.toString(),
+    DOCKER_BACKEND + "/api/tasks/ids?" + params.toString(),
     {
       cache: "no-store",
     }

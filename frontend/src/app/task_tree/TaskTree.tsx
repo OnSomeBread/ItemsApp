@@ -34,7 +34,7 @@ async function TaskTree({ searchParams }: PageProps) {
   if (is_lightkeeper === undefined) is_lightkeeper = false;
   if (include_completed === undefined) include_completed = true;
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/adj_list", {
+  const res1 = await fetch(DOCKER_BACKEND + "/api/tasks/adj_list", {
     cache: "no-store",
   });
   const adjList = (await res1.json()) as TaskAdjList;

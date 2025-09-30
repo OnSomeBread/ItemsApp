@@ -14,13 +14,13 @@ async function ItemView({ searchParams }: PageProps) {
   const id = (await searchParams)?.id;
   if (id === undefined) return <p>no item passed in</p>;
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/item_ids?ids=" + id, {
+  const res1 = await fetch(DOCKER_BACKEND + "/api/items/ids?ids=" + id, {
     cache: "no-store",
   });
   const item = ((await res1.json()) as Item[])[0];
 
   const res2 = await fetch(
-    DOCKER_BACKEND + "/api/item_history?item_id=" + item._id,
+    DOCKER_BACKEND + "/api/items/history?item_id=" + item._id,
     {
       cache: "no-store",
     }

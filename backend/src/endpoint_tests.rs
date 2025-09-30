@@ -32,7 +32,7 @@ trait QueryParms: DeserializeOwned {
 
 impl QueryParms for DeviceItemQueryParams {
     fn get_base() -> String {
-        "/item_query_parms".to_string()
+        "/items/query_parms".to_string()
     }
     fn get_search(&self) -> &str {
         &self.search
@@ -40,7 +40,7 @@ impl QueryParms for DeviceItemQueryParams {
 }
 impl QueryParms for DeviceTaskQueryParams {
     fn get_base() -> String {
-        "/task_query_parms".to_string()
+        "/tasks/query_parms".to_string()
     }
     fn get_search(&self) -> &str {
         &self.search
@@ -252,20 +252,24 @@ async fn test_health() {
 }
 
 #[tokio::test]
-async fn test_stats() {
+async fn test_item_stats() {
     let res = Client::new()
-        .get(format!("{}{}", URL, "/item_stats"))
+        .get(format!("{}{}", URL, "/items/stats"))
         .send()
         .await
-        .expect("item_stats endpoint failed");
+        .expect("item stats endpoint failed");
 
     assert!(res.status().is_success());
+}
 
+#[tokio::test]
+async fn test_task_stats() {
     let res = Client::new()
-        .get(format!("{}{}", URL, "/task_stats"))
+        .get(format!("{}{}", URL, "/tasks/stats"))
+        .header("x-device-id", DEVICE_ID)
         .send()
         .await
-        .expect("task_stats endpoint failed");
+        .expect("task stats endpoint failed");
 
     assert!(res.status().is_success());
 }
@@ -275,7 +279,7 @@ async fn test_item_history() {
     let res = Client::new()
         .get(format!(
             "{}{}",
-            URL, "/item_history?item_id=674d90b55704568fe60bc8f5"
+            URL, "/items/history?item_id=674d90b55704568fe60bc8f5"
         ))
         .send()
         .await
@@ -364,17 +368,25 @@ async fn test_ids_endpoint() {
     Task::ids_testing().await;
 }
 
+// this tests enforces that search does not break backend and works correctly
 #[tokio::test]
-async fn test_search() {
-    // this tests enforces that search does not break backend and works correctly
+async fn test_item_search() {
     Item::search_testing().await;
-    Task::search_testing().await;
 }
 
 #[tokio::test]
-async fn test_limit_and_offset() {
-    // this tests enforces that limit and offset grab the correct values
+async fn test_task_search() {
+    Task::search_testing().await;
+}
+
+// this tests enforces that limit and offset grab the correct values
+#[tokio::test]
+async fn test_item_limit_and_offset() {
     Item::limit_and_offset_testing().await;
+}
+
+#[tokio::test]
+async fn test_task_limit_and_offset() {
     Task::limit_and_offset_testing().await;
 }
 
@@ -408,7 +420,7 @@ fn perform_dfs(
 #[tokio::test]
 async fn test_adj_list() {
     let res = Client::new()
-        .get(format!("{}{}", URL, "/adj_list"))
+        .get(format!("{}{}", URL, "/tasks/adj_list"))
         .send()
         .await
         .expect("adj_list endpoint failed");
@@ -451,7 +463,11 @@ async fn test_adj_list() {
 
 // this tests to make sure that adding the device id header works correctly
 #[tokio::test]
-async fn test_device_endpoint() {
+async fn test_item_device_endpoint() {
     Item::device_id_testing().await;
+}
+
+#[tokio::test]
+async fn test_task_device_endpoint() {
     Task::device_id_testing().await;
 }

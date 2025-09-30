@@ -17,7 +17,7 @@ function ItemCart() {
     });
   }
 
-  const query = "/api/item_ids?" + params.toString();
+  const query = "/api/items/ids?" + params.toString();
   const count = params.getAll("ids").length;
 
   useEffect(() => {

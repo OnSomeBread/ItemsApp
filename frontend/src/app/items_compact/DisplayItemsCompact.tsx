@@ -19,13 +19,13 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/item_stats", {
+  const res1 = await fetch(DOCKER_BACKEND + "/api/items/stats", {
     cache: "no-store",
     headers,
   });
   const itemStats = (await res1.json()) as ItemStats;
 
-  const res2 = await fetch(DOCKER_BACKEND + "/api/item_query_parms", {
+  const res2 = await fetch(DOCKER_BACKEND + "/api/items/query_parms", {
     cache: "no-store",
     headers,
   });

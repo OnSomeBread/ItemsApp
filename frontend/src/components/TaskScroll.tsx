@@ -60,7 +60,7 @@ function TaskScroll({
   }, [timer]);
 
   const fetchNewCompletedTasks = () => {
-    fetch(API_BASE + "/api/get_completed", {
+    fetch(API_BASE + "/api/tasks/get_completed", {
       cache: "no-store",
       headers,
     })
@@ -76,7 +76,7 @@ function TaskScroll({
   };
 
   const fetchNewTaskStats = () => {
-    fetch(API_BASE + "/api/task_stats", {
+    fetch(API_BASE + "/api/tasks/stats", {
       cache: "no-store",
       headers,
     })

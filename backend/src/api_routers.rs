@@ -238,28 +238,28 @@ impl RedisCache for SavedItemData {}
 
 fn items_router() -> Router<AppState> {
     Router::new()
-        .route("/item_stats", get(item_stats))
-        .route("/items", get(get_items))
-        .route("/item_history", get(get_item_history))
-        .route("/item_ids", get(get_page_by_ids::<Item>))
-        .route("/item_query_parms", get(get_device_item_query_parms))
+        .route("/", get(get_items))
+        .route("/stats", get(item_stats))
+        .route("/history", get(get_item_history))
+        .route("/ids", get(get_page_by_ids::<Item>))
+        .route("/query_parms", get(get_device_item_query_parms))
 }
 
 fn tasks_router() -> Router<AppState> {
     Router::new()
-        .route("/task_stats", get(task_stats))
-        .route("/tasks", get(get_tasks))
-        .route("/task_ids", get(get_page_by_ids::<Task>))
+        .route("/", get(get_tasks))
+        .route("/stats", get(task_stats))
+        .route("/ids", get(get_page_by_ids::<Task>))
         .route("/adj_list", get(get_adj_list))
         .route("/get_completed", get(get_completed_tasks))
         .route("/set_complete", post(set_completed_task))
         .route("/clear_completed_tasks", get(clear_completed_tasks))
-        .route("/task_query_parms", get(get_device_task_query_parms))
+        .route("/query_parms", get(get_device_task_query_parms))
 }
 
 pub fn api_router() -> Router<AppState> {
     Router::new()
         .route("/health", get(health))
-        .merge(items_router())
-        .merge(tasks_router())
+        .nest("/items", items_router())
+        .nest("/tasks", tasks_router())
 }
