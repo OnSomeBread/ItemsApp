@@ -69,8 +69,10 @@ async function TaskView({ searchParams }: PageProps) {
           </p>
           <p>Objectives</p>
           <ul>
-            {task.objectives.map((obj) => (
-              <li key={obj.id}>
+            {task.objectives.map((obj, i) => (
+              // the array here is constant so this lint can be ignored
+              // eslint-disable-next-line @eslint-react/no-array-index-key
+              <li key={i}>
                 <p>
                   Objective Type:{" "}
                   {

@@ -67,14 +67,12 @@ export type TaskQueryParams = {
 };
 
 export type TaskRequirement = {
-  id: number;
   status: string;
   req_task_id: string;
   task_id: string;
 };
 
 export type Objective = {
-  id: number;
   obj_type: string;
   obj_description: string;
   map_name: "";
@@ -85,8 +83,6 @@ export type Objective = {
 export type Task = {
   _id: string;
   task_name: string;
-  normalized_name: string;
-  experience: number;
   min_player_level: number;
   trader: string;
   faction_name: string;

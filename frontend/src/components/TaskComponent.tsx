@@ -47,7 +47,7 @@ function TaskComponent({ task, idx, onClickButton }: Props) {
 
       <ul className="mt-3 space-y-1 px-4">
         {task.objectives.map((obj, index) => (
-          <li key={obj.id}>
+          <li key={"I" + idx + "O" + index.toString()}>
             <span className="font-semibold">{index + 1}.</span>{" "}
             {obj.obj_description}
           </li>
