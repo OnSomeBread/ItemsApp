@@ -32,7 +32,7 @@ function TaskScroll({
   const [hasMore, setHasMore] = useState(
     initTasks.length === initQueryParams.limit
   );
-  const [loading, setLoading] = useState(false);
+  //const [loading, setLoading] = useState(false);
   const [queryParams, setQueryParams] = useState(initQueryParams);
 
   // the actual value here doesn't matter its for the useEffect so that it can account for changed task list
@@ -92,8 +92,6 @@ function TaskScroll({
   };
 
   const fetchTasks = (offset: number) => {
-    if (loading) return;
-    setLoading(true);
     const params = new URLSearchParams();
     Object.entries(queryParams).forEach(([key, value]) => {
       if (key !== "offset") params.append(key, value.toString());
@@ -118,7 +116,6 @@ function TaskScroll({
 
             changeQueryParams("offset", queryParams.offset + queryParams.limit);
             setHasMore(tasks.length === queryParams.limit);
-            setLoading(false);
           })
           .catch((err) => console.error(err));
       })

@@ -30,7 +30,6 @@ function ItemScrollCompact({
     initItems.length === initQueryParams.limit
   );
   const [offset, setOffset] = useState(initQueryParams.limit);
-  const [loading, setLoading] = useState(false);
   const [queryParams, setQueryParams] = useState(initQueryParams);
   const firstRun = useRef(true);
 
@@ -55,8 +54,6 @@ function ItemScrollCompact({
   }, [timer]);
 
   const fetchItems = () => {
-    if (loading) return;
-    setLoading(true);
     const params = new URLSearchParams();
     Object.entries(queryParams).forEach(([key, value]) => {
       if (key !== "offset") params.append(key, value.toString());
@@ -84,7 +81,6 @@ function ItemScrollCompact({
               items.length === queryParams.limit && allItems.length < 300
             );
             setOffset((prev) => prev + queryParams.limit);
-            setLoading(false);
           })
           .catch((err) => console.error(err));
       })
