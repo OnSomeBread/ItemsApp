@@ -1,4 +1,4 @@
-use crate::database_types::{Item, ItemFromDB, SavedItemData, Task, TaskFromDB};
+use crate::database_types::{Item, ItemFromDB, SavedItemData, Task, TaskBase, TaskFromDB};
 use crate::init_app_state::AppState;
 use crate::item_routes::{
     get_device_item_query_parms, get_item_history, get_items, item_stats, items_from_db_to_items,
@@ -8,7 +8,7 @@ use crate::query_types::{
 };
 use crate::task_routes::{
     clear_completed_tasks, get_adj_list, get_completed_tasks, get_device_task_query_parms,
-    get_tasks, set_completed_task, task_stats, tasks_from_db_to_tasks,
+    get_tasks, get_tasks_base, set_completed_task, task_stats, tasks_from_db_to_tasks,
 };
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
@@ -232,9 +232,10 @@ pub trait RedisCache: DeserializeOwned + Serialize + Send + 'static {
     }
 }
 
-impl RedisCache for Task {}
 impl RedisCache for Item {}
 impl RedisCache for SavedItemData {}
+impl RedisCache for Task {}
+impl RedisCache for TaskBase {}
 
 fn items_router() -> Router<AppState> {
     Router::new()
@@ -248,6 +249,7 @@ fn items_router() -> Router<AppState> {
 fn tasks_router() -> Router<AppState> {
     Router::new()
         .route("/", get(get_tasks))
+        .route("/base", get(get_tasks_base))
         .route("/stats", get(task_stats))
         .route("/ids", get(get_page_by_ids::<Task>))
         .route("/adj_list", get(get_adj_list))

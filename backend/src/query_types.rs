@@ -1,4 +1,3 @@
-use crate::database_types::{DeviceItemQueryParams, DeviceTaskQueryParams};
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Json, Response},
@@ -38,6 +37,10 @@ impl<T> AppErrorHandling<T> for Result<T, sqlx::Error> {
     }
 }
 
+const fn default_true() -> bool {
+    true
+}
+
 #[derive(Serialize)]
 pub struct ItemStats {
     pub items_count: i64,
@@ -57,37 +60,20 @@ pub struct TaskStats {
 
 #[derive(Deserialize)]
 pub struct ItemQueryParams {
-    pub search: Option<String>,
-    pub sort_asc: Option<bool>,
-    pub sort_by: Option<String>,
-    pub item_type: Option<String>,
-    pub limit: Option<u32>,
-    pub offset: Option<u32>,
-    pub save: Option<bool>,
-}
-
-// impl ItemQueryParams {
-//     pub fn is_all_none(&self) -> bool {
-//         self.search.is_none()
-//             && self.asc.is_none()
-//             && self.sort_by.is_none()
-//             && self.item_type.is_none()
-//     }
-// }
-
-impl From<DeviceItemQueryParams> for ItemQueryParams {
-    fn from(parms: DeviceItemQueryParams) -> Self {
-        Self {
-            search: Some(parms.search),
-            sort_asc: Some(parms.sort_asc),
-            sort_by: Some(parms.sort_by),
-            item_type: Some(parms.item_type),
-
-            limit: None,
-            offset: None,
-            save: Some(true),
-        }
-    }
+    #[serde(default)]
+    pub search: String,
+    #[serde(default)]
+    pub sort_asc: bool,
+    #[serde(default)]
+    pub sort_by: String,
+    #[serde(default)]
+    pub item_type: String,
+    #[serde(default = "default_limit")]
+    pub limit: u32,
+    #[serde(default)]
+    pub offset: u32,
+    #[serde(default = "default_true")]
+    pub save: bool,
 }
 
 #[derive(Deserialize)]
@@ -100,47 +86,37 @@ pub struct IdsQueryParams {
     pub ids: Option<Vec<String>>,
 }
 
-#[derive(Deserialize)]
-pub struct TaskQueryParams {
-    pub search: Option<String>,
-    pub is_kappa: Option<bool>,
-    pub is_lightkeeper: Option<bool>,
-    pub obj_type: Option<String>,
-    pub trader: Option<String>,
-    pub player_lvl: Option<u32>,
-    pub limit: Option<u32>,
-    pub offset: Option<u32>,
-    pub include_completed: Option<bool>,
-    pub save: Option<bool>,
+const fn default_player_lvl() -> u32 {
+    99
 }
 
-// impl TaskQueryParams {
-//     pub fn is_all_none(&self) -> bool {
-//         self.search.is_none()
-//             && self.is_kappa.is_none()
-//             && self.is_lightkeeper.is_none()
-//             && self.obj_type.is_none()
-//             && self.trader.is_none()
-//             && self.player_lvl.is_none()
-//     }
-// }
+const fn default_limit() -> u32 {
+    30
+}
 
-impl From<DeviceTaskQueryParams> for TaskQueryParams {
-    fn from(parms: DeviceTaskQueryParams) -> Self {
-        Self {
-            search: Some(parms.search),
-            is_kappa: Some(parms.is_kappa),
-            is_lightkeeper: Some(parms.is_lightkeeper),
-            obj_type: Some(parms.obj_type),
-            trader: Some(parms.trader),
-            #[allow(clippy::cast_sign_loss)]
-            player_lvl: Some(parms.player_lvl as u32),
-            limit: None,
-            offset: None,
-            include_completed: None,
-            save: Some(true),
-        }
-    }
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Deserialize)]
+pub struct TaskQueryParams {
+    #[serde(default)]
+    pub search: String,
+    #[serde(default)]
+    pub is_kappa: bool,
+    #[serde(default)]
+    pub is_lightkeeper: bool,
+    #[serde(default)]
+    pub obj_type: String,
+    #[serde(default)]
+    pub trader: String,
+    #[serde(default = "default_player_lvl")]
+    pub player_lvl: u32,
+    #[serde(default = "default_limit")]
+    pub limit: u32,
+    #[serde(default)]
+    pub offset: u32,
+    #[serde(default = "default_true")]
+    pub include_completed: bool,
+    #[serde(default = "default_true")]
+    pub save: bool,
 }
 
 pub const VALID_SORT_BY: &[&str] = &[

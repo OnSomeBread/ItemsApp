@@ -5,6 +5,7 @@ use sqlx::types::chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone, sqlx::Type)]
 pub struct BuyFor {
+    #[serde(skip)]
     pub id: i32,
     pub price: i32,
     pub currency: String,
@@ -17,6 +18,7 @@ pub struct BuyFor {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone, sqlx::Type)]
 pub struct SellFor {
+    #[serde(skip)]
     pub id: i32,
     pub price: i32,
     pub currency: String,
@@ -86,6 +88,8 @@ impl From<ItemFromDB> for Item {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct Objective {
+    #[serde(skip)]
+    #[allow(dead_code)]
     pub id: i32,
     pub obj_type: String,
     pub obj_description: String,
@@ -98,6 +102,8 @@ pub struct Objective {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct TaskRequirement {
+    #[serde(skip)]
+    #[allow(dead_code)]
     pub id: i32,
     pub status: String,
     pub req_task_id: String,
@@ -130,6 +136,12 @@ pub struct Task {
     pub task_requirements: Vec<TaskRequirement>,
 }
 
+#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
+pub struct TaskBase {
+    pub _id: String,
+    pub task_name: String,
+}
+
 impl From<TaskFromDB> for Task {
     fn from(task_from_db: TaskFromDB) -> Self {
         Self {
@@ -149,6 +161,8 @@ impl From<TaskFromDB> for Task {
 
 #[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
 pub struct SavedItemData {
+    #[serde(skip)]
+    #[allow(dead_code)]
     pub id: i32,
     pub price_rub: i32,
     pub recorded_time: DateTime<Utc>,
@@ -157,6 +171,8 @@ pub struct SavedItemData {
 
 #[derive(sqlx::FromRow, Serialize, Deserialize)]
 pub struct DeviceItemQueryParams {
+    #[serde(skip)]
+    #[allow(dead_code)]
     pub id: Uuid,
     pub search: String,
     pub sort_asc: bool,
@@ -166,6 +182,8 @@ pub struct DeviceItemQueryParams {
 
 #[derive(sqlx::FromRow, Serialize, Deserialize)]
 pub struct DeviceTaskQueryParams {
+    #[serde(skip)]
+    #[allow(dead_code)]
     pub id: Uuid,
     pub search: String,
     pub is_kappa: bool,

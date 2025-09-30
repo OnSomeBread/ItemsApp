@@ -38,6 +38,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
         type="search"
         name="search"
         placeholder="search"
+        defaultValue={queryParams.search}
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button

@@ -93,6 +93,11 @@ export type Task = {
   objectives: Objective[];
 };
 
+export type TaskBase = {
+  _id: string;
+  task_name: string;
+};
+
 // adjlist is defined as an object with all task ids mapped to an array of tasks that precede or succeed the key
 // in graph theory its defined as a double ended adjacency list since at any point in the object can move forward or backwords if exists
 export type TaskAdjList = {

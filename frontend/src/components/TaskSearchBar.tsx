@@ -38,6 +38,7 @@ function TaskSearchBar({ changeQueryParams, queryParams, onClear }: Props) {
         type="search"
         name="search"
         placeholder="search"
+        defaultValue={queryParams.search}
         onChange={(e) => setSearchInput(e.target.value)}
       ></input>
       <button

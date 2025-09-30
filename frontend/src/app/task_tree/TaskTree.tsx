@@ -1,4 +1,4 @@
-import type { Task, TaskAdjList } from "../../types";
+import type { TaskAdjList, TaskBase } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 import { type Edge } from "@xyflow/react";
 import TraderSelect from "../../components/TraderSelect";
@@ -49,7 +49,7 @@ async function TaskTree({ searchParams }: PageProps) {
 
   const res2 = await fetch(
     DOCKER_BACKEND +
-      "/api/tasks?trader=" +
+      "/api/tasks/base?trader=" +
       trader +
       "&is_kappa=" +
       is_kappa +
@@ -63,7 +63,7 @@ async function TaskTree({ searchParams }: PageProps) {
       headers,
     }
   );
-  const allTasks = (await res2.json()) as Task[];
+  const allTasks = (await res2.json()) as TaskBase[];
 
   const initNodes =
     allTasks?.map((task) => ({
@@ -71,7 +71,7 @@ async function TaskTree({ searchParams }: PageProps) {
       data: { label: task.task_name },
     })) ?? [];
 
-  const idToTask = new Map<string, Task>(
+  const idToTask = new Map<string, TaskBase>(
     allTasks?.map((task) => [task._id, task]) ?? []
   );
 

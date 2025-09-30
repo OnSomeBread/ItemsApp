@@ -10,6 +10,8 @@ use crate::query_types::{
 };
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
+use sqlx::PgPool;
+use sqlx::types::Uuid;
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
@@ -83,13 +85,43 @@ pub async fn items_from_db_to_items(
         .collect())
 }
 
+fn save_item_query_parms(
+    device_id: Uuid,
+    search: String,
+    sort_by: String,
+    sort_asc: bool,
+    item_type: String,
+    pgpool: PgPool,
+) {
+    tokio::spawn(async move {
+        let _ = sqlx::query!(
+            "UPDATE ItemQueryParams
+                    SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
+            device_id,
+            search,
+            sort_asc,
+            if sort_by.is_empty() {
+                "base_price".to_string()
+            } else {
+                sort_by
+            },
+            if item_type.is_empty() {
+                "any".to_string()
+            } else {
+                item_type
+            },
+        )
+        .execute(&pgpool)
+        .await;
+    });
+}
+
 // grabs items from the Item table based off of the query params
 // there are 2 types of queries the first approach is to query for
 // Item, BuyFor, SellFor as 3 separate queries which runs quickly
 // for multiple runs then slows down presumibly from the extra connections
 // the second approach is to query all at once as a join which does not have
 // the connections issue and is much easier to work with but is also much slower
-#[allow(clippy::too_many_lines)]
 pub async fn get_items(
     device: Device,
     Query(query_parms): Query<ItemQueryParams>,
@@ -100,72 +132,54 @@ pub async fn get_items(
         next_tasks_call_timer: _,
     }): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
-    let save = query_parms.save.unwrap_or(true);
-    let search = query_parms.search.unwrap_or(String::new());
-    let sort_asc = query_parms.sort_asc.unwrap_or(false);
-    let mut sort_by = query_parms
-        .sort_by
-        .unwrap_or_else(|| String::from("base_price"))
-        .to_lowercase();
-    let mut item_type = query_parms
-        .item_type
-        .unwrap_or(String::new())
-        .to_lowercase();
-    let limit = std::cmp::min(query_parms.limit.unwrap_or(30), 100);
-    let offset = query_parms.offset.unwrap_or(0);
+    let ItemQueryParams {
+        save,
+        search,
+        sort_asc,
+        mut sort_by,
+        mut item_type,
+        mut limit,
+        offset,
+    } = query_parms;
+
+    limit = std::cmp::min(limit, 100);
 
     let valid_sort_by: HashSet<&str> = VALID_SORT_BY.iter().copied().collect();
-    if sort_by == "any" || !valid_sort_by.contains(sort_by.as_str()) {
+    if sort_by.to_lowercase() == "any" || !valid_sort_by.contains(sort_by.to_lowercase().as_str()) {
         sort_by = String::from("base_price");
     }
 
     let valid_item_type: HashSet<&str> = VALID_ITEM_TYPES.iter().copied().collect();
-    if item_type == "any" || !valid_item_type.contains(item_type.as_str()) {
+    if item_type.to_lowercase() == "any"
+        || !valid_item_type.contains(item_type.to_lowercase().as_str())
+    {
         item_type = String::new();
     }
 
     // save query
     if save && let Some(device_id) = device.0 {
-        let search = search.clone();
-        let sort_by = sort_by.clone();
-        let item_type = item_type.clone();
-        let pgpool = pgpool.clone();
-        tokio::spawn(async move {
-            let _ = sqlx::query!(
-                "UPDATE ItemQueryParams
-                    SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
-                device_id,
-                search,
-                sort_asc,
-                if sort_by.is_empty() {
-                    "base_price".to_string()
-                } else {
-                    sort_by
-                },
-                if item_type.is_empty() {
-                    "any".to_string()
-                } else {
-                    item_type
-                },
-            )
-            .execute(&pgpool)
-            .await;
-        });
+        save_item_query_parms(
+            device_id,
+            search.clone(),
+            sort_by.clone(),
+            sort_asc,
+            item_type.clone(),
+            pgpool.clone(),
+        );
     }
 
     // redis performance falls off at large amounts of items
-    let use_redis = limit <= 100;
     let cache_key = format!(
-        "{}a{}{}{}l{}o{}",
-        search,
+        "@{}{}{}{}{}{}",
         if sort_asc { "1" } else { "0" },
         sort_by,
-        item_type,
         limit,
-        offset
+        item_type,
+        offset,
+        search,
     );
 
-    if use_redis && let Some(values) = Item::get_vec(&cache_key, &redispool).await? {
+    if let Some(values) = Item::get_vec(&cache_key, &redispool).await? {
         return Ok(Json(values));
     }
 
@@ -238,15 +252,13 @@ pub async fn get_items(
     let items = items_from_db_to_items(items_from_db, txn).await?;
 
     // save items in redis cache
-    if use_redis {
-        Item::set_vec(
-            cache_key,
-            items.clone(),
-            redispool,
-            next_items_call_timer.clone(),
-        )
-        .await;
-    }
+    Item::set_vec(
+        cache_key,
+        items.clone(),
+        redispool,
+        next_items_call_timer.clone(),
+    )
+    .await;
 
     Ok(Json(items))
 }
