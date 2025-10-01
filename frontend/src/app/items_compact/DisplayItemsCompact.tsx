@@ -34,7 +34,6 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
   const queryParams = (await searchParams)?.queryParams ?? {
     ...DEFAULT_ITEM_QUERY_PARAMS,
     ...resQueryParams,
-    limit: 50,
   };
 
   const params = new URLSearchParams();
