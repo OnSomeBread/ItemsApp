@@ -1,6 +1,6 @@
 "use client";
 import InfiniteScroll from "react-infinite-scroll-component";
-import type { Task, TaskQueryParams, TaskStats } from "../types";
+import type { Task, TaskBase, TaskQueryParams, TaskStats } from "../types";
 import { useEffect, useRef, useState } from "react";
 import TaskSearchBar from "./TaskSearchBar";
 import { motion } from "framer-motion";
@@ -10,7 +10,7 @@ import { formatSecondsToTime } from "../utils";
 
 interface Props {
   initTasks: Task[];
-  completedTasks: Task[];
+  completedTasks: TaskBase[];
   headers: HeadersInit;
   initQueryParams: TaskQueryParams;
   initTaskStats: TaskStats;
@@ -67,7 +67,7 @@ function TaskScroll({
       .then((res2) => {
         res2
           .json()
-          .then((newCompletedTasks: Task[]) => {
+          .then((newCompletedTasks: TaskBase[]) => {
             setAllCompletedTasks(newCompletedTasks);
           })
           .catch((err) => console.error(err));

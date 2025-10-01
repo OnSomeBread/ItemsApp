@@ -2,7 +2,7 @@ import PageSwitch from "../../components/PageSwitch";
 import TaskScroll from "../../components/TaskScroll";
 import { DEFAULT_TASK_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
 import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
-import type { Task, TaskQueryParams, TaskStats } from "../../types";
+import type { Task, TaskBase, TaskQueryParams, TaskStats } from "../../types";
 import { cookies } from "next/headers";
 
 type PageProps = {
@@ -53,7 +53,7 @@ async function DisplayTasks({ searchParams }: PageProps) {
     cache: "no-store",
     headers,
   });
-  const completedTasks = (await res4.json()) as Task[];
+  const completedTasks = (await res4.json()) as TaskBase[];
 
   return (
     <>

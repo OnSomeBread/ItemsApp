@@ -539,7 +539,7 @@ struct GetOnlyCompletedTasks {
 pub async fn get_completed_tasks(
     device: Device,
     State(app_state): State<AppState>,
-) -> Result<Json<Vec<Task>>, AppError> {
+) -> Result<Json<Vec<TaskBase>>, AppError> {
     if device.0.is_none() {
         return Err(BadRequest("Endpoint Requires a device id".into()));
     }

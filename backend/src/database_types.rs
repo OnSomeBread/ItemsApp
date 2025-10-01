@@ -64,6 +64,12 @@ pub struct Item {
     pub sells: Vec<SellFor>,
 }
 
+#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
+pub struct ItemBase {
+    pub _id: String,
+    pub item_name: String,
+}
+
 impl From<ItemFromDB> for Item {
     fn from(item_from_db: ItemFromDB) -> Self {
         Self {

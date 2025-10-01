@@ -1,4 +1,6 @@
-use crate::database_types::{Item, ItemFromDB, SavedItemData, Task, TaskBase, TaskFromDB};
+use crate::database_types::{
+    Item, ItemBase, ItemFromDB, SavedItemData, Task, TaskBase, TaskFromDB,
+};
 use crate::init_app_state::AppState;
 use crate::item_routes::{
     get_device_item_query_parms, get_item_history, get_items, item_stats, items_from_db_to_items,
@@ -88,6 +90,31 @@ impl Page for Item {
         app_state.next_items_call_timer.clone()
     }
 }
+
+impl Page for ItemBase {
+    async fn fetch_by_ids(
+        pgpool: &sqlx::PgPool,
+        not_found_ids: &[String],
+    ) -> Result<Vec<Self>, AppError> {
+        sqlx::query_as!(
+            ItemBase,
+            "SELECT _id, item_name FROM Item WHERE _id = ANY($1)",
+            not_found_ids
+        )
+        .fetch_all(pgpool)
+        .await
+        .bad_sql("ItemBase by Ids")
+    }
+
+    fn id(&self) -> &str {
+        &self._id
+    }
+
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
+        app_state.next_items_call_timer.clone()
+    }
+}
+
 impl Page for Task {
     async fn fetch_by_ids(
         pgpool: &sqlx::PgPool,
@@ -104,6 +131,30 @@ impl Page for Task {
         .bad_sql("Tasks by Ids")?;
 
         tasks_from_db_to_tasks(tasks_from_db, txn).await
+    }
+
+    fn id(&self) -> &str {
+        &self._id
+    }
+
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
+        app_state.next_tasks_call_timer.clone()
+    }
+}
+
+impl Page for TaskBase {
+    async fn fetch_by_ids(
+        pgpool: &sqlx::PgPool,
+        not_found_ids: &[String],
+    ) -> Result<Vec<Self>, AppError> {
+        sqlx::query_as!(
+            TaskBase,
+            "SELECT _id, task_name FROM Task WHERE _id = ANY($1)",
+            &not_found_ids
+        )
+        .fetch_all(pgpool)
+        .await
+        .bad_sql("TaskBase by Ids")
     }
 
     fn id(&self) -> &str {
