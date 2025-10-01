@@ -5,7 +5,7 @@ FROM rust:1.89.0 AS builder
 WORKDIR /ItemsApp
 COPY . .
 ENV SQLX_OFFLINE=true
-RUN cargo build --release
+RUN cargo +nightly build --release
 
 FROM debian:bookworm-slim
 WORKDIR /ItemsApp

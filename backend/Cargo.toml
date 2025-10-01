@@ -3,6 +3,13 @@ name = "backend-rust"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+opt-level = 3      
+lto = "fat"        
+codegen-units = 1  
+panic = "abort"    
+strip = "debuginfo"
+
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }

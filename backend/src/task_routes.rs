@@ -59,12 +59,15 @@ pub async fn task_stats(
         .filter(|i| completed_tasks.contains(&i._id))
         .count();
 
-    let mut time_in_seconds_tasks = None;
-    if let Ok(mutex_timer) = app_state.next_tasks_call_timer.lock() {
-        time_in_seconds_tasks = mutex_timer
-            .as_ref()
-            .map(|t| t.saturating_duration_since(Instant::now()).as_secs());
-    }
+    let time_in_seconds_tasks =
+        app_state
+            .next_tasks_call_timer
+            .lock()
+            .map_or(None, |mutex_timer| {
+                mutex_timer
+                    .as_ref()
+                    .map(|t| t.saturating_duration_since(Instant::now()).as_secs())
+            });
 
     Ok(Json(TaskStats {
         tasks_completed_count: completed_tasks.len(),

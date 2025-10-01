@@ -85,9 +85,9 @@ async fn upsert_items(
     let mut txn = pool.begin().await?;
     sqlx::query!("DELETE FROM Item").execute(&mut *txn).await?;
 
-    let ids: Vec<String> = items.iter().map(|item| item._id.to_string()).collect();
-    let names: Vec<String> = items.iter().map(|x| x.item_name.to_string()).collect();
-    let short_names: Vec<String> = items.iter().map(|x| x.short_name.to_string()).collect();
+    let ids: Vec<String> = items.iter().map(|item| item._id.clone()).collect();
+    let names: Vec<String> = items.iter().map(|x| x.item_name.clone()).collect();
+    let short_names: Vec<String> = items.iter().map(|x| x.short_name.clone()).collect();
     let avg_24h_prices: Vec<i32> = items.iter().map(|x| x.avg_24h_price.unwrap_or(0)).collect();
     let change_last_48h_percents: Vec<f32> = items
         .iter()
@@ -120,12 +120,7 @@ async fn upsert_items(
                 }
             });
 
-            let max_sell_price;
-            if let Some(max_sell) = max_sell {
-                max_sell_price = max_sell.price_rub;
-            } else {
-                max_sell_price = 0;
-            }
+            let max_sell_price = max_sell.map_or(0, |max_sell| max_sell.price_rub);
 
             let flea = item
                 .buys
@@ -189,7 +184,7 @@ async fn upsert_items(
         &change_last_48h_percents,
         &items.iter().map(|item| item.width).collect::<Vec<i32>>(),
         &items.iter().map(|item| item.height).collect::<Vec<i32>>(),
-        &items.iter().map(|item| item.wiki.to_string()).collect::<Vec<String>>(),
+        &items.iter().map(|item| item.wiki.clone()).collect::<Vec<String>>(),
         &types_arr,
         &buy_from_flea_instant_profits,
         &buy_from_trader_instant_profits,
@@ -204,7 +199,7 @@ async fn upsert_items(
         .flat_map(|x| {
             x.buys
                 .iter()
-                .map(|y| y.currency.to_string())
+                .map(|y| y.currency.clone())
                 .collect::<Vec<String>>()
         })
         .collect();
@@ -217,7 +212,7 @@ async fn upsert_items(
         .flat_map(|x| {
             x.buys
                 .iter()
-                .map(|y| y.vendor.trader_name.to_string())
+                .map(|y| y.vendor.trader_name.clone())
                 .collect::<Vec<String>>()
         })
         .collect();
@@ -242,7 +237,7 @@ async fn upsert_items(
 
     let buy_for_item_ids = items
         .iter()
-        .flat_map(|x| vec![x._id.to_string(); x.buys.len()])
+        .flat_map(|x| vec![x._id.clone(); x.buys.len()])
         .collect::<Vec<String>>();
 
     // BUYFOR BULK INSERT
@@ -268,7 +263,7 @@ async fn upsert_items(
         .flat_map(|x| {
             x.sells
                 .iter()
-                .map(|y| y.currency.to_string())
+                .map(|y| y.currency.clone())
                 .collect::<Vec<String>>()
         })
         .collect();
@@ -281,7 +276,7 @@ async fn upsert_items(
         .flat_map(|x| {
             x.sells
                 .iter()
-                .map(|y| y.vendor.trader_name.to_string())
+                .map(|y| y.vendor.trader_name.clone())
                 .collect::<Vec<String>>()
         })
         .collect();
@@ -298,7 +293,7 @@ async fn upsert_items(
 
     let sell_for_item_ids = items
         .iter()
-        .flat_map(|x| vec![x._id.to_string(); x.sells.len()])
+        .flat_map(|x| vec![x._id.clone(); x.sells.len()])
         .collect::<Vec<String>>();
 
     // SELLFOR BULK INSERT
@@ -428,8 +423,8 @@ async fn upsert_tasks(
         sqlx::query!(
             "INSERT INTO TaskRequirement (status, req_task_id, task_id) SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[]) ON CONFLICT DO NOTHING;",
             &task.task_requirements.iter().map(|x| x.status.join(", ")).collect::<Vec<String>>(),
-            &task.task_requirements.iter().map(|x| x.req_task_id.id.to_string()).collect::<Vec<String>>(),
-            &vec![task._id.to_string();task.task_requirements.len()],
+            &task.task_requirements.iter().map(|x| x.req_task_id.id.clone()).collect::<Vec<String>>(),
+            &vec![task._id.clone();task.task_requirements.len()],
         ).execute(&mut *txn)
         .await?;
     }

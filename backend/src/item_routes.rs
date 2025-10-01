@@ -22,12 +22,15 @@ pub async fn item_stats(State(app_state): State<AppState>) -> Result<Json<ItemSt
         .await
         .bad_sql("Item Stats")?;
 
-    let mut time_in_seconds_items = None;
-    if let Ok(mutex_timer) = app_state.next_items_call_timer.lock() {
-        time_in_seconds_items = mutex_timer
-            .as_ref()
-            .map(|t| t.saturating_duration_since(Instant::now()).as_secs());
-    }
+    let time_in_seconds_items =
+        app_state
+            .next_items_call_timer
+            .lock()
+            .map_or(None, |mutex_timer| {
+                mutex_timer
+                    .as_ref()
+                    .map(|t| t.saturating_duration_since(Instant::now()).as_secs())
+            });
 
     Ok(Json(ItemStats {
         items_count: items_count.unwrap_or(0),
