@@ -98,6 +98,9 @@ function TaskScroll({
     });
     params.append("offset", offset.toString());
 
+    fetchNewCompletedTasks();
+    fetchNewTaskStats();
+
     fetch(API_BASE + "/api/tasks?" + params.toString(), {
       cache: "no-store",
       headers,
@@ -108,8 +111,6 @@ function TaskScroll({
           .then((tasks: Task[]) => {
             if (offset === 0) {
               setAllTasks(tasks);
-              fetchNewCompletedTasks();
-              fetchNewTaskStats();
             } else {
               setAllTasks((prev) => [...(prev ?? []), ...tasks]);
             }
