@@ -44,6 +44,8 @@ pub async fn init_app_state(
     }
 
     let redispool = bb8::Pool::builder()
+        .min_idle(1)
+        .connection_timeout(Duration::from_millis(100))
         .max_size(10)
         .build(RedisConnectionManager::new(redis_url)?)
         .await?;
