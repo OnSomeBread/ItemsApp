@@ -98,8 +98,10 @@ function TaskScroll({
     });
     params.append("offset", offset.toString());
 
-    fetchNewCompletedTasks();
-    fetchNewTaskStats();
+    if (offset === 0) {
+      fetchNewCompletedTasks();
+      fetchNewTaskStats();
+    }
 
     fetch(API_BASE + "/api/tasks?" + params.toString(), {
       cache: "no-store",
