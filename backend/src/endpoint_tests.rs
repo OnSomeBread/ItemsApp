@@ -471,3 +471,27 @@ async fn test_item_device_endpoint() {
 async fn test_task_device_endpoint() {
     Task::device_id_testing().await;
 }
+
+#[tokio::test]
+async fn heavy_redis_testing() {
+    let total_time = std::time::Instant::now();
+
+    let mut handlers = vec![];
+
+    // end number represents number of users
+    for _ in 0..10 {
+        handlers.push(std::thread::spawn(async || {
+            // end number represents number of requests a user would make albeit with no time in between
+            for _ in 0..10 {
+                let v = Item::get_request_vec(format!("{}{}", URL, "/items")).await;
+                assert!(!v.is_empty());
+            }
+        }));
+    }
+
+    for handle in handlers {
+        handle.join().unwrap().await;
+    }
+
+    println!("{}ms", total_time.elapsed().as_millis());
+}
