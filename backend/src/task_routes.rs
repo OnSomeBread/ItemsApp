@@ -448,8 +448,10 @@ async fn fetch_adj_list(
     let mut conn = app_state.redispool.get().await.ok();
     if let Some(conn) = conn.as_mut() {
         let adj_list: Option<Option<String>> = conn.get(cache_key).await.ok();
-        if let Some(adj_list) = adj_list.flatten() {
-            return Ok(serde_json::from_str(&adj_list).unwrap());
+        if let Some(adj_list_str) = adj_list.flatten()
+            && let Ok(adj_list_val) = serde_json::from_str(&adj_list_str)
+        {
+            return Ok(adj_list_val);
         }
     }
 

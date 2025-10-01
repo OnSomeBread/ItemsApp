@@ -177,9 +177,11 @@ pub async fn fetch_tasks_by_ids<T: Page>(
     // check if there is a cache hit from redis cache
     if let Some(conn) = conn.as_mut() {
         for id in ids {
-            let item: Option<Option<String>> = conn.get(&id).await.ok();
-            if let Some(item) = item.flatten() {
-                found_values.push(serde_json::from_str(&item).unwrap());
+            let values: Option<Option<String>> = conn.get(&id).await.ok();
+            if let Some(value_str) = values.flatten() {
+                if let Ok(val) = serde_json::from_str(&value_str) {
+                    found_values.push(val);
+                }
             } else {
                 not_found_ids.push(id);
             }
@@ -255,8 +257,10 @@ pub trait RedisCache: DeserializeOwned + Serialize + Send + 'static {
 
         if let Some(conn) = conn.as_mut() {
             let value: Option<Option<String>> = conn.get(cache_key).await.ok();
-            if let Some(value) = value.flatten() {
-                return Ok(serde_json::from_str(&value).unwrap());
+            if let Some(value_str) = value.flatten()
+                && let Ok(val) = serde_json::from_str(&value_str)
+            {
+                return Ok(val);
             }
         }
 
