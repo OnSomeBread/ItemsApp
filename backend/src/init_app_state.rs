@@ -27,7 +27,7 @@ pub async fn init_app_state(
         {
             Ok(p) => break p,
             Err(e) => {
-                println!("Waiting for DB... {e}");
+                tracing::warn!("Waiting for DB... {e}");
                 tokio::time::sleep(Duration::from_secs(2)).await;
             }
         }

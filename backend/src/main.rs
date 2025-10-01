@@ -9,14 +9,21 @@ mod task_routes;
 mod upsert;
 
 use axum::Router;
+use axum::extract::Request;
+use axum::http::Response;
 use dotenvy::dotenv;
 use init_app_state::init_app_state;
 use std::env;
 use std::error::Error;
+use std::time::Duration;
+use tower_http::trace::TraceLayer;
 //use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let (non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
+    tracing_subscriber::fmt().with_writer(non_blocking).init();
+
     dotenv().ok();
     let postgres_url = env::var("DATABASE_URL")?;
     let redis_url = env::var("REDIS_URL")?;
@@ -35,7 +42,41 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = Router::new()
         .nest("/api", api_routers::api_router())
-        .with_state(app_state);
+        .with_state(app_state)
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|req: &Request<_>| {
+                    tracing::info_span!(
+                        "request",
+                        method = %req.method(),
+                        path = %req.uri().path(),
+                        version = ?req.version()
+                    )
+                })
+                .on_response(
+                    |res: &Response<_>, latency: Duration, span: &tracing::Span| {
+                        let status = res.status();
+
+                        if status.is_client_error() || status.is_server_error() {
+                            tracing::warn!(
+                                parent: span,
+                                status = %status,
+                                latency_ms = %latency.as_millis(),
+                                "request resulted in error status"
+                            );
+                        }
+
+                        if latency > Duration::from_millis(500) {
+                            tracing::warn!(
+                                parent: span,
+                                status = %status,
+                                latency_ms = %latency.as_millis(),
+                                "slow request"
+                            );
+                        }
+                    },
+                ),
+        );
     //.layer(cors);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;

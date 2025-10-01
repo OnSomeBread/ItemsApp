@@ -65,6 +65,7 @@ pub struct Item {
 }
 
 #[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
+#[allow(unused)]
 pub struct ItemBase {
     pub _id: String,
     pub item_name: String,

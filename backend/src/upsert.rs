@@ -10,18 +10,19 @@ pub async fn upsert_data_file(
     page: &str,
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
-    println!("starting {page} upsert");
+    tracing::info!("starting {page} upsert");
+
     let file = std::fs::File::open(file_name)?;
     let json: Value = serde_json::from_reader(file)?;
 
     if page == "items" {
         let item_data: Vec<Item> = Vec::<Item>::deserialize(&json["data"][page])?;
         upsert_items(&item_data, pool, false).await?;
-        println!("finished {} upsert with {} entries", page, item_data.len());
+        tracing::info!("finished {} upsert with {} entries", page, item_data.len());
     } else if page == "tasks" {
         let task_data: Vec<Task> = Vec::<Task>::deserialize(&json["data"][page])?;
         upsert_tasks(&task_data, pool).await?;
-        println!("finished {} upsert with {} entries", page, task_data.len());
+        tracing::info!("finished {} upsert with {} entries", page, task_data.len());
     }
     Ok(())
 }
@@ -46,7 +47,7 @@ pub async fn upsert_data_api(
     page: &str,
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
-    println!("starting {page} upsert");
+    tracing::info!("starting {page} upsert");
 
     if page == "items" {
         let json = run_query(ITEMS_QUERY).await?;
@@ -58,7 +59,7 @@ pub async fn upsert_data_api(
         let mut file = std::fs::File::create(file_name)?;
         file.write_all(json_string.as_bytes())?;
 
-        println!("finished {} upsert with {} entries", page, item_data.len());
+        tracing::info!("finished {} upsert with {} entries", page, item_data.len());
     } else if page == "tasks" {
         let json = run_query(TASKS_QUERY).await?;
         let task_data = Vec::<Task>::deserialize(&json["data"][page])?;
@@ -69,7 +70,7 @@ pub async fn upsert_data_api(
         let mut file = std::fs::File::create(file_name)?;
         file.write_all(json_string.as_bytes())?;
 
-        println!("finished {} upsert with {} entries", page, task_data.len());
+        tracing::info!("finished {} upsert with {} entries", page, task_data.len());
     }
 
     Ok(())
