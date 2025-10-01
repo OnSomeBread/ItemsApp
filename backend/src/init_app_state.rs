@@ -1,10 +1,9 @@
 use crate::upsert::{upsert_data_api, upsert_data_file};
 use bb8_redis::{RedisConnectionManager, bb8};
+use sqlx::postgres::PgPoolOptions;
+use std::error::Error;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-
-use sqlx::PgPool;
-use std::error::Error;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -18,12 +17,17 @@ pub async fn init_app_state(
     postgres_url: String,
     redis_url: String,
 ) -> Result<AppState, Box<dyn Error>> {
-    // PGOPTIONS CAUSES BACKEND NOT TO CONNECT TO DB
     let pgpool = loop {
-        match PgPool::connect(&postgres_url).await {
+        match PgPoolOptions::new()
+            .min_connections(1)
+            .max_connections(10)
+            .idle_timeout(Duration::from_mins(30))
+            .connect(&postgres_url)
+            .await
+        {
             Ok(p) => break p,
             Err(e) => {
-                eprintln!("Waiting for DB... {e}");
+                println!("Waiting for DB... {e}");
                 tokio::time::sleep(Duration::from_secs(2)).await;
             }
         }
