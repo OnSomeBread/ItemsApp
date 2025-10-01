@@ -69,18 +69,19 @@ function ItemScrollCompact({
           .json()
           .then((items: Item[]) => {
             if (offset === 0) {
+              setOffset(queryParams.limit);
               setAllItems(items);
             } else {
               // HARD LIMIT ON ITEMS DISPLAYED ON SCREEN AT ANY GIVEN MOMENT
               if (allItems.length < 300) {
                 setAllItems((prev) => [...(prev ?? []), ...items]);
+                setOffset((prev) => prev + queryParams.limit);
               }
             }
 
             setHasMore(
               items.length === queryParams.limit && allItems.length < 300
             );
-            setOffset((prev) => prev + queryParams.limit);
           })
           .catch((err) => console.error(err));
       })
