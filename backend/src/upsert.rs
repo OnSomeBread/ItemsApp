@@ -10,8 +10,6 @@ pub async fn upsert_data_file(
     page: &str,
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
-    tracing::info!("starting {page} upsert");
-
     let file = std::fs::File::open(file_name)?;
     let json: Value = serde_json::from_reader(file)?;
 
@@ -47,8 +45,6 @@ pub async fn upsert_data_api(
     page: &str,
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
-    tracing::info!("starting {page} upsert");
-
     if page == "items" {
         let json = run_query(ITEMS_QUERY).await?;
         let item_data = Vec::<Item>::deserialize(&json["data"][page])?;
