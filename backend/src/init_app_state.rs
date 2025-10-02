@@ -90,7 +90,11 @@ pub async fn init_app_state(
     tokio::spawn(async move {
         loop {
             let items_refresh_time = Duration::from_secs(600);
-            *items_call.lock().unwrap() = Some(Instant::now() + items_refresh_time);
+            if let Ok(mut val) = items_call.lock() {
+                *val = Some(Instant::now() + items_refresh_time);
+            } else {
+                tracing::error!("could not lock items timer");
+            }
 
             tokio::time::sleep(items_refresh_time).await;
             if Item::api_upsert(items_file, &pgpool1).await.is_err() {
@@ -103,7 +107,11 @@ pub async fn init_app_state(
     tokio::spawn(async move {
         loop {
             let tasks_refresh_time = Duration::from_secs(3600 * 12);
-            *tasks_call.lock().unwrap() = Some(Instant::now() + tasks_refresh_time);
+            if let Ok(mut val) = tasks_call.lock() {
+                *val = Some(Instant::now() + tasks_refresh_time);
+            } else {
+                tracing::error!("could not lock tasks timer");
+            }
 
             tokio::time::sleep(tasks_refresh_time).await;
             if Task::api_upsert(tasks_file, &pgpool2).await.is_err() {
