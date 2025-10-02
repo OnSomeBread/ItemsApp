@@ -44,8 +44,6 @@ pub async fn init_app_state(
     let items_file = "most_recent_items.json";
     let tasks_file = "most_recent_tasks.json";
 
-    Item::file_upsert(items_file, &pgpool).await?;
-
     if items_count == 0 {
         tracing::info!("items init");
         let item_pgpool = pgpool.clone();
