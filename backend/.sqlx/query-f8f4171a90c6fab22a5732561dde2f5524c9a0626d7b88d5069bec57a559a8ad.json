@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "DELETE FROM Task",
+  "query": "TRUNCATE TABLE Task CASCADE",
   "describe": {
     "columns": [],
     "parameters": {
@@ -8,5 +8,5 @@
     },
     "nullable": []
   },
-  "hash": "0fb86abb2182386a1c833ac74a9949b33e36e8361f64d05cb606d0fe71329536"
+  "hash": "f8f4171a90c6fab22a5732561dde2f5524c9a0626d7b88d5069bec57a559a8ad"
 }
