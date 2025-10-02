@@ -4,7 +4,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value;
 use sqlx::PgPool;
-use std::{collections::HashSet, error::Error, io::Write};
+use std::{error::Error, io::Write};
 
 async fn run_query(query: &str) -> Result<Value, Box<dyn Error>> {
     let res = Client::new()
@@ -343,42 +343,39 @@ async fn upsert_items(
 
     // SAVEDITEMDATA BULK INSERT ONLY ON UPSERT API
     if is_api_call {
-        // delete all rows that are not the 10 most recent
+        // delete all rows that are not the $1 most recent
         sqlx::query!(
-            "DELETE FROM SavedItemData WHERE id IN (
-                SELECT id FROM (SELECT id, ROW_NUMBER() OVER 
-                (PARTITION BY item_id ORDER BY recorded_time DESC) AS rn FROM SavedItemData
-                ) t WHERE t.rn > $1
-            );",
-            500
+            "DELETE FROM SavedItemData d USING 
+            (SELECT id FROM (SELECT id, ROW_NUMBER() OVER 
+            (PARTITION BY item_id ORDER BY recorded_time DESC) AS rn FROM SavedItemData) 
+            t WHERE t.rn > $1) 
+            sub WHERE d.id = sub.id;",
+            1000
         )
         .execute(&mut *txn)
         .await?;
 
-        let saved_item_ids: HashSet<String> = items
+        let (saved_item_ids, best_flea_prices): (Vec<String>, Vec<i32>) = items
             .iter()
             .filter(|x| x.buys.iter().any(|b| b.vendor.trader_name == "Flea Market"))
-            .map(|x| x._id.clone())
-            .collect();
-
-        let best_flea_prices: Vec<i32> = items
-            .iter()
-            .filter(|x| saved_item_ids.contains(&x._id))
             .map(|x| {
-                x.buys
-                    .iter()
-                    .find(|b| b.vendor.trader_name == "Flea Market")
-                    .unwrap()
-                    .price_rub
+                (
+                    x._id.clone(),
+                    x.buys
+                        .iter()
+                        .find(|b| b.vendor.trader_name == "Flea Market")
+                        .unwrap()
+                        .price_rub,
+                )
             })
-            .collect();
+            .unzip();
 
         sqlx::query!(
             "INSERT INTO SavedItemData (price_rub, recorded_time, item_id) 
             SELECT * FROM UNNEST($1::int[], $2::timestamptz[], $3::text[])",
             &best_flea_prices,
             &vec![Utc::now(); saved_item_ids.len()],
-            &saved_item_ids.into_iter().collect::<Vec<String>>(),
+            &saved_item_ids,
         )
         .execute(&mut *txn)
         .await?;
