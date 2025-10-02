@@ -109,7 +109,9 @@ async fn upsert_items(
     is_api_call: bool,
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;
-    sqlx::query!("DELETE FROM Item").execute(&mut *txn).await?;
+    sqlx::query!("TRUNCATE TABLE Item CASCADE")
+        .execute(&mut *txn)
+        .await?;
 
     let ids: Vec<String> = items.iter().map(|item| item._id.clone()).collect();
     let names: Vec<String> = items.iter().map(|x| x.item_name.clone()).collect();
@@ -393,7 +395,9 @@ async fn upsert_tasks(
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;
-    sqlx::query!("DELETE FROM Task").execute(&mut *txn).await?;
+    sqlx::query!("TRUNCATE TABLE Task CASCADE")
+        .execute(&mut *txn)
+        .await?;
 
     for task in tasks {
         sqlx::query!(
