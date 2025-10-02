@@ -1,29 +1,10 @@
 use crate::deserialize_json_types::{ITEMS_QUERY, Item, TASKS_QUERY, Task};
 use chrono::Utc;
 use reqwest::Client;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value;
+use sqlx::PgPool;
 use std::{collections::HashSet, error::Error, io::Write};
-
-pub async fn upsert_data_file(
-    file_name: &str,
-    page: &str,
-    pool: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), Box<dyn Error>> {
-    let file = std::fs::File::open(file_name)?;
-    let json: Value = serde_json::from_reader(file)?;
-
-    if page == "items" {
-        let item_data: Vec<Item> = Vec::<Item>::deserialize(&json["data"][page])?;
-        upsert_items(&item_data, pool, false).await?;
-        tracing::info!("finished {} upsert with {} entries", page, item_data.len());
-    } else if page == "tasks" {
-        let task_data: Vec<Task> = Vec::<Task>::deserialize(&json["data"][page])?;
-        upsert_tasks(&task_data, pool).await?;
-        tracing::info!("finished {} upsert with {} entries", page, task_data.len());
-    }
-    Ok(())
-}
 
 async fn run_query(query: &str) -> Result<Value, Box<dyn Error>> {
     let res = Client::new()
@@ -40,36 +21,84 @@ async fn run_query(query: &str) -> Result<Value, Box<dyn Error>> {
     Err(format!("Query failed with status: {}", res.status()).into())
 }
 
-pub async fn upsert_data_api(
-    file_name: &str,
-    page: &str,
-    pool: &sqlx::Pool<sqlx::Postgres>,
-) -> Result<(), Box<dyn Error>> {
-    if page == "items" {
-        let json = run_query(ITEMS_QUERY).await?;
-        let item_data = Vec::<Item>::deserialize(&json["data"][page])?;
-        upsert_items(&item_data, pool, true).await?;
+pub trait Upsert: Serialize + DeserializeOwned {
+    fn get_page() -> &'static str;
+    fn get_query() -> &'static str;
+    async fn upsert_data(
+        values: &[Self],
+        pgpool: &PgPool,
+        is_api_call: bool,
+    ) -> Result<(), Box<dyn Error>>;
 
-        let json_string =
-            serde_json::to_string_pretty(&serde_json::json!({"data": {page: item_data}}))?;
-        let mut file = std::fs::File::create(file_name)?;
-        file.write_all(json_string.as_bytes())?;
+    async fn file_upsert(file_name: &str, pgpool: &PgPool) -> Result<(), Box<dyn Error>> {
+        let page = Self::get_page();
+        let file = std::fs::File::open(file_name)?;
+        let json: Value = serde_json::from_reader(file)?;
+        let values = Vec::<Self>::deserialize(&json["data"][page])?;
+        Self::upsert_data(&values, pgpool, false).await?;
 
-        tracing::info!("finished {} upsert with {} entries", page, item_data.len());
-    } else if page == "tasks" {
-        let json = run_query(TASKS_QUERY).await?;
-        let task_data = Vec::<Task>::deserialize(&json["data"][page])?;
-        upsert_tasks(&task_data, pool).await?;
+        tracing::info!(
+            "finished {} upsert via file with {} entries",
+            page,
+            values.len()
+        );
 
-        let json_string =
-            serde_json::to_string_pretty(&serde_json::json!({"data": {page: task_data}}))?;
-        let mut file = std::fs::File::create(file_name)?;
-        file.write_all(json_string.as_bytes())?;
-
-        tracing::info!("finished {} upsert with {} entries", page, task_data.len());
+        Ok(())
     }
 
-    Ok(())
+    async fn api_upsert(file_name: &str, pgpool: &PgPool) -> Result<(), Box<dyn Error>> {
+        let page = Self::get_page();
+        let json = run_query(Self::get_query()).await?;
+        let values = Vec::<Self>::deserialize(&json["data"][page])?;
+        Self::upsert_data(&values, pgpool, true).await?;
+
+        let json_string =
+            serde_json::to_string_pretty(&serde_json::json!({"data": {page: values}}))?;
+        let mut file = std::fs::File::create(file_name)?;
+        file.write_all(json_string.as_bytes())?;
+        tracing::info!(
+            "finished {} upsert via api with {} entries",
+            page,
+            values.len()
+        );
+        Ok(())
+    }
+}
+
+impl Upsert for Item {
+    fn get_page() -> &'static str {
+        "items"
+    }
+
+    fn get_query() -> &'static str {
+        ITEMS_QUERY
+    }
+
+    async fn upsert_data(
+        values: &[Self],
+        pgpool: &PgPool,
+        is_api_call: bool,
+    ) -> Result<(), Box<dyn Error>> {
+        upsert_items(values, pgpool, is_api_call).await
+    }
+}
+
+impl Upsert for Task {
+    fn get_page() -> &'static str {
+        "tasks"
+    }
+
+    fn get_query() -> &'static str {
+        TASKS_QUERY
+    }
+
+    async fn upsert_data(
+        values: &[Self],
+        pgpool: &PgPool,
+        _is_api_call: bool,
+    ) -> Result<(), Box<dyn Error>> {
+        upsert_tasks(values, pgpool).await
+    }
 }
 
 // inserts all of the input items into the db
@@ -360,7 +389,7 @@ async fn upsert_items(
 // insert all of the input tasks into the db
 // no need to fully bulk optimize this since it is already fast
 async fn upsert_tasks(
-    tasks: &Vec<Task>,
+    tasks: &[Task],
     pool: &sqlx::Pool<sqlx::Postgres>,
 ) -> Result<(), Box<dyn Error>> {
     let mut txn = pool.begin().await?;

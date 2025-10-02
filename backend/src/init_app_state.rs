@@ -1,4 +1,5 @@
-use crate::upsert::{upsert_data_api, upsert_data_file};
+use crate::deserialize_json_types::{Item, Task};
+use crate::upsert::Upsert;
 use bb8_redis::{RedisConnectionManager, bb8};
 use sqlx::postgres::PgPoolOptions;
 use std::error::Error;
@@ -13,6 +14,7 @@ pub struct AppState {
     pub next_tasks_call_timer: Arc<Mutex<Option<Instant>>>,
 }
 
+#[allow(clippy::too_many_lines)]
 pub async fn init_app_state(
     postgres_url: String,
     redis_url: String,
@@ -39,12 +41,33 @@ pub async fn init_app_state(
         sqlx::query_scalar("SELECT COUNT(*) FROM Task").fetch_one(&pgpool)
     )?;
 
+    let items_file = "most_recent_items.json";
+    let tasks_file = "most_recent_tasks.json";
+
     if items_count == 0 {
-        upsert_data_file("most_recent_items.json", "items", &pgpool).await?;
+        tracing::info!("items init");
+        let item_pgpool = pgpool.clone();
+        tokio::spawn(async move {
+            // file may not exist
+            if Item::file_upsert(items_file, &item_pgpool).await.is_err()
+                && Item::api_upsert(items_file, &item_pgpool).await.is_err()
+            {
+                tracing::error!("ITEMS INIT FAILED");
+            }
+        });
     }
 
     if tasks_count == 0 {
-        upsert_data_file("most_recent_tasks.json", "tasks", &pgpool).await?;
+        tracing::info!("tasks init");
+        let tasks_pgpool = pgpool.clone();
+        tokio::spawn(async move {
+            // file may not exist
+            if Task::file_upsert(tasks_file, &tasks_pgpool).await.is_err()
+                && Task::api_upsert(tasks_file, &tasks_pgpool).await.is_err()
+            {
+                tracing::error!("TASKS INIT FAILED");
+            }
+        });
     }
 
     let redispool = bb8::Pool::builder()
@@ -70,7 +93,9 @@ pub async fn init_app_state(
             *items_call.lock().unwrap() = Some(Instant::now() + items_refresh_time);
 
             tokio::time::sleep(items_refresh_time).await;
-            let _ = upsert_data_api("most_recent_items.json", "items", &pgpool1).await;
+            if Item::api_upsert(items_file, &pgpool1).await.is_err() {
+                tracing::error!("UPSERT ITEMS VIA API FAILED");
+            }
         }
     });
 
@@ -81,7 +106,9 @@ pub async fn init_app_state(
             *tasks_call.lock().unwrap() = Some(Instant::now() + tasks_refresh_time);
 
             tokio::time::sleep(tasks_refresh_time).await;
-            let _ = upsert_data_api("most_recent_tasks.json", "tasks", &pgpool2).await;
+            if Task::api_upsert(tasks_file, &pgpool2).await.is_err() {
+                tracing::error!("UPSERT TASKS VIA API FAILED");
+            }
         }
     });
 
@@ -89,11 +116,20 @@ pub async fn init_app_state(
     tokio::spawn(async move {
         loop {
             tokio::time::sleep(Duration::from_secs(3600 * 24)).await;
-            let _ = sqlx::query!(
+            let v = sqlx::query!(
                 r#"DELETE FROM DevicePreferences WHERE last_visited < NOW() - INTERVAL '30 days'"#,
             )
             .execute(&pgpool3)
             .await;
+
+            match v {
+                Ok(value) => {
+                    tracing::info!("successfully deleted {} rows", value.rows_affected());
+                }
+                Err(e) => {
+                    tracing::error!("failed to delete old device preferences with error {}", e);
+                }
+            }
         }
     });
 
