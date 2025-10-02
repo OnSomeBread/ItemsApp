@@ -111,14 +111,14 @@ pub async fn tasks_from_db_to_tasks(
     let mut hm: HashMap<String, (Vec<Objective>, Vec<TaskRequirement>)> = HashMap::new();
     for buy in objective_vec {
         hm.entry(buy.task_id.clone())
-            .or_insert((vec![], vec![]))
+            .or_insert_with(|| (Vec::new(), Vec::new()))
             .0
             .push(buy);
     }
 
     for sell in task_requirement_vec {
         hm.entry(sell.task_id.clone())
-            .or_insert((vec![], vec![]))
+            .or_insert_with(|| (Vec::new(), Vec::new()))
             .1
             .push(sell);
     }
@@ -127,8 +127,9 @@ pub async fn tasks_from_db_to_tasks(
         .into_iter()
         .map(|task_from_db| {
             let mut task = Task::from(task_from_db);
-            let (objectives, task_requirements) =
-                hm.entry(task._id.clone()).or_insert((vec![], vec![]));
+            let (objectives, task_requirements) = hm
+                .entry(task._id.clone())
+                .or_insert_with(|| (Vec::new(), Vec::new()));
             task.objectives = std::mem::take(objectives);
             task.task_requirements = std::mem::take(task_requirements);
             task
@@ -467,12 +468,12 @@ async fn fetch_adj_list(
 
         adj_list
             .entry(from_id.clone())
-            .or_insert(vec![])
+            .or_insert_with(Vec::new)
             .push((to_id.clone(), false));
 
         adj_list
             .entry(to_id)
-            .or_insert(vec![])
+            .or_insert_with(Vec::new)
             .push((from_id, true));
     }
 

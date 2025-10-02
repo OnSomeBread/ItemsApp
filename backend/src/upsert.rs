@@ -440,7 +440,7 @@ async fn upsert_tasks(
                 &objective
                     .items
                     .clone()
-                    .unwrap_or(vec![])
+                    .unwrap_or_else(Vec::new)
                     .iter()
                     .map(|x| x._id.clone())
                     .collect::<Vec<String>>(),

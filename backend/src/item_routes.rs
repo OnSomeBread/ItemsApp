@@ -64,14 +64,14 @@ pub async fn items_from_db_to_items(
     let mut hm: HashMap<String, (Vec<BuyFor>, Vec<SellFor>)> = HashMap::new();
     for buy in buy_for_vec {
         hm.entry(buy.item_id.clone())
-            .or_insert((vec![], vec![]))
+            .or_insert_with(|| (Vec::new(), Vec::new()))
             .0
             .push(buy);
     }
 
     for sell in sell_for_vec {
         hm.entry(sell.item_id.clone())
-            .or_insert((vec![], vec![]))
+            .or_insert_with(|| (Vec::new(), Vec::new()))
             .1
             .push(sell);
     }
@@ -80,7 +80,9 @@ pub async fn items_from_db_to_items(
         .into_iter()
         .map(|item_from_db| {
             let mut item = Item::from(item_from_db);
-            let (buys, sells) = hm.entry(item._id.clone()).or_insert((vec![], vec![]));
+            let (buys, sells) = hm
+                .entry(item._id.clone())
+                .or_insert_with(|| (Vec::new(), Vec::new()));
             item.buys = std::mem::take(buys);
             item.sells = std::mem::take(sells);
             item
