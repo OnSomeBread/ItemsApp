@@ -267,7 +267,7 @@ pub trait RedisCache: DeserializeOwned + Serialize + Send + 'static {
         Ok(None)
     }
 
-    async fn set_vec(
+    fn set_vec(
         cache_key: String,
         input_vec: Vec<Self>,
         redispool: Pool<RedisConnectionManager>,

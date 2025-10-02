@@ -262,8 +262,7 @@ pub async fn get_items(
         items.clone(),
         redispool,
         next_items_call_timer.clone(),
-    )
-    .await;
+    );
 
     Ok(Json(items))
 }
@@ -339,8 +338,7 @@ pub async fn get_item_history(
         item_history.clone(),
         app_state.redispool,
         app_state.next_items_call_timer.clone(),
-    )
-    .await;
+    );
 
     Ok(Json(item_history))
 }

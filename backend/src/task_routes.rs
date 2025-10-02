@@ -280,8 +280,7 @@ pub async fn get_tasks(
             tasks.clone(),
             redispool,
             next_tasks_call_timer.clone(),
-        )
-        .await;
+        );
     }
 
     Ok(Json(tasks))
@@ -390,8 +389,7 @@ pub async fn get_tasks_base(
             tasks.clone(),
             redispool,
             next_tasks_call_timer.clone(),
-        )
-        .await;
+        );
     }
 
     Ok(Json(tasks))
