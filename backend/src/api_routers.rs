@@ -215,7 +215,7 @@ pub async fn fetch_tasks_by_ids<T: Page>(
 
     // add back the found items
     values.extend(found_values);
-    values.sort_by_key(|v| v.id().to_owned());
+    values.sort_by(|a, b| a.id().cmp(b.id()));
     Ok(values)
 }
 
