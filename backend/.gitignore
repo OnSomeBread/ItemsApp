@@ -1,3 +1,2 @@
 target
-most_recent_items.json
-most_recent_tasks.json
+*.json

@@ -1,10 +1,15 @@
-use crate::deserialize_json_types::{ITEMS_QUERY, Item, TASKS_QUERY, Task};
+use crate::deserialize_json_types::{AMMO_QUERY, Ammo, ITEMS_QUERY, Item, TASKS_QUERY, Task};
 use chrono::Utc;
 use reqwest::Client;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value;
 use sqlx::PgPool;
-use std::{error::Error, io::Write};
+use std::{
+    error::Error,
+    io::Write,
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 
 async fn run_query(query: &str) -> Result<Value, Box<dyn Error>> {
     let res = Client::new()
@@ -21,7 +26,7 @@ async fn run_query(query: &str) -> Result<Value, Box<dyn Error>> {
     Err(format!("Query failed with status: {}", res.status()).into())
 }
 
-pub trait Upsert: Serialize + DeserializeOwned {
+pub trait Upsert: DeserializeOwned + Serialize {
     fn get_page() -> &'static str;
     fn get_query() -> &'static str;
     async fn upsert_data(
@@ -63,6 +68,35 @@ pub trait Upsert: Serialize + DeserializeOwned {
         );
         Ok(())
     }
+
+    async fn init(file: &'static str, pgpool: PgPool) {
+        tracing::info!("{} init", Self::get_page());
+        // file may not exist
+        if Self::file_upsert(file, &pgpool).await.is_err()
+            && let Err(e) = Self::api_upsert(file, &pgpool).await
+        {
+            tracing::error!("{} INIT FAILED WITH ERROR {}", Self::get_page(), e);
+        }
+    }
+
+    async fn background_task(
+        file: &'static str,
+        timer: &Arc<Mutex<Option<Instant>>>,
+        refresh_time_seconds: u64,
+        pgpool: &PgPool,
+    ) {
+        let refresh_time = Duration::from_secs(refresh_time_seconds);
+        if let Ok(mut val) = timer.lock() {
+            *val = Some(Instant::now() + refresh_time);
+        } else {
+            tracing::error!("could not lock {} timer", Self::get_page());
+        }
+
+        tokio::time::sleep(refresh_time).await;
+        if Item::api_upsert(file, pgpool).await.is_err() {
+            tracing::error!("UPSERT ITEMS VIA API FAILED");
+        }
+    }
 }
 
 impl Upsert for Item {
@@ -98,6 +132,24 @@ impl Upsert for Task {
         _is_api_call: bool,
     ) -> Result<(), Box<dyn Error>> {
         upsert_tasks(values, pgpool).await
+    }
+}
+
+impl Upsert for Ammo {
+    fn get_page() -> &'static str {
+        "ammo"
+    }
+
+    fn get_query() -> &'static str {
+        AMMO_QUERY
+    }
+
+    async fn upsert_data(
+        values: &[Self],
+        pgpool: &PgPool,
+        _is_api_call: bool,
+    ) -> Result<(), Box<dyn Error>> {
+        upsert_ammo(values, pgpool).await
     }
 }
 
@@ -453,6 +505,51 @@ async fn upsert_tasks(
             &task.task_requirements.iter().map(|x| x.req_task_id.id.clone()).collect::<Vec<String>>(),
             &vec![task._id.clone();task.task_requirements.len()],
         ).execute(&mut *txn)
+        .await?;
+    }
+
+    txn.commit().await?;
+    Ok(())
+}
+
+async fn upsert_ammo(
+    ammos: &[Ammo],
+    pool: &sqlx::Pool<sqlx::Postgres>,
+) -> Result<(), Box<dyn Error>> {
+    let mut txn = pool.begin().await?;
+    sqlx::query!("TRUNCATE TABLE Ammo")
+        .execute(&mut *txn)
+        .await?;
+
+    for ammo in ammos {
+        if ammo.item.is_none() {
+            continue;
+        }
+        sqlx::query!("INSERT INTO ammo VALUES 
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)",
+            ammo.accuracy_modifier,
+            ammo.ammo_type,
+            ammo.caliber,
+            ammo.armor_damage,
+            ammo.fragmentation_chance,
+            ammo.damage,
+            ammo.heavy_bleed_modifier,
+            ammo.initial_speed,
+            ammo.light_bleed_modifier,
+            ammo.penetration_chance,
+            ammo.penetration_power,
+            ammo.penetration_power_deviation,
+            ammo.projectile_count,
+            ammo.recoil_modifier,
+            ammo.ricochet_chance,
+            ammo.stack_max_size,
+            ammo.stamina_burn_per_damage,
+            ammo.tracer,
+            ammo.tracer_color,
+            ammo.weight,
+            ammo.item.as_ref().unwrap()._id,
+        )
+        .execute(&mut *txn)
         .await?;
     }
 

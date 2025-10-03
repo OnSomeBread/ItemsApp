@@ -60,6 +60,46 @@ pub struct Item {
     pub sells: Vec<SellFor>,
 }
 
+pub const ITEMS_QUERY: &str = "
+{
+    items {
+        id
+        name
+        shortName
+        types
+        avg24hPrice
+        basePrice
+        width
+        height
+        changeLast48hPercent
+        link
+        sellFor {
+            price
+            currency
+            priceRUB
+            vendor {
+                name
+                ... on FleaMarket {
+                    foundInRaidRequired
+                }
+            }
+        }
+        buyFor {
+            price
+            currency
+            priceRUB
+            vendor {
+                name
+                ... on TraderOffer {
+                    minTraderLevel
+                    buyLimit
+                }
+            }
+        }
+    }
+}
+";
+
 #[derive(Deserialize, Serialize)]
 pub struct Map {
     pub name: String,
@@ -121,46 +161,6 @@ pub struct Task {
     pub task_requirements: Vec<TaskRequirement>,
 }
 
-pub const ITEMS_QUERY: &str = "
-{
-    items {
-        id
-        name
-        shortName
-        types
-        avg24hPrice
-        basePrice
-        width
-        height
-        changeLast48hPercent
-        link
-        sellFor {
-            price
-            currency
-            priceRUB
-            vendor {
-                name
-                ... on FleaMarket {
-                    foundInRaidRequired
-                }
-            }
-        }
-        buyFor {
-            price
-            currency
-            priceRUB
-            vendor {
-                name
-                ... on TraderOffer {
-                    minTraderLevel
-                    buyLimit
-                }
-            }
-        }
-    }
-}
-";
-
 pub const TASKS_QUERY: &str = "
 {
     tasks {
@@ -195,5 +195,67 @@ pub const TASKS_QUERY: &str = "
             name
         }
     }
+}
+";
+
+#[derive(Deserialize, Serialize)]
+pub struct ItemId {
+    #[serde(rename = "id")]
+    pub _id: String,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Ammo {
+    pub accuracy_modifier: f32,
+    pub ammo_type: Option<String>,
+    pub caliber: String,
+    pub armor_damage: Option<i32>,
+    pub fragmentation_chance: Option<f32>,
+    pub damage: Option<i32>,
+    pub heavy_bleed_modifier: Option<f32>,
+    pub initial_speed: f32,
+    pub light_bleed_modifier: Option<f32>,
+    pub penetration_chance: Option<f32>,
+    pub penetration_power: Option<i32>,
+    pub penetration_power_deviation: f32,
+    pub projectile_count: i32,
+    pub recoil_modifier: f32,
+    pub ricochet_chance: Option<f32>,
+    pub stack_max_size: Option<i32>,
+    pub stamina_burn_per_damage: f32,
+    pub tracer: Option<bool>,
+    pub tracer_color: Option<String>,
+    pub weight: Option<f32>,
+    pub item: Option<ItemId>,
+}
+
+pub const AMMO_QUERY: &str = "
+{
+  ammo {
+    accuracyModifier
+    ammoType
+    caliber
+    armorDamage
+    fragmentationChance
+    damage
+    heavyBleedModifier
+    initialSpeed
+    lightBleedModifier
+    penetrationChance
+    penetrationPower
+    penetrationPowerDeviation
+    projectileCount
+    recoilModifier
+    ricochetChance
+    stackMaxSize
+    staminaBurnPerDamage
+    tracer
+    tracerColor
+    weight
+    item {
+      id
+    }
+  }
 }
 ";

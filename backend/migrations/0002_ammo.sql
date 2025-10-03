@@ -1,0 +1,23 @@
+CREATE TABLE Ammo (
+    accuracy_modifier        REAL        NOT NULL,
+    ammo_type                TEXT        NOT NULL DEFAULT '',
+    caliber                  TEXT        NOT NULL,
+    armor_damage             INT         NOT NULL DEFAULT 0,
+    fragmentation_chance     REAL        NOT NULL DEFAULT 0,
+    damage                   INT         NOT NULL DEFAULT 0,
+    heavy_bleed_modifier     REAL        NOT NULL DEFAULT 0,
+    initial_speed            REAL        NOT NULL,
+    light_bleed_modifier     REAL        NOT NULL DEFAULT 0,
+    penetration_chance       REAL        NOT NULL DEFAULT 0,
+    penetration_power        INT         NOT NULL DEFAULT 0,
+    penetration_power_deviation REAL     NOT NULL,
+    projectile_count         INT         NOT NULL,
+    recoil_modifier          REAL        NOT NULL,
+    ricochet_chance          REAL        NOT NULL DEFAULT 0,
+    stack_max_size           INT         NOT NULL DEFAULT 0,
+    stamina_burn_per_damage  REAL        NOT NULL,
+    tracer                   BOOLEAN     NOT NULL DEFAULT FALSE,
+    tracer_color             TEXT        NOT NULL DEFAULT '',
+    weight                   REAL        NOT NULL DEFAULT 0,
+    item_id                  CHAR(24)    PRIMARY KEY
+);

@@ -13,6 +13,7 @@ services:
     volumes:
       - ./most_recent_items.json:/ItemsApp/most_recent_items.json
       - ./most_recent_tasks.json:/ItemsApp/most_recent_tasks.json
+      - ./most_recent_ammo.json:/ItemsApp/most_recent_ammo.json
     depends_on:
       - db
       - redis
