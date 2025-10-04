@@ -73,14 +73,14 @@ function ItemScrollCompact({
               setAllItems(items);
             } else {
               // HARD LIMIT ON ITEMS DISPLAYED ON SCREEN AT ANY GIVEN MOMENT
-              if (allItems.length < 300) {
-                setAllItems((prev) => [...(prev ?? []), ...items]);
-                setOffset((prev) => prev + queryParams.limit);
-              }
+              //if (allItems.length < 300) {
+              setAllItems((prev) => [...(prev ?? []), ...items]);
+              setOffset((prev) => prev + queryParams.limit);
+              //}
             }
 
             setHasMore(
-              items.length === queryParams.limit && allItems.length < 300
+              items.length === queryParams.limit // && allItems.length < 300
             );
           })
           .catch((err) => console.error(err));

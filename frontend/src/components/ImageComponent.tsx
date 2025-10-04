@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+//import { useState } from "react";
 
 interface Props {
   imgSrc: string;
@@ -10,19 +10,19 @@ interface Props {
   priority: boolean;
 }
 // /icons/" + item._id + ".webp
-function ImageComponent({ imgSrc, alt, width, height, priority }: Props) {
-  const [src, setSrc] = useState(imgSrc);
+function ImageComponent({ imgSrc, width, height, priority }: Props) {
+  //const [src, setSrc] = useState(imgSrc);
 
   return (
     <Image
-      src={src.replace(/ /g, "_")}
-      alt={alt}
+      src={imgSrc.replace(/ /g, "_")}
+      alt=""
       width={width}
       height={height}
       priority={priority}
       fetchPriority={priority ? "high" : "auto"}
       placeholder="empty"
-      onError={() => setSrc("/unknown.webp")}
+      //onError={() => setSrc("/unknown.webp")}
       className="rounded"
     />
   );
