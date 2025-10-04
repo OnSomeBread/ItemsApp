@@ -182,6 +182,7 @@ pub async fn get_tasks(
         redispool,
         next_items_call_timer: _,
         next_tasks_call_timer,
+        next_ammo_call_timer: _,
     }): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let TaskQueryParams {
@@ -256,14 +257,14 @@ pub async fn get_tasks(
                 TaskFromDB,
                 "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
                 ($5::bool IS FALSE OR kappa_required = TRUE) AND ($6::bool IS FALSE OR lightkeeper_required = TRUE) AND 
-                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7)ORDER BY _id ASC LIMIT $8 OFFSET $9",
-                format!("%{}%", search),
-                format!("%{}%", trader),
+                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) ORDER BY _id ASC LIMIT $8 OFFSET $9",
+                format!("%{search}%"),
+                format!("%{trader}%"),
                 player_lvl,
                 &ids,
                 is_kappa,
                 is_lightkeeper,
-                format!("%{}%", obj_type),
+                format!("%{obj_type}%"),
                 i64::from(limit),
                 i64::from(offset)
             )
@@ -294,6 +295,7 @@ pub async fn get_tasks_base(
         redispool,
         next_items_call_timer: _,
         next_tasks_call_timer,
+        next_ammo_call_timer: _,
     }): State<AppState>,
 ) -> Result<Json<Vec<TaskBase>>, AppError> {
     let TaskQueryParams {
@@ -367,20 +369,20 @@ pub async fn get_tasks_base(
                 TaskBase,
                 "SELECT _id, task_name FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
                 ($5::bool IS FALSE OR kappa_required = TRUE) AND ($6::bool IS FALSE OR lightkeeper_required = TRUE) AND 
-                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7)ORDER BY _id ASC LIMIT $8 OFFSET $9",
-                format!("%{}%", search),
-                format!("%{}%", trader),
+                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) ORDER BY _id ASC LIMIT $8 OFFSET $9",
+                format!("%{search}%"),
+                format!("%{trader}%"),
                 player_lvl,
                 &ids,
                 is_kappa,
                 is_lightkeeper,
-                format!("%{}%", obj_type),
+                format!("%{obj_type}%"),
                 i64::from(limit),
                 i64::from(offset)
             )
             .fetch_all(&pgpool)
             .await
-            .bad_sql("Tasks")?;
+            .bad_sql("TasksBase")?;
 
     // save tasks in redis cache
     if use_redis {

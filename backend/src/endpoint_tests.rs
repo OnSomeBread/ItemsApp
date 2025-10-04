@@ -1,7 +1,12 @@
 #![cfg(test)]
 use crate::{
-    database_types::{DeviceItemQueryParams, DeviceTaskQueryParams, Item, Task},
-    query_types::{VALID_ITEM_TYPES, VALID_OBJ_TYPES, VALID_SORT_BY, VALID_TRADERS},
+    database_types::{
+        Ammo, DeviceAmmoQueryParams, DeviceItemQueryParams, DeviceTaskQueryParams, Item, Task,
+    },
+    query_types::{
+        VALID_AMMO_SORT_BY, VALID_AMMO_TYPE, VALID_ITEM_SORT_BY, VALID_ITEM_TYPES, VALID_OBJ_TYPES,
+        VALID_TRADERS,
+    },
 };
 use reqwest::Client;
 use serde::de::DeserializeOwned;
@@ -46,6 +51,14 @@ impl QueryParms for DeviceTaskQueryParams {
         &self.search
     }
 }
+impl QueryParms for DeviceAmmoQueryParams {
+    fn get_base() -> String {
+        "/ammo/query_parms".to_string()
+    }
+    fn get_search(&self) -> &str {
+        &self.search
+    }
+}
 
 trait Test: DeserializeOwned {
     type DeviceQueryParms: QueryParms;
@@ -84,7 +97,7 @@ trait Test: DeserializeOwned {
                 key,
                 "=",
                 option,
-                "&limit=100"
+                "&limit=500"
             ))
             .await;
 
@@ -237,6 +250,23 @@ impl Test for Task {
     }
 }
 
+impl Test for Ammo {
+    type DeviceQueryParms = DeviceAmmoQueryParams;
+
+    async fn get_query_parms() -> Self::DeviceQueryParms {
+        DeviceAmmoQueryParams::get().await
+    }
+    fn get_base() -> String {
+        String::from("/ammo")
+    }
+    fn get_id(&self) -> &str {
+        &self.item_id
+    }
+    fn get_name(&self) -> &str {
+        &self.caliber
+    }
+}
+
 const URL: &str = "http://127.0.0.1:8000/api";
 const DEVICE_ID: &str = "501b8491-c3fe-4e37-9428-ce1456c1d386";
 
@@ -289,17 +319,20 @@ async fn test_item_history() {
 }
 
 #[tokio::test]
-async fn test_items_valid_sort_by_endpoint() {
+async fn test_items_valid_sort_by() {
     // this tests enforces that all valid sortby have a unique non empty output
     Item::valid_param_unique_testing(
         "sort_by",
-        VALID_SORT_BY.iter().map(|x| (*x).to_string()).collect(),
+        VALID_ITEM_SORT_BY
+            .iter()
+            .map(|x| (*x).to_string())
+            .collect(),
     )
     .await;
 }
 
 #[tokio::test]
-async fn test_items_valid_item_types_endpoint() {
+async fn test_items_valid_item_types() {
     // this tests enforces that all valid item types have a unique non empty output
     Item::valid_param_unique_testing(
         "item_type",
@@ -309,7 +342,7 @@ async fn test_items_valid_item_types_endpoint() {
 }
 
 #[tokio::test]
-async fn test_items_asc_endpoint() {
+async fn test_items_asc() {
     // this tests enforces that asc and desc have a unique non empty output
     let asc = Item::get_request_vec(format!("{}{}", URL, "/items?sort_asc=true&limit=100")).await;
     let desc = Item::get_request_vec(format!("{}{}", URL, "/items?sort_asc=false&limit=100")).await;
@@ -318,7 +351,29 @@ async fn test_items_asc_endpoint() {
 }
 
 #[tokio::test]
-async fn test_tasks_valid_obj_types_endpoint() {
+async fn test_ammo_valid_sort_by() {
+    // this tests enforces that all valid sortby have a unique non empty output
+    Ammo::valid_param_unique_testing(
+        "sort_by",
+        VALID_AMMO_SORT_BY
+            .iter()
+            .map(|x| (*x).to_string())
+            .collect(),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn test_ammo_asc() {
+    // this tests enforces that asc and desc have a unique non empty output
+    let asc = Ammo::get_request_vec(format!("{}{}", URL, "/ammo?sort_asc=true&limit=100")).await;
+    let desc = Ammo::get_request_vec(format!("{}{}", URL, "/ammo?sort_asc=false&limit=100")).await;
+    assert!(!asc.is_empty() && !desc.is_empty());
+    assert!(Ammo::get_ids(&asc) != Ammo::get_ids(&desc));
+}
+
+#[tokio::test]
+async fn test_tasks_valid_obj_types() {
     // this tests enforces that all valid obj types have a unique non empty output
     Task::valid_param_unique_testing(
         "obj_type",
@@ -328,7 +383,7 @@ async fn test_tasks_valid_obj_types_endpoint() {
 }
 
 #[tokio::test]
-async fn test_tasks_valid_traders_endpoint() {
+async fn test_tasks_valid_traders() {
     // this tests enforces that all valid traders have a unique non empty output
     Task::valid_param_unique_testing(
         "trader",
@@ -338,7 +393,53 @@ async fn test_tasks_valid_traders_endpoint() {
 }
 
 #[tokio::test]
-async fn test_task_kappa_lightkeeper_endpoint() {
+async fn test_tasks_player_lvl() {
+    Task::valid_param_unique_testing(
+        "player_lvl",
+        ((0..80).step_by(20)).map(|x| x.to_string()).collect(),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn test_ammo_valid_ammo_type() {
+    // this tests enforces that all valid sortby have a unique non empty output
+    Ammo::valid_param_unique_testing(
+        "ammo_type",
+        VALID_AMMO_TYPE.iter().map(|x| (*x).to_string()).collect(),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn test_ammo_damage() {
+    Ammo::valid_param_unique_testing(
+        "damage",
+        ((0..250).step_by(20)).map(|x| x.to_string()).collect(),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn test_ammo_penetration_power() {
+    Ammo::valid_param_unique_testing(
+        "penetration_power",
+        ((0..100).step_by(20)).map(|x| x.to_string()).collect(),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn test_ammo_initial_speed() {
+    Ammo::valid_param_unique_testing(
+        "initial_speed",
+        ((0..1200).step_by(200)).map(|x| x.to_string()).collect(),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn test_task_kappa_lightkeeper() {
     // this tests enforces that kappa and lightkeeper have a unique non empty output
 
     let (neither, kappa, lightkeeper) = tokio::join!(
@@ -358,7 +459,7 @@ async fn test_task_kappa_lightkeeper_endpoint() {
 }
 
 #[tokio::test]
-async fn test_ids_endpoint() {
+async fn test_ids() {
     // this tests enforces that ids grab the correct data
     // we do this test twice since it has a unique caching set up
     Item::ids_testing().await;
@@ -366,6 +467,9 @@ async fn test_ids_endpoint() {
 
     Task::ids_testing().await;
     Task::ids_testing().await;
+
+    Ammo::ids_testing().await;
+    Ammo::ids_testing().await;
 }
 
 // this tests enforces that search does not break backend and works correctly
@@ -379,6 +483,11 @@ async fn test_task_search() {
     Task::search_testing().await;
 }
 
+#[tokio::test]
+async fn test_ammo_search() {
+    Ammo::search_testing().await;
+}
+
 // this tests enforces that limit and offset grab the correct values
 #[tokio::test]
 async fn test_item_limit_and_offset() {
@@ -388,6 +497,11 @@ async fn test_item_limit_and_offset() {
 #[tokio::test]
 async fn test_task_limit_and_offset() {
     Task::limit_and_offset_testing().await;
+}
+
+#[tokio::test]
+async fn test_ammo_limit_and_offset() {
+    Ammo::limit_and_offset_testing().await;
 }
 
 fn perform_dfs(
@@ -463,13 +577,18 @@ async fn test_adj_list() {
 
 // this tests to make sure that adding the device id header works correctly
 #[tokio::test]
-async fn test_item_device_endpoint() {
+async fn test_item_device() {
     Item::device_id_testing().await;
 }
 
 #[tokio::test]
-async fn test_task_device_endpoint() {
+async fn test_task_device() {
     Task::device_id_testing().await;
+}
+
+#[tokio::test]
+async fn test_ammo_device() {
+    Ammo::device_id_testing().await;
 }
 
 #[tokio::test]

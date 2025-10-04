@@ -21,3 +21,15 @@ CREATE TABLE Ammo (
     weight                   REAL        NOT NULL DEFAULT 0,
     item_id                  CHAR(24)    PRIMARY KEY
 );
+
+CREATE TABLE IF NOT EXISTS AmmoQueryParams(
+    id UUID PRIMARY KEY,
+    search VARCHAR(255) DEFAULT '' NOT NULL,
+    sort_by VARCHAR(255) DEFAULT 'any' NOT NULL,
+    sort_asc BOOL DEFAULT FALSE NOT NULL,
+    damage INT DEFAULT 0 NOT NULL,
+    penetration_power INT DEFAULT 0 NOT NULL,
+    initial_speed REAL DEFAULT 0 NOT NULL,
+    ammo_type VARCHAR(64) DEFAULT 'any' NOT NULL,
+    FOREIGN KEY (id) REFERENCES DevicePreferences(id) ON DELETE CASCADE
+);

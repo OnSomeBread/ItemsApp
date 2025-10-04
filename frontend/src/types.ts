@@ -118,3 +118,27 @@ export type TaskStats = {
   lightkeeper_required_count: number;
   time_till_tasks_refresh_secs: number;
 };
+
+export type Ammo = {
+  accuracy_modifier: number;
+  ammo_type: string;
+  caliber: string;
+  armor_damage: number;
+  fragmentation_chance: number;
+  damage: number;
+  heavy_bleed_modifier: number;
+  initial_speed: number;
+  light_bleed_modifier: number;
+  penetration_chance: number;
+  penetration_power: number;
+  penetration_power_deviation: number;
+  projectile_count: number;
+  recoil_modifier: number;
+  ricochet_chance: number;
+  stack_max_size: number;
+  stamina_burn_per_damage: number;
+  tracer: boolean;
+  tracer_color: string;
+  weight: number;
+  item_id: string;
+};

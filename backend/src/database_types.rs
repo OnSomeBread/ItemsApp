@@ -200,9 +200,48 @@ pub struct DeviceTaskQueryParams {
     pub trader: String,
 }
 
+#[derive(sqlx::FromRow, Serialize, Deserialize)]
+pub struct DeviceAmmoQueryParams {
+    #[serde(skip)]
+    #[allow(dead_code)]
+    pub id: Uuid,
+    pub search: String,
+    pub sort_by: String,
+    pub sort_asc: bool,
+    pub damage: i32,
+    pub penetration_power: i32,
+    pub initial_speed: f32,
+    pub ammo_type: String,
+}
+
 // #[derive(sqlx::FromRow)]
 // pub struct DevicePreferences {
 //     pub id: Uuid,
 //     pub completed_tasks: Vec<String>,
 //     pub last_visited: DateTime<Utc>,
 // }
+
+#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
+pub struct Ammo {
+    pub accuracy_modifier: f32,
+    pub ammo_type: String,
+    pub caliber: String,
+    pub armor_damage: i32,
+    pub fragmentation_chance: f32,
+    pub damage: i32,
+    pub heavy_bleed_modifier: f32,
+    pub initial_speed: f32,
+    pub light_bleed_modifier: f32,
+    pub penetration_chance: f32,
+    pub penetration_power: i32,
+    pub penetration_power_deviation: f32,
+    pub projectile_count: i32,
+    pub recoil_modifier: f32,
+    pub ricochet_chance: f32,
+    pub stack_max_size: i32,
+    pub stamina_burn_per_damage: f32,
+    pub tracer: bool,
+    pub tracer_color: String,
+    pub weight: f32,
+    pub item_id: String,
+}

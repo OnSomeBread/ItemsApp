@@ -5,8 +5,8 @@ use crate::database_types::{
 use crate::init_app_state::AppState;
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{
-    AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, ItemStats, VALID_ITEM_TYPES,
-    VALID_SORT_BY,
+    AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, ItemStats, VALID_ITEM_SORT_BY,
+    VALID_ITEM_TYPES,
 };
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
@@ -135,6 +135,7 @@ pub async fn get_items(
         redispool,
         next_items_call_timer,
         next_tasks_call_timer: _,
+        next_ammo_call_timer: _,
     }): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let ItemQueryParams {
@@ -147,9 +148,9 @@ pub async fn get_items(
         offset,
     } = query_parms;
 
-    limit = std::cmp::min(limit, 100);
+    limit = std::cmp::min(limit, 500);
 
-    let valid_sort_by: HashSet<&str> = VALID_SORT_BY.iter().copied().collect();
+    let valid_sort_by: HashSet<&str> = VALID_ITEM_SORT_BY.iter().copied().collect();
     if sort_by.to_lowercase() == "any" || !valid_sort_by.contains(sort_by.to_lowercase().as_str()) {
         sort_by = String::from("base_price");
     }

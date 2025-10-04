@@ -1,5 +1,6 @@
+use crate::ammo_routes::{get_ammo, get_device_ammo_query_parms};
 use crate::database_types::{
-    Item, ItemBase, ItemFromDB, SavedItemData, Task, TaskBase, TaskFromDB,
+    Ammo, Item, ItemBase, ItemFromDB, SavedItemData, Task, TaskBase, TaskFromDB,
 };
 use crate::init_app_state::AppState;
 use crate::item_routes::{
@@ -62,6 +63,9 @@ pub trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
     fn id(&self) -> &str;
 
     fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>>;
+
+    // each struct needs to have a unique but short postfix
+    fn get_cache_key_postfix() -> &'static str;
 }
 
 impl Page for Item {
@@ -89,6 +93,10 @@ impl Page for Item {
     fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
         app_state.next_items_call_timer.clone()
     }
+
+    fn get_cache_key_postfix() -> &'static str {
+        "!"
+    }
 }
 
 impl Page for ItemBase {
@@ -112,6 +120,10 @@ impl Page for ItemBase {
 
     fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
         app_state.next_items_call_timer.clone()
+    }
+
+    fn get_cache_key_postfix() -> &'static str {
+        "@"
     }
 }
 
@@ -140,6 +152,10 @@ impl Page for Task {
     fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
         app_state.next_tasks_call_timer.clone()
     }
+
+    fn get_cache_key_postfix() -> &'static str {
+        "#"
+    }
 }
 
 impl Page for TaskBase {
@@ -164,6 +180,38 @@ impl Page for TaskBase {
     fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
         app_state.next_tasks_call_timer.clone()
     }
+
+    fn get_cache_key_postfix() -> &'static str {
+        "$"
+    }
+}
+
+impl Page for Ammo {
+    async fn fetch_by_ids(
+        pgpool: &sqlx::PgPool,
+        not_found_ids: &[String],
+    ) -> Result<Vec<Self>, AppError> {
+        sqlx::query_as!(
+            Ammo,
+            "SELECT * FROM Ammo WHERE item_id = ANY($1)",
+            &not_found_ids
+        )
+        .fetch_all(pgpool)
+        .await
+        .bad_sql("Ammo by Ids")
+    }
+
+    fn id(&self) -> &str {
+        &self.item_id
+    }
+
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
+        app_state.next_ammo_call_timer.clone()
+    }
+
+    fn get_cache_key_postfix() -> &'static str {
+        "%"
+    }
 }
 
 pub async fn fetch_tasks_by_ids<T: Page>(
@@ -177,7 +225,8 @@ pub async fn fetch_tasks_by_ids<T: Page>(
     // check if there is a cache hit from redis cache
     if let Some(conn) = conn.as_mut() {
         for id in ids {
-            let values: Option<Option<String>> = conn.get(&id).await.ok();
+            let values: Option<Option<String>> =
+                conn.get(id.clone() + T::get_cache_key_postfix()).await.ok();
             if let Some(value_str) = values.flatten() {
                 if let Ok(val) = serde_json::from_str(&value_str) {
                     found_values.push(val);
@@ -291,6 +340,7 @@ impl RedisCache for Item {}
 impl RedisCache for SavedItemData {}
 impl RedisCache for Task {}
 impl RedisCache for TaskBase {}
+impl RedisCache for Ammo {}
 
 fn items_router() -> Router<AppState> {
     Router::new()
@@ -314,9 +364,17 @@ fn tasks_router() -> Router<AppState> {
         .route("/query_parms", get(get_device_task_query_parms))
 }
 
+fn ammo_router() -> Router<AppState> {
+    Router::new()
+        .route("/", get(get_ammo))
+        .route("/ids", get(get_page_by_ids::<Ammo>))
+        .route("/query_parms", get(get_device_ammo_query_parms))
+}
+
 pub fn api_router() -> Router<AppState> {
     Router::new()
         .route("/health", get(health))
         .nest("/items", items_router())
         .nest("/tasks", tasks_router())
+        .nest("/ammo", ammo_router())
 }

@@ -119,7 +119,31 @@ pub struct TaskQueryParams {
     pub save: bool,
 }
 
-pub const VALID_SORT_BY: &[&str] = &[
+#[derive(Deserialize)]
+pub struct AmmoQueryParams {
+    #[serde(default)]
+    pub search: String,
+    #[serde(default)]
+    pub sort_by: String,
+    #[serde(default)]
+    pub sort_asc: bool,
+    #[serde(default)]
+    pub damage: i32,
+    #[serde(default)]
+    pub penetration_power: i32,
+    #[serde(default)]
+    pub initial_speed: f32,
+    #[serde(default)]
+    pub ammo_type: String,
+    #[serde(default = "default_limit")]
+    pub limit: u32,
+    #[serde(default)]
+    pub offset: u32,
+    #[serde(default = "default_true")]
+    pub save: bool,
+}
+
+pub const VALID_ITEM_SORT_BY: &[&str] = &[
     "_id",
     "item_name",
     "short_name",
@@ -192,3 +216,29 @@ pub const VALID_TRADERS: &[&str] = &[
     "jaeger",
     "ref",
 ];
+
+pub const VALID_AMMO_SORT_BY: &[&str] = &[
+    "accuracy_modifier",
+    "ammo_type",
+    "caliber",
+    "armor_damage",
+    "fragmentation_chance",
+    "damage",
+    "heavy_bleed_modifier",
+    "initial_speed",
+    "light_bleed_modifier",
+    "penetration_chance",
+    "penetration_power",
+    "penetration_power_deviation",
+    "projectile_count",
+    "recoil_modifier",
+    "ricochet_chance",
+    "stack_max_size",
+    "stamina_burn_per_damage",
+    "tracer",
+    "tracer_color",
+    "weight",
+    "item_id",
+];
+
+pub const VALID_AMMO_TYPE: &[&str] = &["bullet", "buckshot", "grenade", "flashbang"];

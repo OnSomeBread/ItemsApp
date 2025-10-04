@@ -1,3 +1,4 @@
+mod ammo_routes;
 mod api_routers;
 mod database_types;
 mod deserialize_json_types;
@@ -57,7 +58,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     |res: &Response<_>, latency: Duration, span: &tracing::Span| {
                         let status = res.status();
 
-                        if status.is_client_error() || status.is_server_error() {
+                        if status.is_client_error() {
                             tracing::warn!(
                                 parent: span,
                                 status = %status,

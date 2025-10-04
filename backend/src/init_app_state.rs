@@ -13,6 +13,7 @@ pub struct AppState {
     pub redispool: bb8::Pool<RedisConnectionManager>,
     pub next_items_call_timer: Arc<Mutex<Option<Instant>>>,
     pub next_tasks_call_timer: Arc<Mutex<Option<Instant>>>,
+    pub next_ammo_call_timer: Arc<Mutex<Option<Instant>>>,
 }
 
 const ITEMS_FILE: &str = "most_recent_items.json";
@@ -73,6 +74,7 @@ pub async fn init_app_state(
         redispool,
         next_items_call_timer,
         next_tasks_call_timer,
+        next_ammo_call_timer,
     })
 }
 
