@@ -149,7 +149,8 @@ pub const VALID_ITEM_SORT_BY: &[&str] = &[
     "short_name",
     "base_price",
     "avg_24h_price",
-    "change_last_48h_percent",
+    // right now the data from api just makes this either 0.0 or null so its not usable as of now
+    //    "change_last_48h_percent",
     "buy_from_flea_instant_profit",
     "buy_from_trader_instant_profit",
     "per_slot",
