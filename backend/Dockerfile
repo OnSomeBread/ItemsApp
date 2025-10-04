@@ -1,7 +1,7 @@
 # needs to run before running docker file
 # cargo sqlx prepare 
 
-FROM rust:1.89.0 AS builder
+FROM rust:1.90.0-slim AS builder
 WORKDIR /ItemsApp
 COPY . .
 ENV SQLX_OFFLINE=true
