@@ -219,25 +219,19 @@ pub async fn get_items(
     // .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
     // return Ok(Json(items_test));
 
-    // can't find items that have noFlea looking for a sortby flea
-    let item_type_extension = if sort_by == "flea_market"
+    let sort_by = sort_by.to_lowercase();
+    let is_flea = sort_by == "flea_market"
         || sort_by == "buy_from_flea_instant_profit"
         || sort_by == "buy_from_trader_instant_profit"
         || sort_by == "per_slot"
         || sort_by == "avg_24h_price"
-        || sort_by == "change_last_48h_percent"
-    {
-        "noFlea"
-    } else {
-        // can't use empty string here otherwise NOT ILIKE always evaluates to false
-        "!"
-    };
+        || sort_by == "change_last_48h_percent";
 
     let mut txn = pgpool.begin().await.bad_sql("Items")?;
     let items_from_db = if sort_by == "flea_market" {
         let sql = format!(
             "SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
-            WHERE LOWER(b.trader_name) = 'flea market' AND i.item_name ILIKE $1 AND i.item_types ILIKE $2 AND i.item_types NOT ILIKE $3
+            WHERE LOWER(b.trader_name) = 'flea market' AND i.item_name ILIKE $1 AND i.item_types ILIKE $2 AND ($3 IS FALSE OR i.is_flea = TRUE)
             ORDER BY b.price_rub {} LIMIT $4 OFFSET $5;",
             if sort_asc { "ASC" } else { "DESC" },
         );
@@ -245,7 +239,7 @@ pub async fn get_items(
         sqlx::query_as(&sql)
             .bind(format!("%{search}%"))
             .bind(format!("%{item_type}%"))
-            .bind(format!("%{item_type_extension}%"))
+            .bind(is_flea)
             .bind(i64::from(limit))
             .bind(i64::from(offset))
             .fetch_all(&mut *txn)
@@ -254,7 +248,7 @@ pub async fn get_items(
     } else {
         let sql = format!(
             "SELECT * FROM Item 
-            WHERE item_name ILIKE $1 AND item_types ILIKE $2 AND item_types NOT ILIKE $3
+            WHERE item_name ILIKE $1 AND item_types ILIKE $2 AND ($3 IS FALSE OR is_flea = TRUE)
             ORDER BY {} {} LIMIT $4 OFFSET $5",
             sort_by,
             if sort_asc { "ASC" } else { "DESC" },
@@ -263,7 +257,7 @@ pub async fn get_items(
         sqlx::query_as(&sql)
             .bind(format!("%{search}%"))
             .bind(format!("%{item_type}%"))
-            .bind(format!("%{item_type_extension}%"))
+            .bind(is_flea)
             .bind(i64::from(limit))
             .bind(i64::from(offset))
             .fetch_all(&mut *txn)

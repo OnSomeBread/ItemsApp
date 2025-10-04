@@ -252,10 +252,15 @@ async fn upsert_items(
         })
         .collect();
 
+    let is_fleas: Vec<bool> = items
+        .iter()
+        .map(|x| x.buys.iter().any(|b| b.vendor.trader_name == "Flea Market"))
+        .collect();
+
     // ITEM BULK INSERT
-    sqlx::query!("INSERT INTO Item (_id, item_name, short_name, avg_24h_price, base_price, change_last_48h_percent, width, height, wiki, item_types, buy_from_flea_instant_profit, buy_from_trader_instant_profit, per_slot) 
-    SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[], $4::int[], $5::int[], $6::real[], $7::int[], $8::int[], $9::text[], $10::text[], $11::int[], $12::int[], $13::int[]) 
-    ON CONFLICT(_id) DO UPDATE SET avg_24h_price = EXCLUDED.avg_24h_price, change_last_48h_percent = EXCLUDED.change_last_48h_percent, buy_from_flea_instant_profit = EXCLUDED.buy_from_flea_instant_profit, buy_from_trader_instant_profit = EXCLUDED.buy_from_trader_instant_profit, per_slot = EXCLUDED.per_slot;",
+    sqlx::query!("INSERT INTO Item (_id, item_name, short_name, avg_24h_price, base_price, change_last_48h_percent, width, height, wiki, item_types, buy_from_flea_instant_profit, buy_from_trader_instant_profit, per_slot, is_flea) 
+    SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[], $4::int[], $5::int[], $6::real[], $7::int[], $8::int[], $9::text[], $10::text[], $11::int[], $12::int[], $13::int[], $14::bool[]) 
+    ON CONFLICT(_id) DO UPDATE SET avg_24h_price = EXCLUDED.avg_24h_price, change_last_48h_percent = EXCLUDED.change_last_48h_percent, buy_from_flea_instant_profit = EXCLUDED.buy_from_flea_instant_profit, buy_from_trader_instant_profit = EXCLUDED.buy_from_trader_instant_profit, per_slot = EXCLUDED.per_slot, is_flea = EXCLUDED.is_flea;",
         &ids,
         &names,
         &short_names,
@@ -268,7 +273,9 @@ async fn upsert_items(
         &types_arr,
         &buy_from_flea_instant_profits,
         &buy_from_trader_instant_profits,
-        &per_slots).execute(&mut *txn).await?;
+        &per_slots,
+        &is_fleas,
+    ).execute(&mut *txn).await?;
 
     let buy_for_prices: Vec<i32> = items
         .iter()

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND \n                ($5::bool IS FALSE OR kappa_required = TRUE) AND ($6::bool IS FALSE OR lightkeeper_required = TRUE) AND \n                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) ORDER BY _id ASC LIMIT $8 OFFSET $9",
+  "query": "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND \n                ($5 IS FALSE OR kappa_required = TRUE) AND ($6 IS FALSE OR lightkeeper_required = TRUE) AND \n                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) ORDER BY _id ASC LIMIT $8 OFFSET $9",
   "describe": {
     "columns": [
       {
@@ -68,5 +68,5 @@
       false
     ]
   },
-  "hash": "27f55658cb84470166752d1f5f2b99b15befede8dcc92654a5d3240076107377"
+  "hash": "d1c428b144a75059279edea5f049726148c9e215f59c8f6c7f716ed392240356"
 }

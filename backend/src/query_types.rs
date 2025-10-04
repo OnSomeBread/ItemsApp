@@ -143,6 +143,15 @@ pub struct AmmoQueryParams {
     pub save: bool,
 }
 
+// pub const ITEM_ENABLE_FLEA_FOR: &[&str] = &[
+//     "flea_market",
+//     "buy_from_flea_instant_profit",
+//     "buy_from_trader_instant_profit",
+//     "per_slot",
+//     "avg_24h_price",
+//     "change_last_48h_percent",
+// ];
+
 pub const VALID_ITEM_SORT_BY: &[&str] = &[
     "_id",
     "item_name",

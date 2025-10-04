@@ -43,6 +43,7 @@ pub struct ItemFromDB {
     pub buy_from_flea_instant_profit: i32,
     pub buy_from_trader_instant_profit: i32,
     pub per_slot: i32,
+    pub is_flea: bool,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
@@ -60,6 +61,7 @@ pub struct Item {
     pub buy_from_flea_instant_profit: i32,
     pub buy_from_trader_instant_profit: i32,
     pub per_slot: i32,
+    pub is_flea: bool,
     pub buys: Vec<BuyFor>,
     pub sells: Vec<SellFor>,
 }
@@ -87,6 +89,7 @@ impl From<ItemFromDB> for Item {
             buy_from_flea_instant_profit: item_from_db.buy_from_flea_instant_profit,
             buy_from_trader_instant_profit: item_from_db.buy_from_trader_instant_profit,
             per_slot: item_from_db.per_slot,
+            is_flea: item_from_db.is_flea,
             buys: vec![],
             sells: vec![],
         }

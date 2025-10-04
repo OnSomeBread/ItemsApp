@@ -67,6 +67,11 @@
         "ordinal": 12,
         "name": "per_slot",
         "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "is_flea",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -75,6 +80,7 @@
       ]
     },
     "nullable": [
+      false,
       false,
       false,
       false,
