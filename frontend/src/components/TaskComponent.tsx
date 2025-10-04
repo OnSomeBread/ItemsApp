@@ -1,11 +1,8 @@
 import type { Task } from "../types";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { DEFAULT_TASK_QUERY_PARAMS } from "../constants";
-const ImageComponent = dynamic(() => import("./ImageComponent"), {
-  ssr: false,
-});
+import ImageComponent from "./ImageComponent";
 
 interface Props {
   task: Task;

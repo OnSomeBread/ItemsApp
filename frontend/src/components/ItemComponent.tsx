@@ -2,9 +2,8 @@ import type { Buy, Item, Sell } from "../types";
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
-import dynamic from "next/dynamic";
 import { getBestBuy, getBestSell } from "../utils";
-const ImageComponent = dynamic(() => import("./ImageComponent"));
+import ImageComponent from "./ImageComponent";
 
 interface Props {
   item: Item;

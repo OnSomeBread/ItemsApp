@@ -5,9 +5,8 @@ import Link from "next/link";
 import type { Item, ItemQueryParams, ItemStats } from "../types";
 import { formatSecondsToTime, getBestBuy, getBestSell } from "../utils";
 import ItemSearchBar from "./ItemSearchBar";
-import dynamic from "next/dynamic";
-const ImageComponent = dynamic(() => import("./ImageComponent"));
 import { API_BASE } from "../constants";
+import ImageComponent from "./ImageComponent";
 
 interface Props {
   initItems: Item[];
