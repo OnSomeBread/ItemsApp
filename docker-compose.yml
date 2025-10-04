@@ -3,6 +3,11 @@ services:
     image: mark1qaz/backend:latest
     build:
       context: backend
+      dockerfile: Dockerfile
+      cache_from:
+        - mark1qaz/backend:buildcache
+      cache_to:
+        - mark1qaz/backend:buildcache
     environment:
       - REDIS_URL=${REDIS_URL}
       - DATABASE_URL=${DATABASE_URL}
