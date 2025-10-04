@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "TRUNCATE TABLE Ammo",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "54794d2aae65166b7157e3ce5af85516470523c0010f5aab75ef5913d97c6917"
+}

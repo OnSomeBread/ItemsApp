@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM AmmoQueryParams WHERE id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "search",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "sort_by",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "sort_asc",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "damage",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "penetration_power",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "initial_speed",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 7,
+        "name": "ammo_type",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "aadd82702f5f396c9880de4ba2ec1a403b6058f0640dd7a344f4f11b3d4e346d"
+}

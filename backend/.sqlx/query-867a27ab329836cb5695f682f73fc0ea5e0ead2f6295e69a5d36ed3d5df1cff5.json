@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO AmmoQueryParams VALUES ($1) ON CONFLICT (id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "867a27ab329836cb5695f682f73fc0ea5e0ead2f6295e69a5d36ed3d5df1cff5"
+}

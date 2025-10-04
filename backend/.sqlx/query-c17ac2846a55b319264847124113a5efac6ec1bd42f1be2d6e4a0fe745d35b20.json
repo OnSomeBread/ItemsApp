@@ -1,0 +1,142 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM Ammo WHERE item_id = ANY($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "accuracy_modifier",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 1,
+        "name": "ammo_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "caliber",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "armor_damage",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "fragmentation_chance",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 5,
+        "name": "damage",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "heavy_bleed_modifier",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 7,
+        "name": "initial_speed",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 8,
+        "name": "light_bleed_modifier",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 9,
+        "name": "penetration_chance",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 10,
+        "name": "penetration_power",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "penetration_power_deviation",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 12,
+        "name": "projectile_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "recoil_modifier",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 14,
+        "name": "ricochet_chance",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 15,
+        "name": "stack_max_size",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "stamina_burn_per_damage",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 17,
+        "name": "tracer",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 18,
+        "name": "tracer_color",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "weight",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 20,
+        "name": "item_id",
+        "type_info": "Bpchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "BpcharArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c17ac2846a55b319264847124113a5efac6ec1bd42f1be2d6e4a0fe745d35b20"
+}

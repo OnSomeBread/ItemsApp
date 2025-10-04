@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE AmmoQueryParams\n                    SET search = $2, sort_by = $3, sort_asc = $4, damage = $5, penetration_power = $6, initial_speed = $7, ammo_type = $8 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Int4",
+        "Float4",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e3d179cfa148c12e17e97bf624cc6a5517a18f095db433fd8503a2c3df5d7cd8"
+}

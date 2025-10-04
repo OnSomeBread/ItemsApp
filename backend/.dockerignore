@@ -1,4 +1,3 @@
 target
-most_recent_items.json
-most_recent_tasks.json
+most_recent_*.json
 .gitignore
