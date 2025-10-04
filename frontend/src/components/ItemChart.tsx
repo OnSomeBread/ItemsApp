@@ -23,7 +23,14 @@ function ItemChart({ itemHistory }: Props) {
       >
         <XAxis
           dataKey="recorded_time"
-          tickFormatter={(t: string) => new Date(t).toLocaleTimeString()}
+          tickFormatter={(t: string) =>
+            new Date(t).toLocaleDateString("en-US", {
+              weekday: "short",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })
+          }
         />
         <YAxis
           tickFormatter={(value: number) =>
@@ -35,7 +42,14 @@ function ItemChart({ itemHistory }: Props) {
           domain={["dataMin", "dataMax"]}
         />
         <Tooltip
-          labelFormatter={(t: string) => new Date(t).toLocaleTimeString()}
+          labelFormatter={(t: string) =>
+            new Date(t).toLocaleDateString("en-US", {
+              weekday: "short",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })
+          }
           formatter={(t: string) => Number(t).toLocaleString("en-us")}
         />
         <Line
