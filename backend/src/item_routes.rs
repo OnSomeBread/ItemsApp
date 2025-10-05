@@ -1,4 +1,5 @@
-use crate::api_routers::{Device, RedisCache};
+use crate::api_routers::Device;
+use crate::caching::RedisCache;
 use crate::database_types::{
     BuyFor, DeviceItemQueryParams, Item, ItemFromDB, SavedItemData, SellFor,
 };

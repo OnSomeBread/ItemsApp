@@ -1,5 +1,6 @@
 mod ammo_routes;
 mod api_routers;
+mod caching;
 mod database_types;
 mod deserialize_json_types;
 mod endpoint_tests;

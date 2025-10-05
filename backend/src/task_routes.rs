@@ -1,4 +1,5 @@
-use crate::api_routers::{Device, RedisCache, fetch_tasks_by_ids, get_time_in_seconds};
+use crate::api_routers::{Device, fetch_tasks_by_ids, get_time_in_seconds};
+use crate::caching::RedisCache;
 use crate::database_types::{
     DeviceTaskQueryParams, Objective, Task, TaskBase, TaskFromDB, TaskRequirement,
 };
