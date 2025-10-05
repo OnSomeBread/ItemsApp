@@ -1,18 +1,14 @@
-use crate::api_routers::RedisCache;
-use crate::database_types::DeviceAmmoQueryParams;
-use crate::query_types::{AppErrorHandling, VALID_AMMO_SORT_BY};
 use crate::{
-    api_routers::Device,
-    database_types::Ammo,
+    api_routers::{Device, RedisCache},
+    database_types::{Ammo, DeviceAmmoQueryParams},
     init_app_state::AppState,
-    query_types::{AmmoQueryParams, AppError, AppError::BadRequest, VALID_AMMO_TYPE},
+    query_types::{AmmoQueryParams, AppError, AppError::BadRequest, AppErrorHandling},
 };
 use axum::{
     Json,
     extract::{Query, State},
 };
 use sqlx::{PgPool, types::Uuid};
-use std::collections::HashSet;
 
 pub async fn get_ammo(
     device: Device,
@@ -27,30 +23,16 @@ pub async fn get_ammo(
 ) -> Result<Json<Vec<Ammo>>, AppError> {
     let AmmoQueryParams {
         search,
-        mut sort_by,
+        sort_by,
         sort_asc,
         damage,
         penetration_power,
         initial_speed,
-        mut ammo_type,
+        ammo_type,
         limit,
         offset,
         save,
     } = query_parms;
-
-    let valid_ammo_type: HashSet<&str> = VALID_AMMO_TYPE.iter().copied().collect();
-    if ammo_type.to_lowercase() == "any"
-        || !valid_ammo_type.contains(ammo_type.to_lowercase().as_str())
-    {
-        ammo_type = String::new();
-    }
-
-    let valid_sort_by_type: HashSet<&str> = VALID_AMMO_SORT_BY.iter().copied().collect();
-    if sort_by.to_lowercase() == "any"
-        || !valid_sort_by_type.contains(sort_by.to_lowercase().as_str())
-    {
-        sort_by = String::from("penetration_power");
-    }
 
     // save query
     if save && let Some(device_id) = device.0 {

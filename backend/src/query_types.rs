@@ -2,7 +2,7 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Json, Response},
 };
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 // standard error handling for all endpoints
 #[derive(Debug, serde::Serialize)]
@@ -58,15 +58,48 @@ pub struct TaskStats {
     pub time_till_tasks_refresh_secs: u64,
 }
 
+fn default_item_sort_by() -> String {
+    String::from("base_price")
+}
+
+fn deserialize_item_sort_by<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(
+        if !s.is_empty() && VALID_ITEM_SORT_BY.contains(&s.to_lowercase().as_str()) {
+            s
+        } else {
+            default_item_sort_by()
+        },
+    )
+}
+
+fn deserialize_item_type<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(if VALID_ITEM_TYPES.contains(&s.to_lowercase().as_str()) {
+        s
+    } else {
+        String::new()
+    })
+}
+
 #[derive(Deserialize)]
 pub struct ItemQueryParams {
     #[serde(default)]
     pub search: String,
     #[serde(default)]
     pub sort_asc: bool,
-    #[serde(default)]
+    #[serde(
+        default = "default_item_sort_by",
+        deserialize_with = "deserialize_item_sort_by"
+    )]
     pub sort_by: String,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_item_type")]
     pub item_type: String,
     #[serde(default = "default_limit")]
     pub limit: u32,
@@ -94,6 +127,39 @@ const fn default_limit() -> u32 {
     30
 }
 
+// .to_lowercase happens here instead of above because I need the casing to be kept to pass to frontend
+// fn validate_obj_type(obj_type: &str) {
+//     let obj_type = obj_type.to_lowercase();
+//     let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().copied().collect();
+//     if obj_type == "any" || !valid_obj_types.contains(obj_type.as_str()) {
+//         obj_type = String::new();
+//     }
+// }
+
+fn deserialize_trader<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(if VALID_TRADERS.contains(&s.to_lowercase().as_str()) {
+        s
+    } else {
+        String::new()
+    })
+}
+
+fn deserialize_obj_type<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(if VALID_OBJ_TYPES.contains(&s.to_lowercase().as_str()) {
+        s
+    } else {
+        String::new()
+    })
+}
+
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Deserialize)]
 pub struct TaskQueryParams {
@@ -103,9 +169,9 @@ pub struct TaskQueryParams {
     pub is_kappa: bool,
     #[serde(default)]
     pub is_lightkeeper: bool,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_obj_type")]
     pub obj_type: String,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_trader")]
     pub trader: String,
     #[serde(default = "default_player_lvl")]
     pub player_lvl: u32,
@@ -119,11 +185,44 @@ pub struct TaskQueryParams {
     pub save: bool,
 }
 
+fn default_ammo_sort_by() -> String {
+    String::from("penetration_power")
+}
+
+fn deserialize_ammo_sort_by<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(
+        if !s.is_empty() && VALID_AMMO_SORT_BY.contains(&s.to_lowercase().as_str()) {
+            s
+        } else {
+            default_ammo_sort_by()
+        },
+    )
+}
+
+fn deserialize_ammo_type<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(if VALID_AMMO_TYPE.contains(&s.to_lowercase().as_str()) {
+        s
+    } else {
+        String::new()
+    })
+}
+
 #[derive(Deserialize)]
 pub struct AmmoQueryParams {
     #[serde(default)]
     pub search: String,
-    #[serde(default)]
+    #[serde(
+        default = "default_ammo_sort_by",
+        deserialize_with = "deserialize_ammo_sort_by"
+    )]
     pub sort_by: String,
     #[serde(default)]
     pub sort_asc: bool,
@@ -133,7 +232,7 @@ pub struct AmmoQueryParams {
     pub penetration_power: i32,
     #[serde(default)]
     pub initial_speed: f32,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_ammo_type")]
     pub ammo_type: String,
     #[serde(default = "default_limit")]
     pub limit: u32,
@@ -167,7 +266,6 @@ pub const VALID_ITEM_SORT_BY: &[&str] = &[
 ];
 
 pub const VALID_ITEM_TYPES: &[&str] = &[
-    "any",
     "ammo",
     "ammobox",
     "armor",

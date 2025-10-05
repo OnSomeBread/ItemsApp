@@ -4,9 +4,7 @@ use crate::database_types::{
 };
 use crate::init_app_state::AppState;
 use crate::query_types::{AppError, AppError::BadRequest};
-use crate::query_types::{
-    AppErrorHandling, TaskQueryParams, TaskStats, VALID_OBJ_TYPES, VALID_TRADERS,
-};
+use crate::query_types::{AppErrorHandling, TaskQueryParams, TaskStats};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
@@ -190,8 +188,8 @@ pub async fn get_tasks(
         search,
         is_kappa,
         is_lightkeeper,
-        mut obj_type,
-        mut trader,
+        obj_type,
+        trader,
         player_lvl,
         limit,
         offset,
@@ -199,26 +197,13 @@ pub async fn get_tasks(
     } = query_parms;
 
     #[allow(clippy::cast_possible_wrap)]
-    let player_lvl = std::cmp::min(player_lvl, 99) as i32;
+    let player_lvl = player_lvl as i32;
 
     let ids = if include_completed && device.0.is_some() {
         get_completed_task_by_device_id(&pgpool, device.0.unwrap()).await?
     } else {
         vec![]
     };
-
-    // .to_lowercase happens here instead of above because I need the casing to be kept to pass to frontend
-    let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().copied().collect();
-    if obj_type.to_lowercase() == "any"
-        || !valid_obj_types.contains(obj_type.to_lowercase().as_str())
-    {
-        obj_type = String::new();
-    }
-
-    let valid_traders: HashSet<&str> = VALID_TRADERS.iter().copied().collect();
-    if trader.to_lowercase() == "any" || !valid_traders.contains(trader.to_lowercase().as_str()) {
-        trader = String::new();
-    }
 
     // save query
     if save && let Some(device_id) = device.0 {
@@ -303,8 +288,8 @@ pub async fn get_tasks_base(
         search,
         is_kappa,
         is_lightkeeper,
-        mut obj_type,
-        mut trader,
+        obj_type,
+        trader,
         player_lvl,
         limit,
         offset,
@@ -312,26 +297,13 @@ pub async fn get_tasks_base(
     } = query_parms;
 
     #[allow(clippy::cast_possible_wrap)]
-    let player_lvl = std::cmp::min(player_lvl, 99) as i32;
+    let player_lvl = player_lvl as i32;
 
     let ids = if include_completed && device.0.is_some() {
         get_completed_task_by_device_id(&pgpool, device.0.unwrap()).await?
     } else {
         vec![]
     };
-
-    // .to_lowercase happens here instead of above because I need the casing to be kept to pass to frontend
-    let valid_obj_types: HashSet<&str> = VALID_OBJ_TYPES.iter().copied().collect();
-    if obj_type.to_lowercase() == "any"
-        || !valid_obj_types.contains(obj_type.to_lowercase().as_str())
-    {
-        obj_type = String::new();
-    }
-
-    let valid_traders: HashSet<&str> = VALID_TRADERS.iter().copied().collect();
-    if trader.to_lowercase() == "any" || !valid_traders.contains(trader.to_lowercase().as_str()) {
-        trader = String::new();
-    }
 
     // save query
     if save && let Some(device_id) = device.0 {

@@ -4,15 +4,12 @@ use crate::database_types::{
 };
 use crate::init_app_state::AppState;
 use crate::query_types::{AppError, AppError::BadRequest};
-use crate::query_types::{
-    AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, ItemStats, VALID_ITEM_SORT_BY,
-    VALID_ITEM_TYPES,
-};
+use crate::query_types::{AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, ItemStats};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use sqlx::PgPool;
 use sqlx::types::Uuid;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::time::Instant;
 
 // gives data on different interesting stats about the data stored
@@ -142,25 +139,13 @@ pub async fn get_items(
         save,
         search,
         sort_asc,
-        mut sort_by,
-        mut item_type,
-        mut limit,
+        sort_by,
+        item_type,
+        limit,
         offset,
     } = query_parms;
 
-    limit = std::cmp::min(limit, 500);
-
-    let valid_sort_by: HashSet<&str> = VALID_ITEM_SORT_BY.iter().copied().collect();
-    if sort_by.to_lowercase() == "any" || !valid_sort_by.contains(sort_by.to_lowercase().as_str()) {
-        sort_by = String::from("base_price");
-    }
-
-    let valid_item_type: HashSet<&str> = VALID_ITEM_TYPES.iter().copied().collect();
-    if item_type.to_lowercase() == "any"
-        || !valid_item_type.contains(item_type.to_lowercase().as_str())
-    {
-        item_type = String::new();
-    }
+    let limit = std::cmp::min(limit, 500);
 
     // save query
     if save && let Some(device_id) = device.0 {
