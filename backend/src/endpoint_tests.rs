@@ -109,9 +109,16 @@ trait Test: DeserializeOwned {
         }
     }
 
-    async fn ids_testing() {
-        let values_from_base =
-            Self::get_request_vec(format!("{}{}{}", URL, Self::get_base(), "?")).await;
+    async fn ids_testing(sort_by: &str) {
+        let values_from_base = Self::get_request_vec(format!(
+            "{}{}{}{}{}",
+            URL,
+            Self::get_base(),
+            "?sort_by=",
+            sort_by,
+            "&sort_asc=true"
+        ))
+        .await;
         let ids = Self::get_ids(&values_from_base);
         let mut final_str = String::new();
         for v in &ids {
@@ -119,11 +126,17 @@ trait Test: DeserializeOwned {
             final_str += v.as_str();
         }
 
-        // removes inital &
-        final_str.replace_range(0..1, "");
+        let values_from_ids = Self::get_request_vec(format!(
+            "{}{}{}{}",
+            URL,
+            Self::get_base(),
+            "/ids?",
+            final_str
+        ))
+        .await;
 
-        let values_from_ids =
-            Self::get_request_vec(format!("{}{}{}{}", URL, Self::get_base(), "?", final_str)).await;
+        println!("{:?}", Self::get_ids(&values_from_base));
+        println!("{:?}", Self::get_ids(&values_from_ids));
 
         assert!(!values_from_base.is_empty() && !values_from_ids.is_empty());
         assert!(Self::get_ids(&values_from_base) == Self::get_ids(&values_from_ids));
@@ -462,14 +475,14 @@ async fn test_task_kappa_lightkeeper() {
 async fn test_ids() {
     // this tests enforces that ids grab the correct data
     // we do this test twice since it has a unique caching set up
-    Item::ids_testing().await;
-    Item::ids_testing().await;
+    Item::ids_testing("_id").await;
+    Item::ids_testing("_id").await;
 
-    Task::ids_testing().await;
-    Task::ids_testing().await;
+    Task::ids_testing("_id").await;
+    Task::ids_testing("_id").await;
 
-    Ammo::ids_testing().await;
-    Ammo::ids_testing().await;
+    Ammo::ids_testing("item_id").await;
+    Ammo::ids_testing("item_id").await;
 }
 
 // this tests enforces that search does not break backend and works correctly
