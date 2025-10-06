@@ -1,4 +1,10 @@
-use crate::deserialize_json_types::{AMMO_QUERY, Ammo, ITEMS_QUERY, Item, TASKS_QUERY, Task};
+use crate::{
+    caching::MokaCache,
+    deserialize_json_types::{AMMO_QUERY, Ammo, ITEMS_QUERY, Item, TASKS_QUERY, Task},
+    init_app_state::{
+        AMMO_UNIQUE_CACHE_PREFIX, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX,
+    },
+};
 use chrono::Utc;
 use reqwest::Client;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -7,9 +13,10 @@ use sqlx::PgPool;
 use std::{
     error::Error,
     io::Write,
-    sync::{Arc, Mutex},
+    sync::Arc,
     time::{Duration, Instant},
 };
+use tokio::sync::Mutex;
 
 async fn run_query(query: &str) -> Result<Value, Box<dyn Error>> {
     let res = Client::new()
@@ -79,23 +86,26 @@ pub trait Upsert: DeserializeOwned + Serialize {
         }
     }
 
+    fn unique_cache_prefix() -> &'static str;
+
     async fn background_task(
         file: &'static str,
-        timer: &Arc<Mutex<Option<Instant>>>,
+        timer: &Arc<Mutex<Instant>>,
         refresh_time_seconds: u64,
+        cache: &mut MokaCache,
         pgpool: &PgPool,
     ) {
         let refresh_time = Duration::from_secs(refresh_time_seconds);
-        if let Ok(mut val) = timer.lock() {
-            *val = Some(Instant::now() + refresh_time);
-        } else {
-            tracing::error!("could not lock {} timer", Self::get_page());
-        }
+        (*timer.lock().await) = Instant::now() + refresh_time;
 
         tokio::time::sleep(refresh_time).await;
-        if Item::api_upsert(file, pgpool).await.is_err() {
-            tracing::error!("UPSERT ITEMS VIA API FAILED");
+        if Self::api_upsert(file, pgpool).await.is_err() {
+            tracing::error!("UPSERT {} VIA API FAILED", Self::get_page());
         }
+
+        cache
+            .invalidate_cache_prefix(Self::unique_cache_prefix())
+            .await;
     }
 }
 
@@ -115,6 +125,10 @@ impl Upsert for Item {
     ) -> Result<(), Box<dyn Error>> {
         upsert_items(values, pgpool, is_api_call).await
     }
+
+    fn unique_cache_prefix() -> &'static str {
+        ITEMS_UNIQUE_CACHE_PREFIX
+    }
 }
 
 impl Upsert for Task {
@@ -133,6 +147,10 @@ impl Upsert for Task {
     ) -> Result<(), Box<dyn Error>> {
         upsert_tasks(values, pgpool).await
     }
+
+    fn unique_cache_prefix() -> &'static str {
+        TASKS_UNIQUE_CACHE_PREFIX
+    }
 }
 
 impl Upsert for Ammo {
@@ -150,6 +168,10 @@ impl Upsert for Ammo {
         _is_api_call: bool,
     ) -> Result<(), Box<dyn Error>> {
         upsert_ammo(values, pgpool).await
+    }
+
+    fn unique_cache_prefix() -> &'static str {
+        AMMO_UNIQUE_CACHE_PREFIX
     }
 }
 

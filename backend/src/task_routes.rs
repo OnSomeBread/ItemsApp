@@ -1,9 +1,8 @@
 use crate::api_routers::{Device, fetch_tasks_by_ids, get_time_in_seconds};
-use crate::caching::RedisCache;
 use crate::database_types::{
     DeviceTaskQueryParams, Objective, Task, TaskBase, TaskFromDB, TaskRequirement,
 };
-use crate::init_app_state::AppState;
+use crate::init_app_state::{AppState, TASKS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{AppErrorHandling, TaskQueryParams, TaskStats};
 use axum::{extract::State, response::Json};
@@ -58,15 +57,12 @@ pub async fn task_stats(
         .filter(|i| completed_tasks.contains(&i._id))
         .count();
 
-    let time_in_seconds_tasks =
-        app_state
-            .next_tasks_call_timer
-            .lock()
-            .map_or(None, |mutex_timer| {
-                mutex_timer
-                    .as_ref()
-                    .map(|t| t.saturating_duration_since(Instant::now()).as_secs())
-            });
+    let time_in_seconds_tasks = app_state
+        .next_tasks_call_timer
+        .lock()
+        .await
+        .saturating_duration_since(Instant::now())
+        .as_secs();
 
     Ok(Json(TaskStats {
         tasks_completed_count: completed_tasks.len(),
@@ -75,7 +71,7 @@ pub async fn task_stats(
         kappa_required_count: kappa_required.len(),
         lightkeeper_completed_count,
         lightkeeper_required_count: lightkeeper_required.len(),
-        time_till_tasks_refresh_secs: time_in_seconds_tasks.unwrap_or(0),
+        time_till_tasks_refresh_secs: time_in_seconds_tasks,
     }))
 }
 
@@ -176,13 +172,7 @@ fn save_task_query_parms(
 pub async fn get_tasks(
     device: Device,
     Query(query_parms): Query<TaskQueryParams>,
-    State(AppState {
-        pgpool,
-        redispool,
-        next_items_call_timer: _,
-        next_tasks_call_timer,
-        next_ammo_call_timer: _,
-    }): State<AppState>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Task>>, AppError> {
     let TaskQueryParams {
         save,
@@ -201,7 +191,7 @@ pub async fn get_tasks(
     let player_lvl = player_lvl as i32;
 
     let ids = if include_completed && device.0.is_some() {
-        get_completed_task_by_device_id(&pgpool, device.0.unwrap()).await?
+        get_completed_task_by_device_id(&app_state.pgpool, device.0.unwrap()).await?
     } else {
         vec![]
     };
@@ -216,12 +206,13 @@ pub async fn get_tasks(
             player_lvl,
             obj_type.clone(),
             trader.clone(),
-            pgpool.clone(),
+            app_state.pgpool.clone(),
         );
     }
 
     let cache_key = format!(
-        "!{}{}{}{}{}l{}o{}{}",
+        "{}{}{}{}{}{}l{}o{}{}",
+        TASKS_UNIQUE_CACHE_PREFIX,
         if is_kappa { "1" } else { "0" },
         if is_lightkeeper { "1" } else { "0" },
         obj_type,
@@ -233,12 +224,12 @@ pub async fn get_tasks(
     );
 
     // try not to create too many cache keys when its not needed
-    let use_redis = ids.is_empty();
-    if use_redis && let Some(values) = Task::get_vec(&cache_key, &redispool).await? {
+    let use_cache = ids.is_empty();
+    if use_cache && let Some(values) = app_state.cache.get_vec(&cache_key).await {
         return Ok(Json(values));
     }
 
-    let mut txn = pgpool.begin().await.bad_sql("Tasks")?;
+    let mut txn = app_state.pgpool.begin().await.bad_sql("Tasks")?;
     let tasks_from_db = sqlx::query_as!(
                 TaskFromDB,
                 "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
@@ -261,13 +252,14 @@ pub async fn get_tasks(
     let tasks = tasks_from_db_to_tasks(tasks_from_db, txn).await?;
 
     // save tasks in redis cache
-    if use_redis {
-        Task::set_vec(
-            cache_key,
-            tasks.clone(),
-            redispool,
-            next_tasks_call_timer.clone(),
-        );
+    if use_cache {
+        let tokio_tasks = tasks.clone();
+        tokio::spawn(async move {
+            app_state
+                .cache
+                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX)
+                .await;
+        });
     }
 
     Ok(Json(tasks))
@@ -276,13 +268,7 @@ pub async fn get_tasks(
 pub async fn get_tasks_base(
     device: Device,
     Query(query_parms): Query<TaskQueryParams>,
-    State(AppState {
-        pgpool,
-        redispool,
-        next_items_call_timer: _,
-        next_tasks_call_timer,
-        next_ammo_call_timer: _,
-    }): State<AppState>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<TaskBase>>, AppError> {
     let TaskQueryParams {
         save,
@@ -301,7 +287,7 @@ pub async fn get_tasks_base(
     let player_lvl = player_lvl as i32;
 
     let ids = if include_completed && device.0.is_some() {
-        get_completed_task_by_device_id(&pgpool, device.0.unwrap()).await?
+        get_completed_task_by_device_id(&app_state.pgpool, device.0.unwrap()).await?
     } else {
         vec![]
     };
@@ -316,12 +302,13 @@ pub async fn get_tasks_base(
             player_lvl,
             obj_type.clone(),
             trader.clone(),
-            pgpool.clone(),
+            app_state.pgpool.clone(),
         );
     }
 
     let cache_key = format!(
-        "#{}{}{}{}{}l{}o{}{}",
+        "{}b{}{}{}{}{}l{}o{}{}",
+        TASKS_UNIQUE_CACHE_PREFIX,
         if is_kappa { "1" } else { "0" },
         if is_lightkeeper { "1" } else { "0" },
         obj_type,
@@ -333,8 +320,8 @@ pub async fn get_tasks_base(
     );
 
     // try not to create too many cache keys when its not needed
-    let use_redis = ids.is_empty();
-    if use_redis && let Some(values) = TaskBase::get_vec(&cache_key, &redispool).await? {
+    let use_cache = ids.is_empty();
+    if use_cache && let Some(values) = app_state.cache.get_vec(&cache_key).await {
         return Ok(Json(values));
     }
 
@@ -353,18 +340,25 @@ pub async fn get_tasks_base(
                 i64::from(limit),
                 i64::from(offset)
             )
-            .fetch_all(&pgpool)
+            .fetch_all(&app_state.pgpool)
             .await
             .bad_sql("TasksBase")?;
 
     // save tasks in redis cache
-    if use_redis {
-        TaskBase::set_vec(
-            cache_key,
-            tasks.clone(),
-            redispool,
-            next_tasks_call_timer.clone(),
-        );
+    if use_cache {
+        let tokio_tasks = tasks.clone();
+        tokio::spawn(async move {
+            app_state
+                .cache
+                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX)
+                .await;
+        });
+        // TaskBase::set_vec(
+        //     cache_key,
+        //     tasks.clone(),
+        //     redispool,
+        //     next_tasks_call_timer.clone(),
+        // );
     }
 
     Ok(Json(tasks))
@@ -418,10 +412,10 @@ pub async fn get_device_task_query_parms(
 async fn fetch_adj_list(
     app_state: &AppState,
 ) -> Result<HashMap<String, Vec<(String, bool)>>, AppError> {
-    let cache_key = "adj_list";
+    let cache_key = TASKS_UNIQUE_CACHE_PREFIX.to_string() + "adj_list";
     let mut conn = app_state.redispool.get().await.ok();
     if let Some(conn) = conn.as_mut() {
-        let adj_list: Option<Option<String>> = conn.get(cache_key).await.ok();
+        let adj_list: Option<Option<String>> = conn.get(&cache_key).await.ok();
         if let Some(adj_list_str) = adj_list.flatten()
             && let Ok(adj_list_val) = serde_json::from_str(&adj_list_str)
         {
@@ -453,6 +447,7 @@ async fn fetch_adj_list(
     let pool = app_state.redispool.clone();
     let tokio_adj_list = adj_list.clone();
     let tasks_call = app_state.next_tasks_call_timer.clone();
+    let moved_cache_key = cache_key.clone();
 
     // store the adj_list that have not been found in redis cache
     tokio::spawn(async move {
@@ -461,9 +456,8 @@ async fn fetch_adj_list(
         {
             let _: redis::RedisResult<()> = conn.set(cache_key, data).await;
 
-            if let Some(time_in_seconds) = get_time_in_seconds(&tasks_call) {
-                let _: redis::RedisResult<()> = conn.expire(cache_key, time_in_seconds).await;
-            }
+            let time_in_seconds = get_time_in_seconds(&tasks_call).await;
+            let _: redis::RedisResult<()> = conn.expire(moved_cache_key, time_in_seconds).await;
         }
     });
 

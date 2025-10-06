@@ -1,8 +1,7 @@
 use crate::{
     api_routers::Device,
-    caching::RedisCache,
     database_types::{Ammo, DeviceAmmoQueryParams},
-    init_app_state::AppState,
+    init_app_state::{AMMO_UNIQUE_CACHE_PREFIX, AppState},
     query_types::{
         AmmoQueryParams,
         AppError::{self, BadRequest},
@@ -18,13 +17,7 @@ use sqlx::{PgPool, types::Uuid};
 pub async fn get_ammo(
     device: Device,
     Query(query_parms): Query<AmmoQueryParams>,
-    State(AppState {
-        pgpool,
-        redispool,
-        next_items_call_timer: _,
-        next_tasks_call_timer: _,
-        next_ammo_call_timer,
-    }): State<AppState>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Ammo>>, AppError> {
     let AmmoQueryParams {
         search,
@@ -50,13 +43,14 @@ pub async fn get_ammo(
             penetration_power,
             initial_speed,
             ammo_type.clone(),
-            pgpool.clone(),
+            app_state.pgpool.clone(),
         );
     }
 
     // redis performance falls off at large amounts of items
     let cache_key = format!(
-        "${}{}d{}p{}i{}{}l{}o{}{}",
+        "{}{}{}d{}p{}i{}{}l{}o{}{}",
+        AMMO_UNIQUE_CACHE_PREFIX,
         if sort_asc { "1" } else { "0" },
         sort_by,
         damage,
@@ -68,7 +62,7 @@ pub async fn get_ammo(
         search,
     );
 
-    if let Some(values) = Ammo::get_vec(&cache_key, &redispool).await? {
+    if let Some(values) = app_state.cache.get_vec(&cache_key).await {
         return Ok(Json(values));
     }
 
@@ -87,16 +81,17 @@ pub async fn get_ammo(
         .bind(format!("%{ammo_type}%"))
         .bind(i64::from(limit))
         .bind(i64::from(offset))
-        .fetch_all(&pgpool)
+        .fetch_all(&app_state.pgpool)
         .await
         .bad_sql("Ammo")?;
 
-    Ammo::set_vec(
-        cache_key,
-        ammo.clone(),
-        redispool,
-        next_ammo_call_timer.clone(),
-    );
+    let tokio_values = ammo.clone();
+    tokio::spawn(async move {
+        app_state
+            .cache
+            .insert_vec(cache_key, &tokio_values, AMMO_UNIQUE_CACHE_PREFIX)
+            .await;
+    });
 
     Ok(Json(ammo))
 }

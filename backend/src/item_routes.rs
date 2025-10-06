@@ -3,7 +3,7 @@ use crate::caching::RedisCache;
 use crate::database_types::{
     BuyFor, DeviceItemQueryParams, Item, ItemFromDB, SavedItemData, SellFor,
 };
-use crate::init_app_state::AppState;
+use crate::init_app_state::{AppState, ITEMS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, ItemStats};
 use axum::{extract::State, response::Json};
@@ -20,19 +20,16 @@ pub async fn item_stats(State(app_state): State<AppState>) -> Result<Json<ItemSt
         .await
         .bad_sql("Item Stats")?;
 
-    let time_in_seconds_items =
-        app_state
-            .next_items_call_timer
-            .lock()
-            .map_or(None, |mutex_timer| {
-                mutex_timer
-                    .as_ref()
-                    .map(|t| t.saturating_duration_since(Instant::now()).as_secs())
-            });
+    let time_in_seconds_items = app_state
+        .next_items_call_timer
+        .lock()
+        .await
+        .saturating_duration_since(Instant::now())
+        .as_secs();
 
     Ok(Json(ItemStats {
         items_count: items_count.unwrap_or(0),
-        time_till_items_refresh_secs: time_in_seconds_items.unwrap_or(0),
+        time_till_items_refresh_secs: time_in_seconds_items,
     }))
 }
 
@@ -128,13 +125,7 @@ fn save_item_query_parms(
 pub async fn get_items(
     device: Device,
     Query(query_parms): Query<ItemQueryParams>,
-    State(AppState {
-        pgpool,
-        redispool,
-        next_items_call_timer,
-        next_tasks_call_timer: _,
-        next_ammo_call_timer: _,
-    }): State<AppState>,
+    State(app_state): State<AppState>,
 ) -> Result<Json<Vec<Item>>, AppError> {
     let ItemQueryParams {
         save,
@@ -156,13 +147,14 @@ pub async fn get_items(
             sort_by.clone(),
             sort_asc,
             item_type.clone(),
-            pgpool.clone(),
+            app_state.pgpool.clone(),
         );
     }
 
     // redis performance falls off at large amounts of items
     let cache_key = format!(
-        "@{}{}{}{}{}{}",
+        "{}{}{}{}{}{}{}",
+        ITEMS_UNIQUE_CACHE_PREFIX,
         if sort_asc { "1" } else { "0" },
         sort_by,
         limit,
@@ -171,7 +163,7 @@ pub async fn get_items(
         search,
     );
 
-    if let Some(values) = Item::get_vec(&cache_key, &redispool).await? {
+    if let Some(values) = app_state.cache.get_vec(&cache_key).await {
         return Ok(Json(values));
     }
 
@@ -213,7 +205,7 @@ pub async fn get_items(
         || sort_by == "avg_24h_price"
         || sort_by == "change_last_48h_percent";
 
-    let mut txn = pgpool.begin().await.bad_sql("Items")?;
+    let mut txn = app_state.pgpool.begin().await.bad_sql("Items")?;
     let items_from_db = if sort_by == "flea_market" {
         let sql = format!(
             "SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
@@ -253,13 +245,13 @@ pub async fn get_items(
 
     let items = items_from_db_to_items(items_from_db, txn).await?;
 
-    // save items in redis cache
-    Item::set_vec(
-        cache_key,
-        items.clone(),
-        redispool,
-        next_items_call_timer.clone(),
-    );
+    let tokio_values = items.clone();
+    tokio::spawn(async move {
+        app_state
+            .cache
+            .insert_vec(cache_key, &tokio_values, ITEMS_UNIQUE_CACHE_PREFIX)
+            .await;
+    });
 
     Ok(Json(items))
 }
@@ -315,7 +307,7 @@ pub async fn get_item_history(
     }
 
     let item_id = query_parms.item_id.unwrap();
-    let cache_key = item_id.clone() + "-history";
+    let cache_key = ITEMS_UNIQUE_CACHE_PREFIX.to_string() + item_id.clone().as_str() + "-history";
 
     if let Some(values) = SavedItemData::get_vec(&cache_key, &app_state.redispool).await? {
         return Ok(Json(values));

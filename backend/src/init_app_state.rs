@@ -1,29 +1,36 @@
+use crate::caching::MokaCache;
 use crate::deserialize_json_types::{Ammo, Item, Task};
 use crate::upsert::Upsert;
 use bb8_redis::{RedisConnectionManager, bb8};
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::error::Error;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
+use tokio::sync::Mutex;
 
 #[derive(Clone)]
 pub struct AppState {
     pub pgpool: sqlx::PgPool,
     pub redispool: bb8::Pool<RedisConnectionManager>,
-    pub next_items_call_timer: Arc<Mutex<Option<Instant>>>,
-    pub next_tasks_call_timer: Arc<Mutex<Option<Instant>>>,
-    pub next_ammo_call_timer: Arc<Mutex<Option<Instant>>>,
+    pub cache: MokaCache,
+    pub next_items_call_timer: Arc<Mutex<Instant>>,
+    pub next_tasks_call_timer: Arc<Mutex<Instant>>,
+    #[allow(unused)]
+    pub next_ammo_call_timer: Arc<Mutex<Instant>>,
 }
 
 const ITEMS_FILE: &str = "most_recent_items.json";
 const ITEM_SLEEP_TIME: u64 = 600;
+pub const ITEMS_UNIQUE_CACHE_PREFIX: &str = "!";
 
 const TASKS_FILE: &str = "most_recent_tasks.json";
 const TASK_SLEEP_TIME: u64 = 3600 * 24;
+pub const TASKS_UNIQUE_CACHE_PREFIX: &str = "@";
 
 const AMMO_FILE: &str = "most_recent_ammo.json";
 const AMMO_SLEEP_TIME: u64 = 3600 * 24;
+pub const AMMO_UNIQUE_CACHE_PREFIX: &str = "#";
 
 const DELETE_DEVICE_PREFERENCES_TIME: u64 = 3600 * 24;
 
@@ -58,11 +65,14 @@ pub async fn init_app_state(
         .build(RedisConnectionManager::new(redis_url)?)
         .await?;
 
-    let next_items_call_timer = Arc::new(Mutex::new(None::<Instant>));
-    let next_tasks_call_timer = Arc::new(Mutex::new(None::<Instant>));
-    let next_ammo_call_timer = Arc::new(Mutex::new(None::<Instant>));
+    let next_items_call_timer = Arc::new(Mutex::new(Instant::now()));
+    let next_tasks_call_timer = Arc::new(Mutex::new(Instant::now()));
+    let next_ammo_call_timer = Arc::new(Mutex::new(Instant::now()));
+
+    let cache = MokaCache::new();
 
     background_tasks(
+        &cache,
         &next_items_call_timer,
         &next_tasks_call_timer,
         &next_ammo_call_timer,
@@ -72,6 +82,7 @@ pub async fn init_app_state(
     Ok(AppState {
         pgpool,
         redispool,
+        cache,
         next_items_call_timer,
         next_tasks_call_timer,
         next_ammo_call_timer,
@@ -110,9 +121,10 @@ async fn init_data(pgpool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 // this spawns all of the background tasks that the app will need
 fn background_tasks(
-    next_items_call_timer: &Arc<Mutex<Option<Instant>>>,
-    next_tasks_call_timer: &Arc<Mutex<Option<Instant>>>,
-    next_ammo_call_timer: &Arc<Mutex<Option<Instant>>>,
+    cache: &MokaCache,
+    next_items_call_timer: &Arc<Mutex<Instant>>,
+    next_tasks_call_timer: &Arc<Mutex<Instant>>,
+    next_ammo_call_timer: &Arc<Mutex<Instant>>,
     pgpool: &PgPool,
 ) {
     let pgpool1 = pgpool.clone();
@@ -123,12 +135,23 @@ fn background_tasks(
     let tasks_call = next_tasks_call_timer.clone();
     let ammo_call = next_ammo_call_timer.clone();
 
+    let mut cache1 = cache.clone();
+    let mut cache2 = cache.clone();
+    let mut cache3 = cache.clone();
+
     // spawn background task to refresh items in the database via api call
     tokio::spawn(async move {
         let pgpool1 = pgpool1;
         let items_call = items_call;
         loop {
-            Item::background_task(ITEMS_FILE, &items_call, ITEM_SLEEP_TIME, &pgpool1).await;
+            Item::background_task(
+                ITEMS_FILE,
+                &items_call,
+                ITEM_SLEEP_TIME,
+                &mut cache1,
+                &pgpool1,
+            )
+            .await;
         }
     });
 
@@ -137,7 +160,14 @@ fn background_tasks(
         let pgpool2 = pgpool2;
         let tasks_call = tasks_call;
         loop {
-            Task::background_task(TASKS_FILE, &tasks_call, TASK_SLEEP_TIME, &pgpool2).await;
+            Task::background_task(
+                TASKS_FILE,
+                &tasks_call,
+                TASK_SLEEP_TIME,
+                &mut cache2,
+                &pgpool2,
+            )
+            .await;
         }
     });
 
@@ -146,7 +176,14 @@ fn background_tasks(
         let pgpool3 = pgpool3;
         let ammo_call = ammo_call;
         loop {
-            Ammo::background_task(AMMO_FILE, &ammo_call, AMMO_SLEEP_TIME, &pgpool3).await;
+            Ammo::background_task(
+                AMMO_FILE,
+                &ammo_call,
+                AMMO_SLEEP_TIME,
+                &mut cache3,
+                &pgpool3,
+            )
+            .await;
         }
     });
 

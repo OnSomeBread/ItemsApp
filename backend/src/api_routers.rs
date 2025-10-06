@@ -1,6 +1,8 @@
 use crate::ammo_routes::{get_ammo, get_device_ammo_query_parms};
 use crate::database_types::{Ammo, Item, ItemBase, ItemFromDB, Task, TaskBase, TaskFromDB};
-use crate::init_app_state::AppState;
+use crate::init_app_state::{
+    AMMO_UNIQUE_CACHE_PREFIX, AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX,
+};
 use crate::item_routes::{
     get_device_item_query_parms, get_item_history, get_items, item_stats, items_from_db_to_items,
 };
@@ -15,10 +17,10 @@ use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::{Router, extract::State, response::Json, routing::get, routing::post};
 use axum_extra::extract::Query;
-use redis::AsyncCommands;
 use serde::{Serialize, de::DeserializeOwned};
 use sqlx::types::Uuid;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tokio::try_join;
 
 use std::time::Instant;
@@ -41,16 +43,16 @@ async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
 }
 
 // in app state there are timers to see when when a page refreshes the helps to unwrap it into a number in seconds
-pub fn get_time_in_seconds(timer: &Arc<Mutex<Option<Instant>>>) -> Option<i64> {
-    #[allow(clippy::cast_possible_wrap)]
-    timer.lock().map_or(None, |mutex_timer| {
-        mutex_timer
-            .as_ref()
-            .map(|t| t.saturating_duration_since(Instant::now()).as_secs() as i64)
-    })
+#[allow(clippy::cast_possible_wrap)]
+pub async fn get_time_in_seconds(timer: &Arc<Mutex<Instant>>) -> i64 {
+    timer
+        .lock()
+        .await
+        .saturating_duration_since(Instant::now())
+        .as_secs() as i64
 }
 
-pub trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
+pub trait Page: Send + Sync + Serialize + DeserializeOwned + Clone + 'static {
     async fn fetch_by_ids(
         pgpool: &sqlx::PgPool,
         not_found_ids: &[String],
@@ -58,10 +60,12 @@ pub trait Page: Send + Serialize + DeserializeOwned + Clone + 'static {
 
     fn id(&self) -> &str;
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>>;
+    #[allow(dead_code)]
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>>;
 
-    // each struct needs to have a unique but short postfix
-    fn get_cache_key_postfix() -> &'static str;
+    // each struct needs to have a unique but short postfix and prefix where prefix matches with the general page they are associated with
+    fn make_cache_key(id: &str) -> String;
+    fn unique_cache_key_prefix() -> &'static str;
 }
 
 impl Page for Item {
@@ -86,12 +90,16 @@ impl Page for Item {
         &self._id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
         app_state.next_items_call_timer.clone()
     }
 
-    fn get_cache_key_postfix() -> &'static str {
-        "!"
+    fn unique_cache_key_prefix() -> &'static str {
+        ITEMS_UNIQUE_CACHE_PREFIX
+    }
+
+    fn make_cache_key(id: &str) -> String {
+        Self::unique_cache_key_prefix().to_string() + id + "!"
     }
 }
 
@@ -114,12 +122,16 @@ impl Page for ItemBase {
         &self._id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
         app_state.next_items_call_timer.clone()
     }
 
-    fn get_cache_key_postfix() -> &'static str {
-        "@"
+    fn unique_cache_key_prefix() -> &'static str {
+        ITEMS_UNIQUE_CACHE_PREFIX
+    }
+
+    fn make_cache_key(id: &str) -> String {
+        Self::unique_cache_key_prefix().to_string() + id + "@"
     }
 }
 
@@ -145,12 +157,15 @@ impl Page for Task {
         &self._id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
         app_state.next_tasks_call_timer.clone()
     }
+    fn unique_cache_key_prefix() -> &'static str {
+        TASKS_UNIQUE_CACHE_PREFIX
+    }
 
-    fn get_cache_key_postfix() -> &'static str {
-        "#"
+    fn make_cache_key(id: &str) -> String {
+        Self::unique_cache_key_prefix().to_string() + id + "#"
     }
 }
 
@@ -173,12 +188,16 @@ impl Page for TaskBase {
         &self._id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
         app_state.next_tasks_call_timer.clone()
     }
 
-    fn get_cache_key_postfix() -> &'static str {
-        "$"
+    fn unique_cache_key_prefix() -> &'static str {
+        TASKS_UNIQUE_CACHE_PREFIX
+    }
+
+    fn make_cache_key(id: &str) -> String {
+        Self::unique_cache_key_prefix().to_string() + id + "$"
     }
 }
 
@@ -201,12 +220,16 @@ impl Page for Ammo {
         &self.item_id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Option<Instant>>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
         app_state.next_ammo_call_timer.clone()
     }
 
-    fn get_cache_key_postfix() -> &'static str {
-        "%"
+    fn unique_cache_key_prefix() -> &'static str {
+        AMMO_UNIQUE_CACHE_PREFIX
+    }
+
+    fn make_cache_key(id: &str) -> String {
+        Self::unique_cache_key_prefix().to_string() + id + "%"
     }
 }
 
@@ -214,47 +237,29 @@ pub async fn fetch_tasks_by_ids<T: Page>(
     app_state: &AppState,
     ids: Vec<String>,
 ) -> Result<Vec<T>, AppError> {
-    let mut conn = app_state.redispool.get().await.ok();
     let mut not_found_ids = vec![];
     let mut found_values: Vec<T> = vec![];
-
-    // check if there is a cache hit from redis cache
-    if let Some(conn) = conn.as_mut() {
-        for id in ids {
-            let values: Option<Option<String>> =
-                conn.get(id.clone() + T::get_cache_key_postfix()).await.ok();
-            if let Some(value_str) = values.flatten() {
-                if let Ok(val) = serde_json::from_str(&value_str) {
-                    found_values.push(val);
-                }
-            } else {
-                not_found_ids.push(id);
-            }
+    for id in ids {
+        let cache_key = T::make_cache_key(id.as_str());
+        if let Some(val) = app_state.cache.get(&cache_key).await {
+            found_values.push(val);
+        } else {
+            not_found_ids.push(id);
         }
-    } else {
-        not_found_ids = ids;
     }
 
     let mut values: Vec<T> = T::fetch_by_ids(&app_state.pgpool, &not_found_ids).await?;
 
-    let pool = app_state.redispool.clone();
     let tokio_values = values.clone();
-    let api_call_timer = T::get_app_state_timer(app_state);
+    let cache = app_state.cache.clone();
 
-    // store the items that have not been found in redis cache
     tokio::spawn(async move {
-        if let Ok(mut conn) = pool.get().await {
-            for value in tokio_values {
-                if let Ok(data) = serde_json::to_string(&value) {
-                    let value_id = value.id();
-                    let _: redis::RedisResult<()> = conn.set(value_id, data).await;
+        for value in tokio_values {
+            let key = T::make_cache_key(value.id());
 
-                    if let Some(time_in_seconds) = get_time_in_seconds(&api_call_timer) {
-                        let _: redis::RedisResult<()> =
-                            conn.expire(value_id, time_in_seconds).await;
-                    }
-                }
-            }
+            cache
+                .insert(key, &value, T::unique_cache_key_prefix())
+                .await;
         }
     });
 
