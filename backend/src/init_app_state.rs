@@ -103,16 +103,12 @@ async fn init_data(pgpool: &PgPool) -> Result<(), Box<dyn Error>> {
 
     if tasks_count == 0 {
         let pgpool = pgpool.clone();
-        tokio::spawn(async move {
-            tokio::spawn(async move { Task::init(TASKS_FILE, pgpool).await });
-        });
+        tokio::spawn(async move { Task::init(TASKS_FILE, pgpool).await });
     }
 
     if ammo_count == 0 {
         let pgpool = pgpool.clone();
-        tokio::spawn(async move {
-            tokio::spawn(async move { Ammo::init(AMMO_FILE, pgpool).await });
-        });
+        tokio::spawn(async move { Ammo::init(AMMO_FILE, pgpool).await });
     }
 
     Ok(())
