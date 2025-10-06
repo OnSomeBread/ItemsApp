@@ -41,7 +41,7 @@ pub async fn init_app_state(
 ) -> Result<AppState, Box<dyn Error>> {
     let pgpool = loop {
         match PgPoolOptions::new()
-            .min_connections(1)
+            .min_connections(5)
             .max_connections(10)
             .idle_timeout(Duration::from_mins(30))
             .connect(&postgres_url)
@@ -59,7 +59,6 @@ pub async fn init_app_state(
     init_data(&pgpool).await?;
 
     let redispool = bb8::Pool::builder()
-        .min_idle(2)
         .connection_timeout(Duration::from_millis(100))
         .max_size(10)
         .build(RedisConnectionManager::new(redis_url)?)
