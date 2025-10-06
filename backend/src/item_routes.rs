@@ -312,10 +312,14 @@ pub async fn get_item_history(
         return Ok(Json(values));
     }
 
+    // since data is sampled at 1 every 10 minutes then 6 would be every hour
+    let item_history_sample_amount = 6;
     let item_history = sqlx::query_as!(
         SavedItemData,
-        "SELECT * FROM SavedItemData WHERE item_id = $1 ORDER BY recorded_time ASC",
-        item_id
+        "WITH numbered AS (SELECT *, ROW_NUMBER() OVER (ORDER BY recorded_time ASC) AS rn FROM SavedItemData WHERE item_id = $1) 
+        SELECT id, price_rub, recorded_time, item_id FROM numbered WHERE rn % $2 = 1",
+        item_id,
+        item_history_sample_amount
     )
     .fetch_all(&app_state.pgpool)
     .await
