@@ -611,7 +611,7 @@ async fn heavy_redis_testing() {
     let mut handlers = vec![];
 
     // end number represents number of users
-    for _ in 0..10 {
+    for _ in 0..50 {
         handlers.push(std::thread::spawn(async || {
             // end number represents number of requests a user would make albeit with no time in between
             for _ in 0..10 {

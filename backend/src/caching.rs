@@ -58,16 +58,25 @@ impl RedisCache for Task {}
 impl RedisCache for TaskBase {}
 impl RedisCache for Ammo {}
 
-#[derive(Clone)]
 pub struct MokaCache {
     cache: Cache<String, String>,
     keys: Arc<Mutex<HashMap<String, Vec<String>>>>,
 }
 
+// without this keys gets deep copied instead of Arc::cloned
+impl Clone for MokaCache {
+    fn clone(&self) -> Self {
+        Self {
+            cache: self.cache.clone(),
+            keys: Arc::clone(&self.keys),
+        }
+    }
+}
+
 impl MokaCache {
     pub fn new() -> Self {
         Self {
-            cache: Cache::new(2000),
+            cache: Cache::new(1000),
             keys: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -117,10 +126,91 @@ impl MokaCache {
     }
 
     pub async fn invalidate_cache_prefix(&self, cache_prefix: &'static str) {
-        if let Some(keys) = (*self.keys.lock().await).get(cache_prefix) {
-            for key in keys {
-                self.cache.invalidate(key).await;
+        if let Some(keys) = (*self.keys.lock().await).get_mut(cache_prefix) {
+            for key in keys.clone() {
+                self.cache.invalidate(&key).await;
             }
+            keys.clear();
         }
     }
 }
+
+// completly dynamic data caching approach but turns out is much slower than just serde_json
+// pub struct MokaCache {
+//     cache: Cache<String, Arc<dyn CacheValue>>,
+//     keys: Arc<Mutex<HashMap<String, Vec<String>>>>,
+// }
+
+// trait CacheValue: Send + Sync {
+//     fn as_any(&self) -> &dyn Any;
+// }
+
+// // this allows for generic types as the cache value
+// impl<T> CacheValue for T
+// where
+//     T: Send + Sync + Clone + 'static,
+// {
+//     fn as_any(&self) -> &dyn Any {
+//         self
+//     }
+// }
+
+// impl MokaCache {
+//     pub fn new() -> Self {
+//         Self {
+//             cache: Cache::new(1000),
+//             keys: Arc::new(Mutex::new(HashMap::new())),
+//         }
+//     }
+
+//     pub async fn insert<T>(&self, key: String, value: T, cache_prefix: &'static str)
+//     where
+//         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
+//     {
+//         self.cache.insert(key.clone(), Arc::new(value)).await;
+
+//         (*self.keys.lock().await)
+//             .entry(cache_prefix.to_string())
+//             .or_insert(Vec::new())
+//             .push(key);
+//     }
+
+//     pub async fn insert_vec<T>(&self, key: String, value: Vec<T>, cache_prefix: &'static str)
+//     where
+//         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
+//     {
+//         self.cache.insert(key.clone(), Arc::new(value)).await;
+
+//         (*self.keys.lock().await)
+//             .entry(cache_prefix.to_string())
+//             .or_insert(Vec::new())
+//             .push(key);
+//     }
+
+//     pub async fn get<T>(&self, key: &String) -> Option<T>
+//     where
+//         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
+//     {
+//         (self.cache.get(key).await)
+//             .map_or_else(|| None, |data| data.as_any().downcast_ref::<T>().cloned())
+//     }
+
+//     pub async fn get_vec<T>(&self, key: &String) -> Option<Vec<T>>
+//     where
+//         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
+//     {
+//         (self.cache.get(key).await).map_or_else(
+//             || None,
+//             |data| data.as_any().downcast_ref::<Vec<T>>().cloned(),
+//         )
+//     }
+
+//     pub async fn invalidate_cache_prefix(&self, cache_prefix: &'static str) {
+//         if let Some(keys) = (*self.keys.lock().await).get_mut(cache_prefix) {
+//             for key in keys.clone() {
+//                 self.cache.invalidate(&key).await;
+//             }
+//             keys.clear();
+//         }
+//     }
+// }
