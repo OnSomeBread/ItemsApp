@@ -1,5 +1,4 @@
 use crate::api_routers::Device;
-use crate::caching::RedisCache;
 use crate::database_types::{
     BuyFor, DeviceItemQueryParams, Item, ItemFromDB, SavedItemData, SellFor,
 };
@@ -309,7 +308,7 @@ pub async fn get_item_history(
     let item_id = query_parms.item_id.unwrap();
     let cache_key = ITEMS_UNIQUE_CACHE_PREFIX.to_string() + item_id.clone().as_str() + "-history";
 
-    if let Some(values) = SavedItemData::get_vec(&cache_key, &app_state.redispool).await? {
+    if let Some(values) = app_state.cache.get_vec(&cache_key).await {
         return Ok(Json(values));
     }
 
@@ -322,12 +321,13 @@ pub async fn get_item_history(
     .await
     .bad_sql("ItemHistory")?;
 
-    SavedItemData::set_vec(
-        cache_key,
-        item_history.clone(),
-        app_state.redispool,
-        app_state.next_items_call_timer.clone(),
-    );
+    let tokio_values = item_history.clone();
+    tokio::spawn(async move {
+        app_state
+            .cache
+            .insert_vec(cache_key, &tokio_values, ITEMS_UNIQUE_CACHE_PREFIX)
+            .await;
+    });
 
     Ok(Json(item_history))
 }
