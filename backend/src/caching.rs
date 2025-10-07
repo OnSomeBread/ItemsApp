@@ -115,6 +115,14 @@ impl MokaCache {
     {
         (self.cache.get(key).await)
             .map_or_else(|| None, |data| serde_json::from_str(data.as_str()).ok())
+
+        //     tokio_rayon::spawn(move || {
+        //     cache_data
+        //         .par_iter()
+        //         .filter_map(|x| serde_json::from_str(x).ok())
+        //         .collect()
+        // })
+        // .await
     }
 
     pub async fn invalidate_cache_prefix(&self, cache_prefix: &'static str) {
