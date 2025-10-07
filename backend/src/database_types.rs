@@ -104,6 +104,7 @@ pub struct Objective {
     pub obj_type: String,
     pub obj_description: String,
     pub map_name: String,
+    pub map_wiki: String,
     pub task_id: String,
     pub count: i32,
     pub needed_item_ids: Vec<String>,
