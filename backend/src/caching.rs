@@ -52,7 +52,7 @@ use serde::de::DeserializeOwned;
 
 pub struct MokaCache {
     cache: Cache<String, String>,
-    keys: Arc<Mutex<HashMap<String, Vec<String>>>>,
+    keys: Arc<Mutex<HashMap<&'static str, Vec<String>>>>,
 }
 
 // without this keys gets deep copied instead of Arc::cloned
@@ -82,8 +82,8 @@ impl MokaCache {
         }
 
         (*self.keys.lock().await)
-            .entry(cache_prefix.to_string())
-            .or_insert(Vec::new())
+            .entry(cache_prefix)
+            .or_insert_with(Vec::new)
             .push(key);
     }
 
@@ -96,8 +96,8 @@ impl MokaCache {
         }
 
         (*self.keys.lock().await)
-            .entry(cache_prefix.to_string())
-            .or_insert(Vec::new())
+            .entry(cache_prefix)
+            .or_insert_with(Vec::new)
             .push(key);
     }
 
@@ -126,11 +126,12 @@ impl MokaCache {
     }
 
     pub async fn invalidate_cache_prefix(&self, cache_prefix: &'static str) {
-        if let Some(keys) = (*self.keys.lock().await).get_mut(cache_prefix) {
-            for key in keys.clone() {
-                self.cache.invalidate(&key).await;
-            }
-            keys.clear();
+        let values = (*self.keys.lock().await)
+            .get_mut(cache_prefix)
+            .map(std::mem::take);
+
+        if let Some(keys) = values {
+            futures::future::join_all(keys.iter().map(|x| self.cache.invalidate(x))).await;
         }
     }
 }
