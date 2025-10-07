@@ -317,7 +317,7 @@ pub async fn get_item_history(
     let item_history = sqlx::query_as!(
         SavedItemData,
         "WITH numbered AS (SELECT *, ROW_NUMBER() OVER (ORDER BY recorded_time ASC) AS rn FROM SavedItemData WHERE item_id = $1) 
-        SELECT id, price_rub, recorded_time, item_id FROM numbered WHERE rn % $2 = 1",
+        SELECT price_rub, recorded_time FROM numbered WHERE rn % $2 = 1",
         item_id,
         item_history_sample_amount
     )

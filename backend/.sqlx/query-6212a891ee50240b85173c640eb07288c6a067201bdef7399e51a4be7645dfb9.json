@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH numbered AS (SELECT *, ROW_NUMBER() OVER (ORDER BY recorded_time ASC) AS rn FROM SavedItemData WHERE item_id = $1) \n        SELECT price_rub, recorded_time FROM numbered WHERE rn % $2 = 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "price_rub",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "recorded_time",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bpchar",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "6212a891ee50240b85173c640eb07288c6a067201bdef7399e51a4be7645dfb9"
+}
