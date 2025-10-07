@@ -498,20 +498,14 @@ async fn upsert_tasks(
         for objective in &task.objectives {
             sqlx::query!(
                 "INSERT INTO Objective 
-                (obj_type, obj_description, map_name, map_wiki, count, needed_item_ids, task_id) 
-                VALUES($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING;",
+                (obj_type, obj_description, map_name, count, needed_item_ids, task_id) 
+                VALUES($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING;",
                 &objective.obj_type,
                 &objective.obj_description,
                 &objective
                     .maps
                     .iter()
                     .map(|x| x.name.clone())
-                    .collect::<Vec<String>>()
-                    .join(", "),
-                &objective
-                    .maps
-                    .iter()
-                    .map(|x| x.wiki.clone())
                     .collect::<Vec<String>>()
                     .join(", "),
                 &objective.count.unwrap_or(0),
