@@ -1,17 +1,19 @@
-use crate::ammo_routes::{get_ammo, get_device_ammo_query_parms};
+use crate::ammo_routes::{get_ammo, get_ammo_help, get_device_ammo_query_parms};
 use crate::database_types::{Ammo, Item, ItemBase, ItemFromDB, Task, TaskBase, TaskFromDB};
 use crate::init_app_state::{
     AMMO_UNIQUE_CACHE_PREFIX, AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX,
 };
 use crate::item_routes::{
-    get_device_item_query_parms, get_item_history, get_items, item_stats, items_from_db_to_items,
+    get_device_item_query_parms, get_item_history, get_items, get_items_help, item_stats,
+    items_from_db_to_items,
 };
 use crate::query_types::{
     AppError, AppError::UninitalizedDatabase, AppErrorHandling, IdsQueryParams,
 };
 use crate::task_routes::{
     clear_completed_tasks, get_adj_list, get_completed_tasks, get_device_task_query_parms,
-    get_tasks, get_tasks_base, set_completed_task, task_stats, tasks_from_db_to_tasks,
+    get_tasks, get_tasks_base, get_tasks_help, set_completed_task, task_stats,
+    tasks_from_db_to_tasks,
 };
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
@@ -309,6 +311,7 @@ fn items_router() -> Router<AppState> {
         .route("/history", get(get_item_history))
         .route("/ids", get(get_page_by_ids::<Item>))
         .route("/query_parms", get(get_device_item_query_parms))
+        .route("/help", get(get_items_help))
 }
 
 fn tasks_router() -> Router<AppState> {
@@ -322,6 +325,7 @@ fn tasks_router() -> Router<AppState> {
         .route("/set_complete", post(set_completed_task))
         .route("/clear_completed_tasks", get(clear_completed_tasks))
         .route("/query_parms", get(get_device_task_query_parms))
+        .route("/help", get(get_tasks_help))
 }
 
 fn ammo_router() -> Router<AppState> {
@@ -329,6 +333,7 @@ fn ammo_router() -> Router<AppState> {
         .route("/", get(get_ammo))
         .route("/ids", get(get_page_by_ids::<Ammo>))
         .route("/query_parms", get(get_device_ammo_query_parms))
+        .route("/help", get(get_ammo_help))
 }
 
 pub fn api_router() -> Router<AppState> {

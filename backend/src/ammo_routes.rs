@@ -170,3 +170,7 @@ pub async fn get_device_ammo_query_parms(
 
     Ok(Json(v))
 }
+
+pub async fn get_ammo_help(Query(query_parms): Query<AmmoQueryParams>) -> Json<AmmoQueryParams> {
+    Json(query_parms)
+}

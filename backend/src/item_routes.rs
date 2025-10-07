@@ -335,3 +335,7 @@ pub async fn get_item_history(
 
     Ok(Json(item_history))
 }
+
+pub async fn get_items_help(Query(query_parms): Query<ItemQueryParams>) -> Json<ItemQueryParams> {
+    Json(query_parms)
+}

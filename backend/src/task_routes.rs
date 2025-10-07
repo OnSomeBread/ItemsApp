@@ -614,3 +614,7 @@ pub async fn clear_completed_tasks(
 
     Ok(())
 }
+
+pub async fn get_tasks_help(Query(query_parms): Query<TaskQueryParams>) -> Json<TaskQueryParams> {
+    Json(query_parms)
+}

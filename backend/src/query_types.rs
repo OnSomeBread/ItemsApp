@@ -88,7 +88,7 @@ where
     })
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ItemQueryParams {
     #[serde(default)]
     pub search: String,
@@ -161,7 +161,7 @@ where
 }
 
 #[allow(clippy::struct_excessive_bools)]
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct TaskQueryParams {
     #[serde(default)]
     pub search: String,
@@ -215,7 +215,7 @@ where
     })
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AmmoQueryParams {
     #[serde(default)]
     pub search: String,
