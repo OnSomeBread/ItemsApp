@@ -135,9 +135,6 @@ trait Test: DeserializeOwned {
         ))
         .await;
 
-        println!("{:?}", Self::get_ids(&values_from_base));
-        println!("{:?}", Self::get_ids(&values_from_ids));
-
         assert!(!values_from_base.is_empty() && !values_from_ids.is_empty());
         assert!(Self::get_ids(&values_from_base) == Self::get_ids(&values_from_ids));
     }

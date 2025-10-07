@@ -27,13 +27,17 @@ use std::time::Instant;
 
 // checks if the database is initalized
 async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
-    let (items_count, tasks_count) = try_join!(
+    let (items_count, tasks_count, ammo_count) = try_join!(
         sqlx::query_scalar!("SELECT COUNT(*) FROM Item").fetch_one(&app_state.pgpool),
-        sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pgpool)
+        sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pgpool),
+        sqlx::query_scalar!("SELECT COUNT(*) FROM Ammo").fetch_one(&app_state.pgpool)
     )
     .map_err(|_| UninitalizedDatabase(String::from("The Database has not yet been initalized")))?;
 
-    if items_count.unwrap_or(0) == 0 || tasks_count.unwrap_or(0) == 0 {
+    if items_count.unwrap_or(0) == 0
+        || tasks_count.unwrap_or(0) == 0
+        || ammo_count.unwrap_or(0) == 0
+    {
         Err(UninitalizedDatabase(String::from(
             "The Database has not yet been initalized",
         )))
