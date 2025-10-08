@@ -66,7 +66,7 @@ jobs:
           DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
         run: |
           cd backend
-          cargo test -- --nocapture
+          cargo +nightly test -- --nocapture
 
       - name: close prod docker container
         run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down
