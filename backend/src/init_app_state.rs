@@ -34,7 +34,6 @@ pub const AMMO_UNIQUE_CACHE_PREFIX: &str = "#";
 
 const DELETE_DEVICE_PREFERENCES_TIME: u64 = 3600 * 24;
 
-#[allow(clippy::too_many_lines)]
 pub async fn init_app_state(
     postgres_url: String,
     redis_url: String,
