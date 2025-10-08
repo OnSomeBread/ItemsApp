@@ -62,7 +62,7 @@ pub struct Item {
 
 pub const ITEMS_QUERY: &str = "
 {
-    items {
+    items(gameMode: regular) {
         id
         name
         shortName
@@ -163,7 +163,7 @@ pub struct Task {
 
 pub const TASKS_QUERY: &str = "
 {
-    tasks {
+    tasks(gameMode: regular) {
         taskRequirements {
             status
             task {
@@ -232,7 +232,7 @@ pub struct Ammo {
 
 pub const AMMO_QUERY: &str = "
 {
-  ammo {
+  ammo(gameMode: regular) {
     accuracyModifier
     ammoType
     caliber
