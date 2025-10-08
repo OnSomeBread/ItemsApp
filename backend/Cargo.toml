@@ -38,3 +38,5 @@ tracing-appender = "0.2.3"
 tower-http = {version = "0.6.6", features = ["trace"]}
 moka = { version = "0.12.11", features = ["future"] }
 futures = "0.3.31"
+rayon = "1.11.0"
+tokio-rayon = "2.1.0"

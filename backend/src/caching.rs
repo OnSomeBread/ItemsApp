@@ -1,3 +1,5 @@
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -50,8 +52,14 @@ use serde::de::DeserializeOwned;
 // // impl RedisCache for TaskBase {}
 // // impl RedisCache for Ammo {}
 
+#[derive(Clone)]
+enum CacheValue {
+    CacheStr(String),
+    CacheVec(Vec<String>),
+}
+
 pub struct MokaCache {
-    cache: Cache<String, String>,
+    cache: Cache<String, CacheValue>,
     keys: Arc<Mutex<HashMap<&'static str, Vec<String>>>>,
 }
 
@@ -78,7 +86,9 @@ impl MokaCache {
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
         if let Ok(data) = serde_json::to_string(value) {
-            self.cache.insert(key.clone(), data).await;
+            self.cache
+                .insert(key.clone(), CacheValue::CacheStr(data))
+                .await;
         }
 
         (*self.keys.lock().await)
@@ -91,9 +101,17 @@ impl MokaCache {
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
-        if let Ok(data) = serde_json::to_string(value) {
-            self.cache.insert(key.clone(), data).await;
+        let mut data = vec![];
+        for v in value {
+            if let Ok(v_str) = serde_json::to_string(v) {
+                data.push(v_str);
+            } else {
+                return;
+            }
         }
+        self.cache
+            .insert(key.clone(), CacheValue::CacheVec(data))
+            .await;
 
         (*self.keys.lock().await)
             .entry(cache_prefix)
@@ -105,24 +123,35 @@ impl MokaCache {
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
-        (self.cache.get(key).await)
-            .map_or_else(|| None, |data| serde_json::from_str(data.as_str()).ok())
+        if let CacheValue::CacheStr(value) = self.cache.get(key).await? {
+            serde_json::from_str(value.as_str()).ok()
+        } else {
+            None
+        }
     }
 
     pub async fn get_vec<T>(&self, key: &String) -> Option<Vec<T>>
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
-        (self.cache.get(key).await)
-            .map_or_else(|| None, |data| serde_json::from_str(data.as_str()).ok())
-
-        //     tokio_rayon::spawn(move || {
-        //     cache_data
-        //         .par_iter()
-        //         .filter_map(|x| serde_json::from_str(x).ok())
-        //         .collect()
-        // })
-        // .await
+        if let CacheValue::CacheVec(values) = self.cache.get(key).await? {
+            if values.len() < 100 {
+                values
+                    .iter()
+                    .filter_map(|v| serde_json::from_str(v.as_str()).ok())
+                    .collect()
+            } else {
+                tokio_rayon::spawn(move || {
+                    values
+                        .par_iter()
+                        .filter_map(|x| serde_json::from_str(x).ok())
+                        .collect()
+                })
+                .await
+            }
+        } else {
+            None
+        }
     }
 
     pub async fn invalidate_cache_prefix(&self, cache_prefix: &'static str) {

@@ -602,17 +602,49 @@ async fn test_ammo_device() {
 }
 
 #[tokio::test]
-async fn heavy_redis_testing() {
+async fn normal_case_redis_testing() {
     let total_time = std::time::Instant::now();
 
     let mut handlers = vec![];
 
     // end number represents number of users
-    for _ in 0..50 {
+    for _ in 0..100 {
         handlers.push(std::thread::spawn(async || {
             // end number represents number of requests a user would make albeit with no time in between
             for _ in 0..10 {
                 let v = Item::get_request_vec(format!("{}{}", URL, "/items")).await;
+                assert!(!v.is_empty());
+                let v = Task::get_request_vec(format!("{}{}", URL, "/tasks")).await;
+                assert!(!v.is_empty());
+                let v = Ammo::get_request_vec(format!("{}{}", URL, "/ammo")).await;
+                assert!(!v.is_empty());
+            }
+        }));
+    }
+
+    for handle in handlers {
+        handle.join().unwrap().await;
+    }
+
+    println!("{}ms", total_time.elapsed().as_millis());
+}
+
+#[tokio::test]
+async fn large_limit_redis_testing() {
+    let total_time = std::time::Instant::now();
+
+    let mut handlers = vec![];
+
+    // end number represents number of users
+    for _ in 0..10 {
+        handlers.push(std::thread::spawn(async || {
+            // end number represents number of requests a user would make albeit with no time in between
+            for _ in 0..10 {
+                let v = Item::get_request_vec(format!("{}{}", URL, "/items?limit=1000")).await;
+                assert!(!v.is_empty());
+                let v = Task::get_request_vec(format!("{}{}", URL, "/tasks?limit=1000")).await;
+                assert!(!v.is_empty());
+                let v = Ammo::get_request_vec(format!("{}{}", URL, "/ammo?limit=1000")).await;
                 assert!(!v.is_empty());
             }
         }));
