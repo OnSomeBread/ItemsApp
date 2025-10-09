@@ -1,6 +1,7 @@
 use crate::api_routers::{Device, fetch_tasks_by_ids, get_time_in_seconds};
 use crate::database_types::{
-    DeviceTaskQueryParams, Objective, Task, TaskBase, TaskFromDB, TaskRequirement,
+    DeviceTaskQueryParams, NeededItem, NeededItemsDB, Objective, Task, TaskBase, TaskFromDB,
+    TaskRequirement,
 };
 use crate::init_app_state::{AppState, TASKS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
@@ -133,35 +134,27 @@ pub async fn tasks_from_db_to_tasks(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn save_task_query_parms(
-    device_id: Uuid,
-    search: String,
-    is_kappa: bool,
-    is_lightkeeper: bool,
-    player_lvl: i32,
-    obj_type: String,
-    trader: String,
-    pgpool: PgPool,
-) {
+fn save_task_query_parms(device_id: Uuid, query_parms: TaskQueryParams, pgpool: PgPool) {
     tokio::spawn(async move {
+        #[allow(clippy::cast_possible_wrap)]
         let _ = sqlx::query!(
             "UPDATE TaskQueryParams 
                     SET search = $2, is_kappa = $3, is_lightkeeper = $4, 
                     player_lvl = $5, obj_type = $6, trader = $7 WHERE id = $1",
             device_id,
-            search,
-            is_kappa,
-            is_lightkeeper,
-            player_lvl,
-            if obj_type.is_empty() {
+            query_parms.search,
+            query_parms.is_kappa,
+            query_parms.is_lightkeeper,
+            query_parms.player_lvl as i32,
+            if query_parms.obj_type.is_empty() {
                 "any".to_string()
             } else {
-                obj_type
+                query_parms.obj_type
             },
-            if trader.is_empty() {
+            if query_parms.trader.is_empty() {
                 "any".to_string()
             } else {
-                trader
+                query_parms.trader
             }
         )
         .execute(&pgpool)
@@ -185,7 +178,7 @@ pub async fn get_tasks(
         limit,
         offset,
         include_completed,
-    } = query_parms;
+    } = query_parms.clone();
 
     #[allow(clippy::cast_possible_wrap)]
     let player_lvl = player_lvl as i32;
@@ -198,16 +191,7 @@ pub async fn get_tasks(
 
     // save query
     if save && let Some(device_id) = device.0 {
-        save_task_query_parms(
-            device_id,
-            search.clone(),
-            is_kappa,
-            is_lightkeeper,
-            player_lvl,
-            obj_type.clone(),
-            trader.clone(),
-            app_state.pgpool.clone(),
-        );
+        save_task_query_parms(device_id, query_parms, app_state.pgpool.clone());
     }
 
     let cache_key = format!(
@@ -271,7 +255,7 @@ pub async fn get_tasks_base(
     State(app_state): State<AppState>,
 ) -> Result<Json<Vec<TaskBase>>, AppError> {
     let TaskQueryParams {
-        save,
+        save: _,
         search,
         is_kappa,
         is_lightkeeper,
@@ -281,7 +265,7 @@ pub async fn get_tasks_base(
         limit,
         offset,
         include_completed,
-    } = query_parms;
+    } = query_parms.clone();
 
     #[allow(clippy::cast_possible_wrap)]
     let player_lvl = player_lvl as i32;
@@ -291,20 +275,6 @@ pub async fn get_tasks_base(
     } else {
         vec![]
     };
-
-    // save query
-    if save && let Some(device_id) = device.0 {
-        save_task_query_parms(
-            device_id,
-            search.clone(),
-            is_kappa,
-            is_lightkeeper,
-            player_lvl,
-            obj_type.clone(),
-            trader.clone(),
-            app_state.pgpool.clone(),
-        );
-    }
 
     let cache_key = format!(
         "{}b{}{}{}{}{}l{}o{}{}",
@@ -353,12 +323,6 @@ pub async fn get_tasks_base(
                 .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX)
                 .await;
         });
-        // TaskBase::set_vec(
-        //     cache_key,
-        //     tasks.clone(),
-        //     redispool,
-        //     next_tasks_call_timer.clone(),
-        // );
     }
 
     Ok(Json(tasks))
@@ -617,4 +581,102 @@ pub async fn clear_completed_tasks(
 
 pub async fn get_tasks_help(Query(query_parms): Query<TaskQueryParams>) -> Json<TaskQueryParams> {
     Json(query_parms)
+}
+
+pub async fn get_required_items(
+    device: Device,
+    Query(query_parms): Query<TaskQueryParams>,
+    State(app_state): State<AppState>,
+) -> Result<Json<Vec<NeededItem>>, AppError> {
+    let TaskQueryParams {
+        save: _,
+        search,
+        is_kappa,
+        is_lightkeeper,
+        obj_type,
+        trader,
+        player_lvl,
+        limit,
+        offset,
+        include_completed,
+    } = query_parms.clone();
+
+    #[allow(clippy::cast_possible_wrap)]
+    let player_lvl = player_lvl as i32;
+
+    let ids = if include_completed && let Some(device_id) = device.0 {
+        get_completed_task_by_device_id(&app_state.pgpool, device_id).await?
+    } else {
+        vec![]
+    };
+
+    let cache_key = format!(
+        "{}r{}{}{}{}{}l{}o{}{}",
+        TASKS_UNIQUE_CACHE_PREFIX,
+        if is_kappa { "1" } else { "0" },
+        if is_lightkeeper { "1" } else { "0" },
+        obj_type,
+        player_lvl,
+        trader,
+        limit,
+        offset,
+        search,
+    );
+
+    // try not to create too many cache keys when its not needed
+    let use_cache = ids.is_empty();
+    if use_cache && let Some(values) = app_state.cache.get_vec(&cache_key).await {
+        return Ok(Json(values));
+    }
+
+    let values = sqlx::query_as!(
+        NeededItemsDB,
+        "SELECT o.count, o.needed_item_ids FROM Task t LEFT JOIN Objective o
+        ON t._id = o.task_id WHERE t.task_name ILIKE $1 AND t.trader ILIKE $2 AND 
+        t.min_player_level <= $3 AND NOT (t._id = ANY($4)) AND 
+        ($5 IS FALSE OR t.kappa_required = TRUE) AND ($6 IS FALSE OR t.lightkeeper_required = TRUE) 
+        AND EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) 
+        ORDER BY t._id ASC LIMIT $8 OFFSET $9",
+        format!("%{search}%"),
+        format!("%{trader}%"),
+        player_lvl,
+        &ids,
+        is_kappa,
+        is_lightkeeper,
+        format!("%{obj_type}%"),
+        i64::from(limit),
+        i64::from(offset)
+    )
+    .fetch_all(&app_state.pgpool)
+    .await
+    .bad_sql("NeededItems")?;
+
+    // group item ids
+    let mut d: HashMap<String, i32> = HashMap::new();
+    for v in values {
+        for item_id in v.needed_item_ids {
+            *d.entry(item_id).or_insert(0) += v.count;
+        }
+    }
+
+    let needed_items: Vec<NeededItem> = d
+        .into_iter()
+        .map(|(key, value)| NeededItem {
+            item_id: key,
+            count: value,
+        })
+        .collect();
+
+    // save tasks in redis cache
+    if use_cache {
+        let tokio_tasks = needed_items.clone();
+        tokio::spawn(async move {
+            app_state
+                .cache
+                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX)
+                .await;
+        });
+    }
+
+    Ok(Json(needed_items))
 }

@@ -84,30 +84,23 @@ pub async fn items_from_db_to_items(
         .collect())
 }
 
-fn save_item_query_parms(
-    device_id: Uuid,
-    search: String,
-    sort_by: String,
-    sort_asc: bool,
-    item_type: String,
-    pgpool: PgPool,
-) {
+fn save_item_query_parms(device_id: Uuid, query_parms: ItemQueryParams, pgpool: PgPool) {
     tokio::spawn(async move {
         let _ = sqlx::query!(
             "UPDATE ItemQueryParams
                     SET search = $2, sort_asc = $3, sort_by = $4, item_type = $5 WHERE id = $1",
             device_id,
-            search,
-            sort_asc,
-            if sort_by.is_empty() {
+            query_parms.search,
+            query_parms.sort_asc,
+            if query_parms.sort_by.is_empty() {
                 "base_price".to_string()
             } else {
-                sort_by
+                query_parms.sort_by
             },
-            if item_type.is_empty() {
+            if query_parms.item_type.is_empty() {
                 "any".to_string()
             } else {
-                item_type
+                query_parms.item_type
             },
         )
         .execute(&pgpool)
@@ -134,20 +127,13 @@ pub async fn get_items(
         item_type,
         limit,
         offset,
-    } = query_parms;
+    } = query_parms.clone();
 
     let limit = std::cmp::min(limit, 500);
 
     // save query
     if save && let Some(device_id) = device.0 {
-        save_item_query_parms(
-            device_id,
-            search.clone(),
-            sort_by.clone(),
-            sort_asc,
-            item_type.clone(),
-            app_state.pgpool.clone(),
-        );
+        save_item_query_parms(device_id, query_parms, app_state.pgpool.clone());
     }
 
     // redis performance falls off at large amounts of items

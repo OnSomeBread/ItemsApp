@@ -30,21 +30,11 @@ pub async fn get_ammo(
         limit,
         offset,
         save,
-    } = query_parms;
+    } = query_parms.clone();
 
     // save query
     if save && let Some(device_id) = device.0 {
-        save_ammo_query_parms(
-            device_id,
-            search.clone(),
-            sort_by.clone(),
-            sort_asc,
-            damage,
-            penetration_power,
-            initial_speed,
-            ammo_type.clone(),
-            app_state.pgpool.clone(),
-        );
+        save_ammo_query_parms(device_id, query_parms, app_state.pgpool.clone());
     }
 
     // redis performance falls off at large amounts of items
@@ -97,32 +87,22 @@ pub async fn get_ammo(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn save_ammo_query_parms(
-    device_id: Uuid,
-    search: String,
-    sort_by: String,
-    sort_asc: bool,
-    damage: i32,
-    penetration_power: i32,
-    initial_speed: f32,
-    ammo_type: String,
-    pgpool: PgPool,
-) {
+fn save_ammo_query_parms(device_id: Uuid, query_parms: AmmoQueryParams, pgpool: PgPool) {
     tokio::spawn(async move {
         let _ = sqlx::query!(
             "UPDATE AmmoQueryParams
                     SET search = $2, sort_by = $3, sort_asc = $4, damage = $5, penetration_power = $6, initial_speed = $7, ammo_type = $8 WHERE id = $1",
             device_id,
-            search,
-            sort_by,
-            sort_asc,
-            damage,
-            penetration_power,
-            initial_speed,
-            if ammo_type.is_empty() {
+            query_parms.search,
+            query_parms.sort_by,
+            query_parms.sort_asc,
+            query_parms.damage,
+            query_parms.penetration_power,
+            query_parms.initial_speed,
+            if query_parms.ammo_type.is_empty() {
                 "any".to_string()
             } else {
-                ammo_type
+                query_parms.ammo_type
             },
         )
         .execute(&pgpool)

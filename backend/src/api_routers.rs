@@ -12,7 +12,7 @@ use crate::query_types::{
 };
 use crate::task_routes::{
     clear_completed_tasks, get_adj_list, get_completed_tasks, get_device_task_query_parms,
-    get_tasks, get_tasks_base, get_tasks_help, set_completed_task, task_stats,
+    get_required_items, get_tasks, get_tasks_base, get_tasks_help, set_completed_task, task_stats,
     tasks_from_db_to_tasks,
 };
 use axum::extract::FromRequestParts;
@@ -320,6 +320,7 @@ fn tasks_router() -> Router<AppState> {
         .route("/base", get(get_tasks_base))
         .route("/stats", get(task_stats))
         .route("/ids", get(get_page_by_ids::<Task>))
+        .route("/get_required_items", get(get_required_items))
         .route("/adj_list", get(get_adj_list))
         .route("/get_completed", get(get_completed_tasks))
         .route("/set_complete", post(set_completed_task))

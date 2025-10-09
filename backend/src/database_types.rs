@@ -106,8 +106,24 @@ pub struct Objective {
     pub map_name: String,
     pub map_wiki: String,
     pub task_id: String,
+    #[serde(skip)]
+    #[allow(dead_code)]
+    pub count: i32,
+    #[serde(skip)]
+    #[allow(dead_code)]
+    pub needed_item_ids: Vec<String>,
+}
+
+#[derive(sqlx::FromRow)]
+pub struct NeededItemsDB {
     pub count: i32,
     pub needed_item_ids: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone)]
+pub struct NeededItem {
+    pub count: i32,
+    pub item_id: String,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
