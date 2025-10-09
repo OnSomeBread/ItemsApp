@@ -120,12 +120,6 @@ pub struct NeededItemsDB {
     pub needed_item_ids: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone)]
-pub struct NeededItem {
-    pub count: i32,
-    pub item_id: String,
-}
-
 #[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
 pub struct TaskRequirement {
     #[serde(skip)]

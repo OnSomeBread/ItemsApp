@@ -1,9 +1,9 @@
-use crate::api_routers::{Device, fetch_tasks_by_ids, get_time_in_seconds};
+use crate::api_routers::{Device, Page, fetch_tasks_by_ids, get_time_in_seconds};
 use crate::database_types::{
-    DeviceTaskQueryParams, NeededItem, NeededItemsDB, Objective, Task, TaskBase, TaskFromDB,
+    DeviceTaskQueryParams, Item, NeededItemsDB, Objective, Task, TaskBase, TaskFromDB,
     TaskRequirement,
 };
-use crate::init_app_state::{AppState, TASKS_UNIQUE_CACHE_PREFIX};
+use crate::init_app_state::{AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{AppErrorHandling, TaskQueryParams, TaskStats};
 use axum::{extract::State, response::Json};
@@ -587,7 +587,7 @@ pub async fn get_required_items(
     device: Device,
     Query(query_parms): Query<TaskQueryParams>,
     State(app_state): State<AppState>,
-) -> Result<Json<Vec<NeededItem>>, AppError> {
+) -> Result<Json<Vec<(Item, i32)>>, AppError> {
     let TaskQueryParams {
         save: _,
         search,
@@ -610,7 +610,7 @@ pub async fn get_required_items(
         vec![]
     };
 
-    let cache_key = format!(
+    let count_cache_key = format!(
         "{}r{}{}{}{}{}l{}o{}{}",
         TASKS_UNIQUE_CACHE_PREFIX,
         if is_kappa { "1" } else { "0" },
@@ -623,10 +623,26 @@ pub async fn get_required_items(
         search,
     );
 
+    let item_cache_key = format!(
+        "{}r{}{}{}{}{}l{}o{}{}",
+        ITEMS_UNIQUE_CACHE_PREFIX,
+        if is_kappa { "1" } else { "0" },
+        if is_lightkeeper { "1" } else { "0" },
+        obj_type,
+        player_lvl,
+        trader,
+        limit,
+        offset,
+        search,
+    );
+
     // try not to create too many cache keys when its not needed
     let use_cache = ids.is_empty();
-    if use_cache && let Some(values) = app_state.cache.get_vec(&cache_key).await {
-        return Ok(Json(values));
+    if use_cache
+        && let Some(counts) = app_state.cache.get_vec(&count_cache_key).await
+        && let Some(items) = app_state.cache.get_vec(&item_cache_key).await
+    {
+        return Ok(Json(items.into_iter().zip(counts.into_iter()).collect()));
     }
 
     let values = sqlx::query_as!(
@@ -652,31 +668,39 @@ pub async fn get_required_items(
     .bad_sql("NeededItems")?;
 
     // group item ids
-    let mut d: HashMap<String, i32> = HashMap::new();
+    let mut item_to_count: HashMap<String, i32> = HashMap::new();
     for v in values {
         for item_id in v.needed_item_ids {
-            *d.entry(item_id).or_insert(0) += v.count;
+            *item_to_count.entry(item_id).or_insert(0) += v.count;
         }
     }
 
-    let needed_items: Vec<NeededItem> = d
-        .into_iter()
-        .map(|(key, value)| NeededItem {
-            item_id: key,
-            count: value,
-        })
+    let item_ids: Vec<String> = item_to_count.keys().cloned().collect();
+
+    let items: Vec<Item> = Item::fetch_by_ids(&app_state.pgpool, &item_ids).await?;
+
+    // CANT USE .values() HERE BECAUSE ORDER WOULD BE WRONG
+    let counts: Vec<i32> = items
+        .iter()
+        .map(|i| *item_to_count.get(&i._id).unwrap_or(&0))
         .collect();
 
     // save tasks in redis cache
     if use_cache {
-        let tokio_tasks = needed_items.clone();
+        let tokio_items = items.clone();
+        let tokio_counts = counts.clone();
         tokio::spawn(async move {
             app_state
                 .cache
-                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX)
+                .insert_vec(item_cache_key, &tokio_items, ITEMS_UNIQUE_CACHE_PREFIX)
+                .await;
+
+            app_state
+                .cache
+                .insert_vec(count_cache_key, &tokio_counts, TASKS_UNIQUE_CACHE_PREFIX)
                 .await;
         });
     }
 
-    Ok(Json(needed_items))
+    Ok(Json(items.into_iter().zip(counts.into_iter()).collect()))
 }
