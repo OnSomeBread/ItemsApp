@@ -21,7 +21,7 @@ function ItemSearchBar({ queryParams, changeQueryParams, clearCounts }: Props) {
 
     const delayTimer = setTimeout(() => {
       changeQueryParams("search", searchInput);
-    }, 150);
+    }, 200);
 
     return () => clearTimeout(delayTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
