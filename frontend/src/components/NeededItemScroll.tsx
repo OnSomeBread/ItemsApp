@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { API_BASE } from "../constants";
 import { formatSecondsToTime } from "../utils";
 import Link from "next/link";
+import ImageComponent from "./ImageComponent";
 
 interface Props {
   initItems: [ItemBase, number][];
@@ -123,15 +124,25 @@ function NeededItemScroll({
             }}
             style={{ listStyleType: "none" }}
           >
+            {item[1].toLocaleString("en-us")}{" "}
             <Link
+              className="items-center justify-center"
               href={{
                 pathname: "/item_view",
                 query: "id=" + item[0]._id,
               }}
             >
               {item[0].item_name}
-            </Link>{" "}
-            {item[1]}
+            </Link>
+            <div className="relative -z-1 flex h-32 w-[100%] items-center justify-center">
+              <ImageComponent
+                imgSrc={"/" + item[0]._id + ".webp"}
+                alt={""}
+                priority={false}
+                width={64}
+                height={64}
+              />
+            </div>
           </motion.li>
         ))}
       </motion.ul>
