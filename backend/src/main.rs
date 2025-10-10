@@ -18,8 +18,8 @@ use init_app_state::init_app_state;
 use std::env;
 use std::error::Error;
 use std::time::Duration;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
-//use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -32,15 +32,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app_state = init_app_state(postgres_url, redis_url).await?;
 
-    // not needed here since it will be a docker container however will keep here for future reference
-    // let cors = CorsLayer::new()
-    //     .allow_origin([
-    //         "http://localhost:3000".parse().unwrap(),
-    //         "http://127.0.0.1:3000".parse().unwrap(),
-    //         "http://frontend:3000".parse().unwrap(),
-    //     ])
-    //     .allow_headers(Any)
-    //     .allow_methods(Any);
+    let cors = CorsLayer::new()
+        .allow_origin([
+            "http://localhost:3000".parse().unwrap(),
+            "http://127.0.0.1:3000".parse().unwrap(),
+            "http://frontend:3000".parse().unwrap(),
+        ])
+        .allow_headers(Any)
+        .allow_methods(Any);
 
     let app = Router::new()
         .nest("/api", api_routers::api_router())
@@ -78,8 +77,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         }
                     },
                 ),
-        );
-    //.layer(cors);
+        )
+        .layer(cors);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;
     axum::serve(listener, app).await?;
