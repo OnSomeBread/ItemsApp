@@ -18,6 +18,18 @@ export const DEFAULT_TASK_QUERY_PARAMS = {
   offset: 0,
 };
 
+export const DEFAULT_AMMO_QUERY_PARAMS = {
+  search: "",
+  sort_asc: false,
+  sort_by: "any",
+  damage: 0,
+  penetration_power: 0,
+  initial_speed: 0,
+  ammo_type: "any",
+  limit: 40,
+  offset: 0,
+};
+
 // this is for ItemComponent to specifiy which item details should be listed
 export const DISPLAY_ITEM_KEYS = [
   "name",
@@ -102,6 +114,38 @@ export const ALL_TASK_OBJECTIVE_TYPES = {
   traderStanding: "Trader Standing",
   experience: "Experience",
   skill: "Skill",
+};
+
+export const ALL_AMMO_SORT_BY = {
+  accuracy_modifier: "Accuracy Modifier",
+  ammo_type: "Ammo Type",
+  caliber: "Caliber",
+  armor_damage: "Armor Damage",
+  fragmentation_chance: "Fragmentation Chance",
+  damage: "Damage",
+  heavy_bleed_modifier: "Heavy Bleed Modifier",
+  initial_speed: "Initial Speed",
+  light_bleed_modifier: "Light Bleed Modifier",
+  penetration_chance: "Penetration Chance",
+  penetration_power: "Penetration Power",
+  penetration_power_deviation: "Penetration Power Deviation",
+  projectile_count: "Projectile Count",
+  recoil_modifier: "Recoil Modifier",
+  ricochet_chance: "Ricochet Chance",
+  stack_max_size: "Stack Max Size",
+  stamina_burn_per_damage: "Stamina Burn Per Damage",
+  tracer: "Tracer",
+  tracer_color: "Tracer Color",
+  weight: "Weight",
+  item_id: "Item ID",
+};
+
+export const ALL_AMMO_TYPES = {
+  any: "Any",
+  bullet: "Bullet",
+  buckshot: "Buckshot",
+  grenade: "Grenade",
+  flashbang: "Flashbang",
 };
 
 export const dev: boolean = false;

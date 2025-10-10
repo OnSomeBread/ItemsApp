@@ -119,6 +119,11 @@ export type TaskStats = {
   time_till_tasks_refresh_secs: number;
 };
 
+export type AmmoStats = {
+  ammo_count: number;
+  time_till_ammo_refresh_secs: number;
+};
+
 export type Ammo = {
   accuracy_modifier: number;
   ammo_type: string;
@@ -141,4 +146,16 @@ export type Ammo = {
   tracer_color: string;
   weight: number;
   item_id: string;
+};
+
+export type AmmoQueryParams = {
+  search: string;
+  sort_by: string;
+  sort_asc: boolean;
+  damage: number;
+  penetration_power: number;
+  initial_speed: number;
+  ammo_type: string;
+  limit: number;
+  offset: number;
 };
