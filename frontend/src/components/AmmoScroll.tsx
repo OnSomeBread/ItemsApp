@@ -7,6 +7,7 @@ import { API_BASE } from "../constants";
 import { formatSecondsToTime } from "../utils";
 import AmmoSearchBar from "./AmmoSearchBar";
 import Link from "next/link";
+import ImageComponent from "./ImageComponent";
 
 interface Props {
   initAmmo: Ammo[];
@@ -132,7 +133,7 @@ function AmmoScroll({
             >
               {allAmmo?.map((ammo) => (
                 <motion.li
-                  className="h-50 md:px-14 md:pb-4"
+                  className="h-80 md:px-14 md:pb-4"
                   key={ammo.item_id}
                   transition={{ duration: 0.8 }}
                   variants={{
@@ -142,6 +143,7 @@ function AmmoScroll({
                   style={{ listStyleType: "none" }}
                 >
                   <Link
+                    className="w-full text-center"
                     href={{
                       pathname: "/item_view",
                       query: "id=" + ammo.item_id,
@@ -149,8 +151,30 @@ function AmmoScroll({
                   >
                     {ammo.caliber}
                   </Link>
-                  <p>Damage: {ammo.damage}</p>
-                  <p>Penetration Power: {ammo.penetration_power}</p>
+                  <p className="w-full text-center">Damage: {ammo.damage}</p>
+                  <p className="w-full text-center">
+                    Penetration Power: {ammo.penetration_power}
+                  </p>
+                  <p className="w-full text-center">
+                    Penetration Power Deviation:{" "}
+                    {ammo.penetration_power_deviation}
+                  </p>
+                  <p className="w-full text-center">
+                    Initial Speed: {ammo.initial_speed}
+                  </p>
+
+                  <p className="w-full text-center">
+                    Projectile Count: {ammo.projectile_count}
+                  </p>
+                  <div className="relative -z-1 flex h-16 w-[100%] items-center justify-center">
+                    <ImageComponent
+                      imgSrc={"/" + ammo.item_id + ".webp"}
+                      alt={""}
+                      priority={false}
+                      width={64}
+                      height={64}
+                    />
+                  </div>
                 </motion.li>
               ))}
             </motion.ul>
