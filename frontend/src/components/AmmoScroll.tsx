@@ -142,15 +142,16 @@ function AmmoScroll({
                   }}
                   style={{ listStyleType: "none" }}
                 >
-                  <Link
-                    className="w-full text-center"
-                    href={{
-                      pathname: "/item_view",
-                      query: "id=" + ammo.item_id,
-                    }}
-                  >
-                    {ammo.caliber}
-                  </Link>
+                  <div className="w-full !items-center !justify-center !text-center">
+                    <Link
+                      href={{
+                        pathname: "/item_view",
+                        query: "id=" + ammo.item_id,
+                      }}
+                    >
+                      {ammo.caliber}
+                    </Link>
+                  </div>
                   <p className="w-full text-center">Damage: {ammo.damage}</p>
                   <p className="w-full text-center">
                     Penetration Power: {ammo.penetration_power}
