@@ -106,11 +106,7 @@ pub struct Objective {
     pub map_name: String,
     pub map_wiki: String,
     pub task_id: String,
-    #[serde(skip)]
-    #[allow(dead_code)]
     pub count: i32,
-    #[serde(skip)]
-    #[allow(dead_code)]
     pub needed_item_ids: Vec<String>,
 }
 
