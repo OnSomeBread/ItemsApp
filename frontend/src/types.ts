@@ -159,3 +159,8 @@ export type AmmoQueryParams = {
   limit: number;
   offset: number;
 };
+
+export type ItemBase = {
+  _id: string;
+  item_name: string;
+};
