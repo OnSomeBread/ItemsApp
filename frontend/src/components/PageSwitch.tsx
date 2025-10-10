@@ -6,7 +6,7 @@ function PageSwitch() {
       <Link href="/items">Items</Link>
       <Link href="/items_compact">Items compact</Link>
       <Link href="/tasks">Tasks</Link>
-      <Link href="/needed_items">Needed Items</Link>
+      {/* <Link href="/needed_items">Needed Items</Link> */}
       <Link href="/task_tree">Task Tree</Link>
       <Link href="/ammo">Ammo</Link>
       <Link href="/bitcoin">BitCoin</Link>
