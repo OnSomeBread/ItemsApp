@@ -47,6 +47,7 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     headers,
   });
   const items = (await res3.json()) as Item[];
+  queryParams.offset = queryParams.limit;
 
   return (
     <>

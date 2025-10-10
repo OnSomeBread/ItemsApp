@@ -28,8 +28,8 @@ function ItemScrollCompact({
   const [hasMore, setHasMore] = useState(
     initItems.length === initQueryParams.limit
   );
-  const [offset, setOffset] = useState(initQueryParams.limit);
   const [queryParams, setQueryParams] = useState(initQueryParams);
+  const [changedItemsToggle, setChangedItemsToggle] = useState(false);
   const firstRun = useRef(true);
 
   useEffect(() => {
@@ -38,9 +38,9 @@ function ItemScrollCompact({
       return;
     }
 
-    fetchItems();
+    fetchItems(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...Object.values(queryParams)]);
+  }, [changedItemsToggle]);
 
   useEffect(() => {
     if (timer <= 0) return;
@@ -52,7 +52,7 @@ function ItemScrollCompact({
     return () => clearInterval(interval);
   }, [timer]);
 
-  const fetchItems = () => {
+  const fetchItems = (offset: number) => {
     const params = new URLSearchParams();
     Object.entries(queryParams).forEach(([key, value]) => {
       if (key !== "offset") params.append(key, value.toString());
@@ -68,16 +68,15 @@ function ItemScrollCompact({
           .json()
           .then((items: Item[]) => {
             if (offset === 0) {
-              setOffset(queryParams.limit);
               setAllItems(items);
             } else {
               // HARD LIMIT ON ITEMS DISPLAYED ON SCREEN AT ANY GIVEN MOMENT
               //if (allItems.length < 300) {
               setAllItems((prev) => [...(prev ?? []), ...items]);
-              setOffset((prev) => prev + queryParams.limit);
               //}
             }
 
+            changeQueryParams("offset", queryParams.offset + queryParams.limit);
             setHasMore(
               items.length === queryParams.limit // && allItems.length < 300
             );
@@ -88,10 +87,16 @@ function ItemScrollCompact({
   };
 
   const changeQueryParams = (key: string, value: string | number | boolean) => {
-    setOffset(0);
     setQueryParams((prev) => {
       return { ...prev, [key]: value };
     });
+    if (key !== "offset") {
+      setChangedItemsToggle((prev) => !prev);
+    }
+  };
+
+  const fetchScroll = () => {
+    fetchItems(queryParams.offset);
   };
 
   return (
@@ -106,7 +111,7 @@ function ItemScrollCompact({
       </p>
       <InfiniteScroll
         dataLength={allItems?.length ?? 0}
-        next={fetchItems}
+        next={fetchScroll}
         hasMore={hasMore}
         loader={<article aria-busy="true"></article>}
       >
@@ -117,7 +122,6 @@ function ItemScrollCompact({
               <th
                 className="font-medium"
                 onClick={() => {
-                  setOffset(0);
                   setQueryParams((prev) => {
                     return {
                       ...prev,
@@ -136,7 +140,6 @@ function ItemScrollCompact({
               <th
                 className="font-medium"
                 onClick={() => {
-                  setOffset(0);
                   setQueryParams((prev) => {
                     return {
                       ...prev,
@@ -153,7 +156,6 @@ function ItemScrollCompact({
               <th
                 className="font-medium"
                 onClick={() => {
-                  setOffset(0);
                   setQueryParams((prev) => {
                     return {
                       ...prev,
@@ -170,7 +172,6 @@ function ItemScrollCompact({
               <th
                 className="font-medium"
                 onClick={() => {
-                  setOffset(0);
                   setQueryParams((prev) => {
                     return {
                       ...prev,
@@ -205,7 +206,10 @@ function ItemScrollCompact({
                   </td>
                   <td className="w-140">
                     <Link
-                      href={{ pathname: "/item_view", query: "id=" + item._id }}
+                      href={{
+                        pathname: "/item_view",
+                        query: "id=" + item._id,
+                      }}
                     >
                       {item.item_name}
                     </Link>
