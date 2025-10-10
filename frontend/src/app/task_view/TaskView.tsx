@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Task, TaskAdjList } from "../../types";
+import type { ItemBase, Task, TaskAdjList } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 import { ALL_TASK_OBJECTIVE_TYPES, DOCKER_BACKEND } from "../../constants";
 
@@ -53,6 +53,22 @@ async function TaskView({ searchParams }: PageProps) {
     (tst) => statusMap.get(tst._id) === "unlocks"
   );
 
+  const allItemIds = task.objectives.flatMap((obj) => obj.needed_item_ids);
+  const itemParams = new URLSearchParams();
+  allItemIds.forEach((itm) => {
+    itemParams.append("ids", itm);
+  });
+
+  const res4 = await fetch(
+    DOCKER_BACKEND + "/api/items/ids?" + itemParams.toString(),
+    {
+      cache: "no-store",
+    }
+  );
+  const items = (await res4.json()) as ItemBase[];
+  const id_to_item: Map<string, ItemBase> = new Map();
+  items.forEach((itm) => id_to_item.set(itm._id, itm));
+
   return (
     <>
       <PageSwitch />
@@ -83,6 +99,24 @@ async function TaskView({ searchParams }: PageProps) {
                 </p>
                 <p>{obj.obj_description}</p>
                 <p>{obj.map_name}</p>
+                {obj.needed_item_ids?.length > 0 && (
+                  <p>
+                    need {obj.count}{" "}
+                    {obj.needed_item_ids?.map((itm_id) => {
+                      return (
+                        <Link
+                          key={itm_id}
+                          href={{
+                            pathname: "/item_view",
+                            query: "id=" + itm_id,
+                          }}
+                        >
+                          {id_to_item.get(itm_id)?.item_name}
+                        </Link>
+                      );
+                    })}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
