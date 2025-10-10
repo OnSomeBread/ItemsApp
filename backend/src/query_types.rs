@@ -58,6 +58,12 @@ pub struct TaskStats {
     pub time_till_tasks_refresh_secs: u64,
 }
 
+#[derive(Serialize)]
+pub struct AmmoStats {
+    pub ammo_count: i64,
+    pub time_till_ammo_refresh_secs: u64,
+}
+
 fn default_item_sort_by() -> String {
     String::from("base_price")
 }
