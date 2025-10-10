@@ -75,9 +75,11 @@ export type TaskRequirement = {
 export type Objective = {
   obj_type: string;
   obj_description: string;
-  map_name: "";
-  map_wiki: "";
+  map_name: string;
+  map_wiki: string;
   task_id: string;
+  count: number;
+  needed_item_ids: string[];
 };
 
 export type Task = {
