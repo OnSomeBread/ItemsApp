@@ -19,7 +19,7 @@ pub async fn item_stats(State(app_state): State<AppState>) -> Result<Json<ItemSt
         .await
         .bad_sql("Item Stats")?;
 
-    let time_in_seconds_items = app_state
+    let time_in_seconds = app_state
         .next_items_call_timer
         .lock()
         .await
@@ -28,7 +28,7 @@ pub async fn item_stats(State(app_state): State<AppState>) -> Result<Json<ItemSt
 
     Ok(Json(ItemStats {
         items_count: items_count.unwrap_or(0),
-        time_till_items_refresh_secs: time_in_seconds_items,
+        time_till_items_refresh_secs: time_in_seconds,
     }))
 }
 

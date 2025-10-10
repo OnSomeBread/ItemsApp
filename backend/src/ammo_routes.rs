@@ -1,9 +1,11 @@
+use std::time::Instant;
+
 use crate::{
     api_routers::Device,
     database_types::{Ammo, DeviceAmmoQueryParams},
     init_app_state::{AMMO_UNIQUE_CACHE_PREFIX, AppState},
     query_types::{
-        AmmoQueryParams,
+        AmmoQueryParams, AmmoStats,
         AppError::{self, BadRequest},
         AppErrorHandling,
     },
@@ -13,6 +15,26 @@ use axum::{
     extract::{Query, State},
 };
 use sqlx::{PgPool, types::Uuid};
+
+// gives data on different interesting stats about the data stored
+pub async fn ammo_stats(State(app_state): State<AppState>) -> Result<Json<AmmoStats>, AppError> {
+    let ammo_count = sqlx::query_scalar!("SELECT COUNT(*) FROM Ammo")
+        .fetch_one(&app_state.pgpool)
+        .await
+        .bad_sql("Ammo Stats")?;
+
+    let time_in_seconds = app_state
+        .next_ammo_call_timer
+        .lock()
+        .await
+        .saturating_duration_since(Instant::now())
+        .as_secs();
+
+    Ok(Json(AmmoStats {
+        ammo_count: ammo_count.unwrap_or(0),
+        time_till_ammo_refresh_secs: time_in_seconds,
+    }))
+}
 
 pub async fn get_ammo(
     device: Device,

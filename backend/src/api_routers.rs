@@ -1,4 +1,4 @@
-use crate::ammo_routes::{get_ammo, get_ammo_help, get_device_ammo_query_parms};
+use crate::ammo_routes::{ammo_stats, get_ammo, get_ammo_help, get_device_ammo_query_parms};
 use crate::database_types::{Ammo, Item, ItemBase, ItemFromDB, Task, TaskBase, TaskFromDB};
 use crate::init_app_state::{
     AMMO_UNIQUE_CACHE_PREFIX, AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX,
@@ -332,6 +332,7 @@ fn tasks_router() -> Router<AppState> {
 fn ammo_router() -> Router<AppState> {
     Router::new()
         .route("/", get(get_ammo))
+        .route("/stats", get(ammo_stats))
         .route("/ids", get(get_page_by_ids::<Ammo>))
         .route("/query_parms", get(get_device_ammo_query_parms))
         .route("/help", get(get_ammo_help))
