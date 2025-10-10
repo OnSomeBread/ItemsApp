@@ -29,7 +29,7 @@ function AmmoScroll({
   //const [loading, setLoading] = useState(false);
   const [queryParams, setQueryParams] = useState(initQueryParams);
 
-  // the actual value here doesn't matter its for the useEffect so that it can account for changed task list
+  // the actual value here doesn't matter its for the useEffect so that it can account for changed list
   const [changedAmmoToggle, setChangedAmmoToggle] = useState(false);
   const firstRun = useRef(true);
 
