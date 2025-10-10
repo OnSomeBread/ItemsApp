@@ -49,18 +49,14 @@ function DisplayItems() {
             count: parseInt(localStorage.getItem("item-" + item._id) || "0"),
           };
         });
-        // HARD LIMIT ON ITEMS DISPLAYED ON SCREEN AT ANY GIVEN MOMENT
-        //const addNewItems = allItems === null || allItems.length < 300;
         if (offset === 0) {
           setAllItems(newItems);
         } else {
-          //if (addNewItems) {
           setAllItems((prev) => [...(prev ?? []), ...newItems]);
-          //}
         }
         changeQueryParams("offset", offset + queryParams.limit);
 
-        setHasMore(newItems.length === queryParams.limit); // && addNewItems);
+        setHasMore(newItems.length === queryParams.limit);
       })
       .catch((err) => console.error(err))
       .finally(() => setFetchLoading(false));

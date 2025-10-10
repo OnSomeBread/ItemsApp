@@ -70,16 +70,11 @@ function ItemScrollCompact({
             if (offset === 0) {
               setAllItems(items);
             } else {
-              // HARD LIMIT ON ITEMS DISPLAYED ON SCREEN AT ANY GIVEN MOMENT
-              //if (allItems.length < 300) {
               setAllItems((prev) => [...(prev ?? []), ...items]);
-              //}
             }
 
             changeQueryParams("offset", queryParams.offset + queryParams.limit);
-            setHasMore(
-              items.length === queryParams.limit // && allItems.length < 300
-            );
+            setHasMore(items.length === queryParams.limit);
           })
           .catch((err) => console.error(err));
       })
