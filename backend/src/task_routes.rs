@@ -1,6 +1,6 @@
 use crate::api_routers::{Device, Page, fetch_tasks_by_ids, get_time_in_seconds};
 use crate::database_types::{
-    DeviceTaskQueryParams, Item, NeededItemsDB, Objective, Task, TaskBase, TaskFromDB,
+    DeviceTaskQueryParams, ItemBase, NeededItemsDB, Objective, Task, TaskBase, TaskFromDB,
     TaskRequirement,
 };
 use crate::init_app_state::{AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX};
@@ -587,7 +587,7 @@ pub async fn get_required_items(
     device: Device,
     Query(query_parms): Query<TaskQueryParams>,
     State(app_state): State<AppState>,
-) -> Result<Json<Vec<(Item, i32)>>, AppError> {
+) -> Result<Json<Vec<(ItemBase, i32)>>, AppError> {
     let TaskQueryParams {
         save: _,
         search,
@@ -596,8 +596,8 @@ pub async fn get_required_items(
         obj_type,
         trader,
         player_lvl,
-        limit,
-        offset,
+        limit: _,
+        offset: _,
         include_completed,
     } = query_parms.clone();
 
@@ -611,28 +611,24 @@ pub async fn get_required_items(
     };
 
     let count_cache_key = format!(
-        "{}r{}{}{}{}{}l{}o{}{}",
+        "{}r{}{}{}{}{}{}",
         TASKS_UNIQUE_CACHE_PREFIX,
         if is_kappa { "1" } else { "0" },
         if is_lightkeeper { "1" } else { "0" },
         obj_type,
         player_lvl,
         trader,
-        limit,
-        offset,
         search,
     );
 
     let item_cache_key = format!(
-        "{}r{}{}{}{}{}l{}o{}{}",
+        "{}r{}{}{}{}{}{}",
         ITEMS_UNIQUE_CACHE_PREFIX,
         if is_kappa { "1" } else { "0" },
         if is_lightkeeper { "1" } else { "0" },
         obj_type,
         player_lvl,
         trader,
-        limit,
-        offset,
         search,
     );
 
@@ -647,12 +643,11 @@ pub async fn get_required_items(
 
     let values = sqlx::query_as!(
         NeededItemsDB,
-        "SELECT o.count, o.needed_item_ids FROM Task t LEFT JOIN Objective o
-        ON t._id = o.task_id WHERE t.task_name ILIKE $1 AND t.trader ILIKE $2 AND 
+        "SELECT o.count, o.needed_item_ids FROM Task t INNER JOIN Objective o 
+        ON t._id = o.task_id AND o.obj_type ILIKE $7 WHERE t.task_name ILIKE $1 AND t.trader ILIKE $2 AND 
         t.min_player_level <= $3 AND NOT (t._id = ANY($4)) AND 
-        ($5 IS FALSE OR t.kappa_required = TRUE) AND ($6 IS FALSE OR t.lightkeeper_required = TRUE) 
-        AND EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) 
-        ORDER BY t._id ASC LIMIT $8 OFFSET $9",
+        ($5 IS FALSE OR t.kappa_required = TRUE) AND ($6 IS FALSE OR t.lightkeeper_required = TRUE)
+        ORDER BY t._id ASC",
         format!("%{search}%"),
         format!("%{trader}%"),
         player_lvl,
@@ -660,8 +655,6 @@ pub async fn get_required_items(
         is_kappa,
         is_lightkeeper,
         format!("%{obj_type}%"),
-        i64::from(limit),
-        i64::from(offset)
     )
     .fetch_all(&app_state.pgpool)
     .await
@@ -677,7 +670,7 @@ pub async fn get_required_items(
 
     let item_ids: Vec<String> = item_to_count.keys().cloned().collect();
 
-    let items: Vec<Item> = Item::fetch_by_ids(&app_state.pgpool, &item_ids).await?;
+    let items: Vec<ItemBase> = ItemBase::fetch_by_ids(&app_state.pgpool, &item_ids).await?;
 
     // CANT USE .values() HERE BECAUSE ORDER WOULD BE WRONG
     let counts: Vec<i32> = items
