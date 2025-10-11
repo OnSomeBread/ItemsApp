@@ -230,7 +230,8 @@ function TaskScroll({
               <div className="mb-4">
                 <h2 className="text-xl font-bold">Completed Tasks</h2>
                 <p className="text-sm">
-                  Click on a task to mark it as not completed
+                  Click on a task to mark it as not completed (all tasks
+                  completed here will affect the other task related pages)
                 </p>
               </div>
               <div className="flex">
