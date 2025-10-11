@@ -27,7 +27,7 @@ async function DisplayNeededItems({ searchParams }: PageProps) {
 
   const queryParams = (await searchParams)?.queryParams ?? {
     ...DEFAULT_TASK_QUERY_PARAMS,
-    limit: 1000,
+    is_kappa: true,
   };
 
   const params = new URLSearchParams();
