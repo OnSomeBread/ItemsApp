@@ -84,6 +84,7 @@ jobs:
             git reset --hard origin/main
             git pull
 
+            docker compose down
             docker system prune --all --volumes --force
 
             export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
