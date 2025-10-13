@@ -52,14 +52,19 @@ use serde::de::DeserializeOwned;
 // // impl RedisCache for TaskBase {}
 // // impl RedisCache for Ammo {}
 
+const CONFIG: bincode::config::Configuration<
+    bincode::config::LittleEndian,
+    bincode::config::Fixint,
+> = bincode::config::standard().with_fixed_int_encoding();
+
 #[derive(Clone)]
 enum CacheValue {
-    CacheStr(String),
-    CacheVec(Vec<String>),
+    CacheStr(Arc<[u8]>),
+    CacheVec(Vec<Arc<[u8]>>),
 }
 
 pub struct MokaCache {
-    cache: Cache<String, CacheValue>,
+    cache: Cache<Box<str>, CacheValue>,
     keys: Arc<Mutex<HashMap<&'static str, Vec<String>>>>,
 }
 
@@ -85,9 +90,9 @@ impl MokaCache {
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
-        if let Ok(data) = serde_json::to_string(value) {
+        if let Ok(data) = bincode::serde::encode_to_vec(value, CONFIG) {
             self.cache
-                .insert(key.clone(), CacheValue::CacheStr(data))
+                .insert(key.clone().into(), CacheValue::CacheStr(data.into()))
                 .await;
         }
 
@@ -103,14 +108,14 @@ impl MokaCache {
     {
         let mut data = vec![];
         for v in value {
-            if let Ok(v_str) = serde_json::to_string(v) {
-                data.push(v_str);
+            if let Ok(v_str) = bincode::serde::encode_to_vec(v, CONFIG) {
+                data.push(v_str.into());
             } else {
                 return;
             }
         }
         self.cache
-            .insert(key.clone(), CacheValue::CacheVec(data))
+            .insert(key.clone().into(), CacheValue::CacheVec(data))
             .await;
 
         (*self.keys.lock().await)
@@ -119,18 +124,22 @@ impl MokaCache {
             .push(key);
     }
 
-    pub async fn get<T>(&self, key: &String) -> Option<T>
+    pub async fn get<T>(&self, key: &str) -> Option<T>
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
         if let CacheValue::CacheStr(value) = self.cache.get(key).await? {
-            serde_json::from_str(value.as_str()).ok()
+            if let Ok((v, _)) = bincode::serde::decode_from_slice(&value, CONFIG) {
+                v
+            } else {
+                None
+            }
         } else {
             None
         }
     }
 
-    pub async fn get_vec<T>(&self, key: &String) -> Option<Vec<T>>
+    pub async fn get_vec<T>(&self, key: &str) -> Option<Vec<T>>
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
@@ -138,13 +147,25 @@ impl MokaCache {
             if values.len() < 100 {
                 values
                     .iter()
-                    .filter_map(|v| serde_json::from_str(v).ok())
+                    .map(|v| {
+                        if let Ok((v, _)) = bincode::serde::decode_from_slice(v, CONFIG) {
+                            Some(v)
+                        } else {
+                            None
+                        }
+                    })
                     .collect()
             } else {
                 tokio_rayon::spawn(move || {
                     values
                         .par_iter()
-                        .filter_map(|x| serde_json::from_str(x).ok())
+                        .map(|v| {
+                            if let Ok((v, _)) = bincode::serde::decode_from_slice(v, CONFIG) {
+                                Some(v)
+                            } else {
+                                None
+                            }
+                        })
                         .collect()
                 })
                 .await
@@ -160,7 +181,7 @@ impl MokaCache {
             .map(std::mem::take);
 
         if let Some(keys) = values {
-            futures::future::join_all(keys.iter().map(|x| self.cache.invalidate(x))).await;
+            futures::future::join_all(keys.iter().map(|x| self.cache.invalidate(x.as_str()))).await;
         }
     }
 }
