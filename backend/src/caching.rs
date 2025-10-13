@@ -97,7 +97,7 @@ impl MokaCache {
             .push(key);
     }
 
-    pub async fn insert_vec<T>(&self, key: String, value: &Vec<T>, cache_prefix: &'static str)
+    pub async fn insert_vec<T>(&self, key: String, value: &[T], cache_prefix: &'static str)
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
@@ -138,7 +138,7 @@ impl MokaCache {
             if values.len() < 100 {
                 values
                     .iter()
-                    .filter_map(|v| serde_json::from_str(v.as_str()).ok())
+                    .filter_map(|v| serde_json::from_str(v).ok())
                     .collect()
             } else {
                 tokio_rayon::spawn(move || {
