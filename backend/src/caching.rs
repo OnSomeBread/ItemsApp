@@ -57,10 +57,18 @@ const CONFIG: bincode::config::Configuration<
     bincode::config::Fixint,
 > = bincode::config::standard().with_fixed_int_encoding();
 
-#[derive(Clone)]
 enum CacheValue {
     CacheStr(Arc<[u8]>),
     CacheVec(Vec<Arc<[u8]>>),
+}
+
+impl Clone for CacheValue {
+    fn clone(&self) -> Self {
+        match self {
+            Self::CacheStr(s) => Self::CacheStr(Arc::clone(s)),
+            Self::CacheVec(v) => Self::CacheVec(v.iter().map(Arc::clone).collect()),
+        }
+    }
 }
 
 pub struct MokaCache {
