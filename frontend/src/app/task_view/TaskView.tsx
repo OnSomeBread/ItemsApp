@@ -81,7 +81,7 @@ async function TaskView({ searchParams }: PageProps) {
           <p>Kappa Required: {task.kappa_required ? "Yes" : "No"}</p>
           <p>Lightkeeper Required: {task.kappa_required ? "Yes" : "No"}</p>
           <p>
-            <a href={task.wiki}>wiki page</a>
+            <Link href={task.wiki}>wiki page</Link>
           </p>
           <p>Objectives</p>
           <ul>
@@ -98,21 +98,22 @@ async function TaskView({ searchParams }: PageProps) {
                   }
                 </p>
                 <p>{obj.obj_description}</p>
-                <p>{obj.map_name}</p>
+                <Link href={obj.map_wiki}>{obj.map_name}</Link>
                 {obj.needed_item_ids?.length > 0 && (
                   <p>
                     need {obj.count}{" "}
                     {obj.needed_item_ids?.map((itm_id) => {
                       return (
-                        <Link
-                          key={itm_id}
-                          href={{
-                            pathname: "/item_view",
-                            query: "id=" + itm_id,
-                          }}
-                        >
-                          {id_to_item.get(itm_id)?.item_name}
-                        </Link>
+                        <div key={itm_id}>
+                          <Link
+                            href={{
+                              pathname: "/item_view",
+                              query: "id=" + itm_id,
+                            }}
+                          >
+                            {id_to_item.get(itm_id)?.item_name}
+                          </Link>{" "}
+                        </div>
                       );
                     })}
                   </p>
