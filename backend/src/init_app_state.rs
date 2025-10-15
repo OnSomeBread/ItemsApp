@@ -1,10 +1,10 @@
 use crate::caching::MokaCache;
 use crate::deserialize_json_types::{Ammo, Item, Task};
 use crate::upsert::Upsert;
+use anyhow::Result;
 use bb8_redis::{RedisConnectionManager, bb8};
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
-use std::error::Error;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
@@ -34,10 +34,7 @@ pub const AMMO_UNIQUE_CACHE_PREFIX: &str = "#";
 
 const DELETE_DEVICE_PREFERENCES_TIME: u64 = 3600 * 24;
 
-pub async fn init_app_state(
-    postgres_url: String,
-    redis_url: String,
-) -> Result<AppState, Box<dyn Error>> {
+pub async fn init_app_state(postgres_url: String, redis_url: String) -> Result<AppState> {
     let pgpool = loop {
         match PgPoolOptions::new()
             .min_connections(5)
@@ -88,7 +85,7 @@ pub async fn init_app_state(
 }
 
 // this initializes the database
-async fn init_data(pgpool: &PgPool) -> Result<(), Box<dyn Error>> {
+async fn init_data(pgpool: &PgPool) -> Result<()> {
     let (items_count, tasks_count, ammo_count): (i64, i64, i64) = tokio::try_join!(
         sqlx::query_scalar("SELECT COUNT(*) FROM Item").fetch_one(pgpool),
         sqlx::query_scalar("SELECT COUNT(*) FROM Task").fetch_one(pgpool),

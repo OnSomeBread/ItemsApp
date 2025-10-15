@@ -10,19 +10,19 @@ mod query_types;
 mod task_routes;
 mod upsert;
 
+use anyhow::Result;
 use axum::Router;
 use axum::extract::Request;
 use axum::http::Response;
 use dotenvy::dotenv;
 use init_app_state::init_app_state;
 use std::env;
-use std::error::Error;
 use std::time::Duration;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<()> {
     let (non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
     tracing_subscriber::fmt().with_writer(non_blocking).init();
 
