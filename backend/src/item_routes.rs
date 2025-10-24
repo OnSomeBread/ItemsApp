@@ -299,7 +299,7 @@ pub async fn get_item_history(
     }
 
     // since data is sampled at 1 every 10 minutes then 6 would be every hour
-    let item_history_sample_amount = 6;
+    let item_history_sample_amount = 12;
     let item_history = sqlx::query_as!(
         SavedItemData,
         "WITH numbered AS (SELECT *, ROW_NUMBER() OVER (ORDER BY recorded_time ASC) AS rn FROM SavedItemData WHERE item_id = $1) 
