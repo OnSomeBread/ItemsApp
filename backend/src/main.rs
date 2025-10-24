@@ -34,9 +34,9 @@ async fn main() -> Result<()> {
 
     let cors = CorsLayer::new()
         .allow_origin([
-            "http://localhost:3000".parse().unwrap(),
-            "http://127.0.0.1:3000".parse().unwrap(),
-            "http://frontend:3000".parse().unwrap(),
+            "http://localhost:3000".parse()?,
+            "http://127.0.0.1:3000".parse()?,
+            "http://frontend:3000".parse()?,
         ])
         .allow_headers(Any)
         .allow_methods(Any);
