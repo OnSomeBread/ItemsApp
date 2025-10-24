@@ -60,7 +60,7 @@ pub async fn task_stats(
 
     let time_in_seconds_tasks = app_state
         .next_tasks_call_timer
-        .lock()
+        .read()
         .await
         .saturating_duration_since(Instant::now())
         .as_secs();

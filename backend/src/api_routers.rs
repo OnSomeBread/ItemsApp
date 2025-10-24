@@ -22,7 +22,7 @@ use axum_extra::extract::Query;
 use serde::{Serialize, de::DeserializeOwned};
 use sqlx::types::Uuid;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 use tokio::try_join;
 
 use std::time::Instant;
@@ -50,9 +50,9 @@ async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
 
 // in app state there are timers to see when when a page refreshes the helps to unwrap it into a number in seconds
 #[allow(clippy::cast_possible_wrap)]
-pub async fn get_time_in_seconds(timer: &Arc<Mutex<Instant>>) -> i64 {
+pub async fn get_time_in_seconds(timer: &Arc<RwLock<Instant>>) -> i64 {
     timer
-        .lock()
+        .read()
         .await
         .saturating_duration_since(Instant::now())
         .as_secs() as i64
@@ -67,7 +67,7 @@ pub trait Page: Send + Sync + Serialize + DeserializeOwned + Clone + 'static {
     fn id(&self) -> &str;
 
     #[allow(dead_code)]
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>>;
+    fn get_app_state_timer(app_state: &AppState) -> Arc<RwLock<Instant>>;
 
     // each struct needs to have a unique but short postfix and prefix where prefix matches with the general page they are associated with
     fn make_cache_key(id: &str) -> String;
@@ -96,7 +96,7 @@ impl Page for Item {
         &self._id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<RwLock<Instant>> {
         app_state.next_items_call_timer.clone()
     }
 
@@ -128,7 +128,7 @@ impl Page for ItemBase {
         &self._id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<RwLock<Instant>> {
         app_state.next_items_call_timer.clone()
     }
 
@@ -163,7 +163,7 @@ impl Page for Task {
         &self._id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<RwLock<Instant>> {
         app_state.next_tasks_call_timer.clone()
     }
     fn unique_cache_key_prefix() -> &'static str {
@@ -194,7 +194,7 @@ impl Page for TaskBase {
         &self._id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<RwLock<Instant>> {
         app_state.next_tasks_call_timer.clone()
     }
 
@@ -226,7 +226,7 @@ impl Page for Ammo {
         &self.item_id
     }
 
-    fn get_app_state_timer(app_state: &AppState) -> Arc<Mutex<Instant>> {
+    fn get_app_state_timer(app_state: &AppState) -> Arc<RwLock<Instant>> {
         app_state.next_ammo_call_timer.clone()
     }
 

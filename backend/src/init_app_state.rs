@@ -7,17 +7,17 @@ use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 #[derive(Clone)]
 pub struct AppState {
     pub pgpool: sqlx::PgPool,
     pub redispool: bb8::Pool<RedisConnectionManager>,
     pub cache: MokaCache,
-    pub next_items_call_timer: Arc<Mutex<Instant>>,
-    pub next_tasks_call_timer: Arc<Mutex<Instant>>,
+    pub next_items_call_timer: Arc<RwLock<Instant>>,
+    pub next_tasks_call_timer: Arc<RwLock<Instant>>,
     #[allow(unused)]
-    pub next_ammo_call_timer: Arc<Mutex<Instant>>,
+    pub next_ammo_call_timer: Arc<RwLock<Instant>>,
 }
 
 const ITEMS_FILE: &str = "most_recent_items.json";
@@ -60,9 +60,9 @@ pub async fn init_app_state(postgres_url: String, redis_url: String) -> Result<A
         .build(RedisConnectionManager::new(redis_url)?)
         .await?;
 
-    let next_items_call_timer = Arc::new(Mutex::new(Instant::now()));
-    let next_tasks_call_timer = Arc::new(Mutex::new(Instant::now()));
-    let next_ammo_call_timer = Arc::new(Mutex::new(Instant::now()));
+    let next_items_call_timer = Arc::new(RwLock::new(Instant::now()));
+    let next_tasks_call_timer = Arc::new(RwLock::new(Instant::now()));
+    let next_ammo_call_timer = Arc::new(RwLock::new(Instant::now()));
 
     let cache = MokaCache::new();
 
@@ -113,9 +113,9 @@ async fn init_data(pgpool: &PgPool) -> Result<()> {
 // this spawns all of the background tasks that the app will need
 fn background_tasks(
     cache: &MokaCache,
-    next_items_call_timer: &Arc<Mutex<Instant>>,
-    next_tasks_call_timer: &Arc<Mutex<Instant>>,
-    next_ammo_call_timer: &Arc<Mutex<Instant>>,
+    next_items_call_timer: &Arc<RwLock<Instant>>,
+    next_tasks_call_timer: &Arc<RwLock<Instant>>,
+    next_ammo_call_timer: &Arc<RwLock<Instant>>,
     pgpool: &PgPool,
 ) {
     let pgpool1 = pgpool.clone();

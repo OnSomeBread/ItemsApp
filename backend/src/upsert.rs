@@ -16,7 +16,7 @@ use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 async fn run_query(query: &str) -> Result<Value, Box<dyn Error>> {
     let res = Client::new()
@@ -90,13 +90,13 @@ pub trait Upsert: DeserializeOwned + Serialize {
 
     async fn background_task(
         file: &'static str,
-        timer: &Arc<Mutex<Instant>>,
+        timer: &Arc<RwLock<Instant>>,
         refresh_time_seconds: u64,
         cache: &mut MokaCache,
         pgpool: &PgPool,
     ) {
         let refresh_time = Duration::from_secs(refresh_time_seconds);
-        (*timer.lock().await) = Instant::now() + refresh_time;
+        (*timer.write().await) = Instant::now() + refresh_time;
 
         tokio::time::sleep(refresh_time).await;
         if Self::api_upsert(file, pgpool).await.is_err() {

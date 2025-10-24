@@ -21,7 +21,7 @@ pub async fn item_stats(State(app_state): State<AppState>) -> Result<Json<ItemSt
 
     let time_in_seconds = app_state
         .next_items_call_timer
-        .lock()
+        .read()
         .await
         .saturating_duration_since(Instant::now())
         .as_secs();
