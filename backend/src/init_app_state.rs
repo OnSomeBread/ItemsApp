@@ -21,7 +21,7 @@ pub struct AppState {
 }
 
 const ITEMS_FILE: &str = "most_recent_items.json";
-const ITEM_SLEEP_TIME: u64 = 600;
+const ITEM_SLEEP_TIME: u64 = 900;
 pub const ITEMS_UNIQUE_CACHE_PREFIX: &str = "!";
 
 const TASKS_FILE: &str = "most_recent_tasks.json";
