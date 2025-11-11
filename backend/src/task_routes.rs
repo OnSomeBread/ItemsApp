@@ -6,6 +6,7 @@ use crate::database_types::{
 use crate::init_app_state::{AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{AppErrorHandling, TaskQueryParams, TaskStats};
+use ahash::RandomState;
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use redis::AsyncCommands;
@@ -42,7 +43,7 @@ pub async fn task_stats(
     )
     .bad_sql("Stats")?;
 
-    let completed_tasks: HashSet<String> =
+    let completed_tasks: HashSet<String, RandomState> =
         get_completed_task_by_device_id(&app_state.pgpool, device_id)
             .await?
             .into_iter()
@@ -104,7 +105,8 @@ pub async fn tasks_from_db_to_tasks(
         .await
         .bad_sql("Objective and Task Requirement")?;
 
-    let mut hm: HashMap<String, (Vec<Objective>, Vec<TaskRequirement>)> = HashMap::new();
+    let mut hm: HashMap<String, (Vec<Objective>, Vec<TaskRequirement>), RandomState> =
+        HashMap::default();
     for buy in objective_vec {
         hm.entry(buy.task_id.clone())
             .or_insert_with(|| (Vec::new(), Vec::new()))
@@ -375,7 +377,7 @@ pub async fn get_device_task_query_parms(
 // effectively mapping every task to their adjacent tasks
 async fn fetch_adj_list(
     app_state: &AppState,
-) -> Result<HashMap<String, Vec<(String, bool)>>, AppError> {
+) -> Result<HashMap<String, Vec<(String, bool)>, RandomState>, AppError> {
     let cache_key = TASKS_UNIQUE_CACHE_PREFIX.to_string() + "adj_list";
     let mut conn = app_state.redispool.get().await.ok();
     if let Some(conn) = conn.as_mut() {
@@ -392,20 +394,17 @@ async fn fetch_adj_list(
         .await
         .bad_sql("TaskRequirements")?;
 
-    let mut adj_list = HashMap::new();
+    let mut adj_list: HashMap<String, Vec<(String, bool)>, RandomState> = HashMap::default();
     for req in task_requirements {
         let from_id = req.task_id;
         let to_id = req.req_task_id;
 
         adj_list
             .entry(from_id.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push((to_id.clone(), false));
 
-        adj_list
-            .entry(to_id)
-            .or_insert_with(Vec::new)
-            .push((from_id, true));
+        adj_list.entry(to_id).or_default().push((from_id, true));
     }
 
     let pool = app_state.redispool.clone();
@@ -430,7 +429,7 @@ async fn fetch_adj_list(
 
 pub async fn get_adj_list(
     State(app_state): State<AppState>,
-) -> Result<Json<HashMap<String, Vec<(String, bool)>>>, AppError> {
+) -> Result<Json<HashMap<String, Vec<(String, bool)>, RandomState>>, AppError> {
     Ok(Json(fetch_adj_list(&app_state).await?))
 }
 
@@ -505,10 +504,10 @@ pub async fn set_completed_task(
     // perform a dfs on adj_list
     let adj_list = fetch_adj_list(&app_state).await?;
 
-    let mut visited = HashSet::new();
+    let mut visited: HashSet<String, RandomState> = HashSet::default();
 
     let mut st = vec![task_id.clone()];
-    let mut marked_tasks = HashSet::new();
+    let mut marked_tasks: HashSet<String, RandomState> = HashSet::default();
     while let Some(top) = st.pop() {
         if visited.contains(&top) {
             continue;
@@ -523,7 +522,7 @@ pub async fn set_completed_task(
         }
     }
 
-    let mut completed_tasks: HashSet<String> =
+    let mut completed_tasks: HashSet<String, RandomState> =
         get_completed_task_by_device_id(&app_state.pgpool, device_id)
             .await?
             .into_iter()
@@ -661,7 +660,7 @@ pub async fn get_required_items(
     .bad_sql("NeededItems")?;
 
     // group item ids
-    let mut item_to_count: HashMap<String, i32> = HashMap::new();
+    let mut item_to_count: HashMap<String, i32, RandomState> = HashMap::default();
     for v in values {
         for item_id in v.needed_item_ids {
             *item_to_count.entry(item_id).or_insert(0) += v.count;

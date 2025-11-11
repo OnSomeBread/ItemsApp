@@ -1,3 +1,4 @@
+use ahash::RandomState;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::collections::HashMap;
@@ -73,7 +74,7 @@ impl Clone for CacheValue {
 
 pub struct MokaCache {
     cache: Cache<Box<str>, CacheValue>,
-    keys: Arc<Mutex<HashMap<&'static str, Vec<String>>>>,
+    keys: Arc<Mutex<HashMap<&'static str, Vec<String>, RandomState>>>,
 }
 
 // without this keys gets deep copied instead of Arc::cloned
@@ -90,7 +91,7 @@ impl MokaCache {
     pub fn new() -> Self {
         Self {
             cache: Cache::new(1000),
-            keys: Arc::new(Mutex::new(HashMap::new())),
+            keys: Arc::new(Mutex::new(HashMap::default())),
         }
     }
 
