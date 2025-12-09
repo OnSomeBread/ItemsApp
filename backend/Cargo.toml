@@ -3,11 +3,13 @@ name = "backend-rust"
 version = "0.1.0"
 edition = "2024"
 
+[profile.dev]
+debug = 0
+
 [profile.release]
-opt-level = 3
+panic = "abort"
 lto = true
 codegen-units = 1
-panic = "abort"
 strip = true
 
 [lints.clippy]
@@ -17,6 +19,7 @@ used_underscore_binding = "allow"
 struct_field_names = "allow"
 
 [dependencies]
+mimalloc = { version = "0.1.48", default-features = false }
 axum = { version = "0.8.6", features = ["macros", "json"] }
 axum-extra = { version = "0.12.1", features = ["query"] }
 tokio = { version = "1.48.0", features = ["rt-multi-thread", "sync", "macros"] }
