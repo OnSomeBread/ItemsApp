@@ -46,7 +46,7 @@ pub trait Upsert: DeserializeOwned + Serialize {
         let page = Self::get_page();
         let file = std::fs::File::open(file_name)?;
         let json: Value = serde_json::from_reader(file)?;
-        let values = Vec::<Self>::deserialize(&json["data"][page])?;
+        let values = Vec::<Self>::deserialize(&json)?;
         Self::upsert_data(&values, pgpool, false).await?;
 
         tracing::info!(
@@ -64,8 +64,7 @@ pub trait Upsert: DeserializeOwned + Serialize {
         let values = Vec::<Self>::deserialize(&json["data"][page])?;
         Self::upsert_data(&values, pgpool, true).await?;
 
-        let json_string =
-            serde_json::to_string_pretty(&serde_json::json!({"data": {page: values}}))?;
+        let json_string = serde_json::to_string_pretty(&serde_json::json!(values))?;
         let mut file = std::fs::File::create(file_name)?;
         file.write_all(json_string.as_bytes())?;
         tracing::info!(
@@ -103,9 +102,7 @@ pub trait Upsert: DeserializeOwned + Serialize {
             tracing::error!("UPSERT {} VIA API FAILED", Self::get_page());
         }
 
-        cache
-            .invalidate_cache_prefix(Self::unique_cache_prefix())
-            .await;
+        cache.invalidate_cache_prefix(Self::unique_cache_prefix());
     }
 }
 
