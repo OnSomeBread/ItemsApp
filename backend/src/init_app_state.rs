@@ -1,4 +1,4 @@
-use crate::caching::MokaCache;
+use crate::caching::AppCache;
 use crate::deserialize_json_types::{Ammo, Item, Task};
 use crate::upsert::Upsert;
 use anyhow::Result;
@@ -13,7 +13,7 @@ use tokio::sync::RwLock;
 pub struct AppState {
     pub pgpool: sqlx::PgPool,
     pub redispool: bb8::Pool<RedisConnectionManager>,
-    pub cache: MokaCache,
+    pub cache: AppCache,
     pub next_items_call_timer: Arc<RwLock<Instant>>,
     pub next_tasks_call_timer: Arc<RwLock<Instant>>,
     #[allow(unused)]
@@ -64,7 +64,7 @@ pub async fn init_app_state(postgres_url: String, redis_url: String) -> Result<A
     let next_tasks_call_timer = Arc::new(RwLock::new(Instant::now()));
     let next_ammo_call_timer = Arc::new(RwLock::new(Instant::now()));
 
-    let cache = MokaCache::new();
+    let cache = AppCache::new();
 
     background_tasks(
         &cache,
@@ -112,7 +112,7 @@ async fn init_data(pgpool: &PgPool) -> Result<()> {
 
 // this spawns all of the background tasks that the app will need
 fn background_tasks(
-    cache: &MokaCache,
+    cache: &AppCache,
     next_items_call_timer: &Arc<RwLock<Instant>>,
     next_tasks_call_timer: &Arc<RwLock<Instant>>,
     next_ammo_call_timer: &Arc<RwLock<Instant>>,

@@ -1,5 +1,5 @@
 use crate::{
-    caching::MokaCache,
+    caching::AppCache,
     deserialize_json_types::{AMMO_QUERY, Ammo, ITEMS_QUERY, Item, TASKS_QUERY, Task},
     init_app_state::{
         AMMO_UNIQUE_CACHE_PREFIX, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX,
@@ -91,7 +91,7 @@ pub trait Upsert: DeserializeOwned + Serialize {
         file: &'static str,
         timer: &Arc<RwLock<Instant>>,
         refresh_time_seconds: u64,
-        cache: &mut MokaCache,
+        cache: &mut AppCache,
         pgpool: &PgPool,
     ) {
         let refresh_time = Duration::from_secs(refresh_time_seconds);

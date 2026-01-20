@@ -66,13 +66,13 @@ impl Clone for CacheValue {
     }
 }
 
-pub struct MokaCache {
+pub struct AppCache {
     cache: Arc<DashMap<Box<str>, CacheValue>>,
     keys: Arc<DashMap<char, Vec<String>>>,
 }
 
 // without this keys gets deep copied instead of Arc::cloned
-impl Clone for MokaCache {
+impl Clone for AppCache {
     fn clone(&self) -> Self {
         Self {
             cache: self.cache.clone(),
@@ -81,7 +81,7 @@ impl Clone for MokaCache {
     }
 }
 
-impl MokaCache {
+impl AppCache {
     pub fn new() -> Self {
         Self {
             cache: Arc::new(DashMap::new()),
@@ -168,7 +168,7 @@ impl MokaCache {
 }
 
 // completly dynamic data caching approach but turns out is much slower than just serde_json
-// pub struct MokaCache {
+// pub struct AppCache {
 //     cache: Cache<String, Arc<dyn CacheValue>>,
 //     keys: Arc<Mutex<HashMap<String, Vec<String>>>>,
 // }
@@ -187,7 +187,7 @@ impl MokaCache {
 //     }
 // }
 
-// impl MokaCache {
+// impl AppCache {
 //     pub fn new() -> Self {
 //         Self {
 //             cache: Cache::new(1000),
