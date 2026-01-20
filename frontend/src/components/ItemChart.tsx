@@ -50,7 +50,7 @@ function ItemChart({ itemHistory }: Props) {
               hour12: true,
             })
           }
-          formatter={(t: string) => Number(t).toLocaleString("en-us")}
+          formatter={(t: string | undefined) => Number(t).toLocaleString("en-us")}
         />
         <Line
           type="monotone"

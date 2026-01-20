@@ -64,8 +64,8 @@ function BitCoinProfitChart({
           <Label value={ylabel} angle={-90} position="insideLeft" />
         </YAxis>
         <Tooltip
-          formatter={(value: number) =>
-            Number(value.toFixed(0)).toLocaleString("en-us") + " " + ytoolLabel
+          formatter={(value: number | undefined) =>
+            Number((value ?? 0).toFixed(0)).toLocaleString("en-us") + " " + ytoolLabel
           }
         />
         <Legend />

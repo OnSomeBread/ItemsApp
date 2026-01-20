@@ -55,7 +55,7 @@ function BitCoinProductionChart({
         >
           <Label value={ylabel} angle={-90} position="insideLeft" />
         </YAxis>
-        <Tooltip formatter={(v: number) => v.toFixed(1) + " " + ytoolLabel} />
+        <Tooltip formatter={(v: number | undefined) => (v ?? 0).toFixed(1) + " " + ytoolLabel} />
         <Line type="monotone" dataKey="y" stroke="#8884d8" dot={false} />
       </LineChart>
     </ResponsiveContainer>
