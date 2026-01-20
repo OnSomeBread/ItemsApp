@@ -74,7 +74,7 @@ pub async fn get_ammo(
         search,
     );
 
-    if let Some(values) = app_state.cache.get_vec(&cache_key).await {
+    if let Some(values) = app_state.cache.get_vec(&cache_key) {
         return Ok(Json(values));
     }
 
@@ -101,8 +101,7 @@ pub async fn get_ammo(
     tokio::spawn(async move {
         app_state
             .cache
-            .insert_vec(cache_key, &tokio_values, AMMO_UNIQUE_CACHE_PREFIX)
-            .await;
+            .insert_vec(cache_key, &tokio_values, AMMO_UNIQUE_CACHE_PREFIX);
     });
 
     Ok(Json(ammo))

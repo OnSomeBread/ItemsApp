@@ -149,7 +149,7 @@ pub async fn get_items(
         search,
     );
 
-    if let Some(values) = app_state.cache.get_vec(&cache_key).await {
+    if let Some(values) = app_state.cache.get_vec(&cache_key) {
         return Ok(Json(values));
     }
 
@@ -235,8 +235,7 @@ pub async fn get_items(
     tokio::spawn(async move {
         app_state
             .cache
-            .insert_vec(cache_key, &tokio_values, ITEMS_UNIQUE_CACHE_PREFIX)
-            .await;
+            .insert_vec(cache_key, &tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
     });
 
     Ok(Json(items))
@@ -295,7 +294,7 @@ pub async fn get_item_history(
     let item_id = query_parms.item_id.unwrap();
     let cache_key = ITEMS_UNIQUE_CACHE_PREFIX.to_string() + item_id.clone().as_str() + "-history";
 
-    if let Some(values) = app_state.cache.get_vec(&cache_key).await {
+    if let Some(values) = app_state.cache.get_vec(&cache_key) {
         return Ok(Json(values));
     }
 
@@ -316,8 +315,7 @@ pub async fn get_item_history(
     tokio::spawn(async move {
         app_state
             .cache
-            .insert_vec(cache_key, &tokio_values, ITEMS_UNIQUE_CACHE_PREFIX)
-            .await;
+            .insert_vec(cache_key, &tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
     });
 
     Ok(Json(item_history))

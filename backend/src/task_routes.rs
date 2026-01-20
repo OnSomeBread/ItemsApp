@@ -211,7 +211,7 @@ pub async fn get_tasks(
 
     // try not to create too many cache keys when its not needed
     let use_cache = ids.is_empty();
-    if use_cache && let Some(values) = app_state.cache.get_vec(&cache_key).await {
+    if use_cache && let Some(values) = app_state.cache.get_vec(&cache_key) {
         return Ok(Json(values));
     }
 
@@ -243,8 +243,7 @@ pub async fn get_tasks(
         tokio::spawn(async move {
             app_state
                 .cache
-                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX)
-                .await;
+                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX);
         });
     }
 
@@ -293,7 +292,7 @@ pub async fn get_tasks_base(
 
     // try not to create too many cache keys when its not needed
     let use_cache = ids.is_empty();
-    if use_cache && let Some(values) = app_state.cache.get_vec(&cache_key).await {
+    if use_cache && let Some(values) = app_state.cache.get_vec(&cache_key) {
         return Ok(Json(values));
     }
 
@@ -322,8 +321,7 @@ pub async fn get_tasks_base(
         tokio::spawn(async move {
             app_state
                 .cache
-                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX)
-                .await;
+                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX);
         });
     }
 
@@ -634,8 +632,8 @@ pub async fn get_required_items(
     // try not to create too many cache keys when its not needed
     let use_cache = ids.is_empty();
     if use_cache
-        && let Some(counts) = app_state.cache.get_vec(&count_cache_key).await
-        && let Some(items) = app_state.cache.get_vec(&item_cache_key).await
+        && let Some(counts) = app_state.cache.get_vec(&count_cache_key)
+        && let Some(items) = app_state.cache.get_vec(&item_cache_key)
     {
         return Ok(Json(items.into_iter().zip(counts.into_iter()).collect()));
     }
@@ -684,13 +682,11 @@ pub async fn get_required_items(
         tokio::spawn(async move {
             app_state
                 .cache
-                .insert_vec(item_cache_key, &tokio_items, ITEMS_UNIQUE_CACHE_PREFIX)
-                .await;
+                .insert_vec(item_cache_key, &tokio_items, ITEMS_UNIQUE_CACHE_PREFIX);
 
             app_state
                 .cache
-                .insert_vec(count_cache_key, &tokio_counts, TASKS_UNIQUE_CACHE_PREFIX)
-                .await;
+                .insert_vec(count_cache_key, &tokio_counts, TASKS_UNIQUE_CACHE_PREFIX);
         });
     }
 

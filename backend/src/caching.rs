@@ -1,9 +1,7 @@
 use dashmap::DashMap;
-use std::sync::Arc;
-
-use moka::future::Cache;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use std::sync::Arc;
 
 // pub trait RedisCache: DeserializeOwned + Serialize + Send + 'static {
 //     async fn get_vec(
@@ -69,7 +67,7 @@ impl Clone for CacheValue {
 }
 
 pub struct MokaCache {
-    cache: Cache<Box<str>, CacheValue>,
+    cache: Arc<DashMap<Box<str>, CacheValue>>,
     keys: Arc<DashMap<char, Vec<String>>>,
 }
 
@@ -86,25 +84,24 @@ impl Clone for MokaCache {
 impl MokaCache {
     pub fn new() -> Self {
         Self {
-            cache: Cache::new(1000),
+            cache: Arc::new(DashMap::new()),
             keys: Arc::new(DashMap::new()),
         }
     }
 
-    pub async fn insert<T>(&self, key: String, value: &T, cache_prefix: char)
+    pub fn insert<T>(&self, key: String, value: &T, cache_prefix: char)
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
         if let Ok(data) = bincode::serde::encode_to_vec(value, CONFIG) {
             self.cache
-                .insert(key.clone().into(), CacheValue::CacheStr(data.into()))
-                .await;
+                .insert(key.clone().into(), CacheValue::CacheStr(data.into()));
         }
 
         (*self.keys).entry(cache_prefix).or_default().push(key);
     }
 
-    pub async fn insert_vec<T>(&self, key: String, value: &[T], cache_prefix: char)
+    pub fn insert_vec<T>(&self, key: String, value: &[T], cache_prefix: char)
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
@@ -117,17 +114,17 @@ impl MokaCache {
             }
         }
         self.cache
-            .insert(key.clone().into(), CacheValue::CacheVec(data))
-            .await;
+            .insert(key.clone().into(), CacheValue::CacheVec(data));
 
         (*self.keys).entry(cache_prefix).or_default().push(key);
     }
 
-    pub async fn get<T>(&self, key: &str) -> Option<T>
+    pub fn get<T>(&self, key: &str) -> Option<T>
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
-        if let CacheValue::CacheStr(value) = self.cache.get(key).await? {
+        let value = self.cache.get(key)?.clone();
+        if let CacheValue::CacheStr(value) = value {
             if let Ok((v, _)) = bincode::serde::decode_from_slice(&value, CONFIG) {
                 v
             } else {
@@ -138,11 +135,12 @@ impl MokaCache {
         }
     }
 
-    pub async fn get_vec<T>(&self, key: &str) -> Option<Vec<T>>
+    pub fn get_vec<T>(&self, key: &str) -> Option<Vec<T>>
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
-        if let CacheValue::CacheVec(values) = self.cache.get(key).await? {
+        let value = self.cache.get(key)?.clone();
+        if let CacheValue::CacheVec(values) = value {
             values
                 .iter()
                 .map(|v| {
@@ -158,11 +156,13 @@ impl MokaCache {
         }
     }
 
-    pub async fn invalidate_cache_prefix(&self, cache_prefix: char) {
+    pub fn invalidate_cache_prefix(&self, cache_prefix: char) {
         let values = (*self.keys).get_mut(&cache_prefix);
 
         if let Some(keys) = values {
-            futures::future::join_all(keys.iter().map(|x| self.cache.invalidate(x.as_str()))).await;
+            keys.iter().for_each(|x| {
+                self.cache.remove(x.as_str());
+            });
         }
     }
 }

@@ -247,7 +247,7 @@ pub async fn fetch_tasks_by_ids<T: Page>(
     let mut found_values: Vec<T> = vec![];
     for id in ids {
         let cache_key = T::make_cache_key(id.as_str());
-        if let Some(val) = app_state.cache.get(&cache_key).await {
+        if let Some(val) = app_state.cache.get(&cache_key) {
             found_values.push(val);
         } else {
             not_found_ids.push(id);
@@ -263,9 +263,7 @@ pub async fn fetch_tasks_by_ids<T: Page>(
         for value in tokio_values {
             let key = T::make_cache_key(value.id());
 
-            cache
-                .insert(key, &value, T::unique_cache_key_prefix())
-                .await;
+            cache.insert(key, &value, T::unique_cache_key_prefix());
         }
     });
 
