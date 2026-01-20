@@ -22,15 +22,15 @@ pub struct AppState {
 
 const ITEMS_FILE: &str = "most_recent_items.json";
 const ITEM_SLEEP_TIME: u64 = 900;
-pub const ITEMS_UNIQUE_CACHE_PREFIX: &str = "!";
+pub const ITEMS_UNIQUE_CACHE_PREFIX: char = '!';
 
 const TASKS_FILE: &str = "most_recent_tasks.json";
 const TASK_SLEEP_TIME: u64 = 3600 * 24;
-pub const TASKS_UNIQUE_CACHE_PREFIX: &str = "@";
+pub const TASKS_UNIQUE_CACHE_PREFIX: char = '@';
 
 const AMMO_FILE: &str = "most_recent_ammo.json";
 const AMMO_SLEEP_TIME: u64 = 3600 * 24;
-pub const AMMO_UNIQUE_CACHE_PREFIX: &str = "#";
+pub const AMMO_UNIQUE_CACHE_PREFIX: char = '#';
 
 const DELETE_DEVICE_PREFERENCES_TIME: u64 = 3600 * 24;
 

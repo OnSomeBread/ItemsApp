@@ -71,7 +71,7 @@ pub trait Page: Send + Sync + Serialize + DeserializeOwned + Clone + 'static {
 
     // each struct needs to have a unique but short postfix and prefix where prefix matches with the general page they are associated with
     fn make_cache_key(id: &str) -> String;
-    fn unique_cache_key_prefix() -> &'static str;
+    fn unique_cache_key_prefix() -> char;
 }
 
 impl Page for Item {
@@ -100,7 +100,7 @@ impl Page for Item {
         app_state.next_items_call_timer.clone()
     }
 
-    fn unique_cache_key_prefix() -> &'static str {
+    fn unique_cache_key_prefix() -> char {
         ITEMS_UNIQUE_CACHE_PREFIX
     }
 
@@ -132,7 +132,7 @@ impl Page for ItemBase {
         app_state.next_items_call_timer.clone()
     }
 
-    fn unique_cache_key_prefix() -> &'static str {
+    fn unique_cache_key_prefix() -> char {
         ITEMS_UNIQUE_CACHE_PREFIX
     }
 
@@ -166,7 +166,7 @@ impl Page for Task {
     fn get_app_state_timer(app_state: &AppState) -> Arc<RwLock<Instant>> {
         app_state.next_tasks_call_timer.clone()
     }
-    fn unique_cache_key_prefix() -> &'static str {
+    fn unique_cache_key_prefix() -> char {
         TASKS_UNIQUE_CACHE_PREFIX
     }
 
@@ -198,7 +198,7 @@ impl Page for TaskBase {
         app_state.next_tasks_call_timer.clone()
     }
 
-    fn unique_cache_key_prefix() -> &'static str {
+    fn unique_cache_key_prefix() -> char {
         TASKS_UNIQUE_CACHE_PREFIX
     }
 
@@ -230,7 +230,7 @@ impl Page for Ammo {
         app_state.next_ammo_call_timer.clone()
     }
 
-    fn unique_cache_key_prefix() -> &'static str {
+    fn unique_cache_key_prefix() -> char {
         AMMO_UNIQUE_CACHE_PREFIX
     }
 

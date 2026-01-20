@@ -1,9 +1,5 @@
-use ahash::RandomState;
-use rayon::iter::IntoParallelRefIterator;
-use rayon::iter::ParallelIterator;
-use std::collections::HashMap;
+use dashmap::DashMap;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 use moka::future::Cache;
 use serde::Serialize;
@@ -74,7 +70,7 @@ impl Clone for CacheValue {
 
 pub struct MokaCache {
     cache: Cache<Box<str>, CacheValue>,
-    keys: Arc<Mutex<HashMap<&'static str, Vec<String>, RandomState>>>,
+    keys: Arc<DashMap<char, Vec<String>>>,
 }
 
 // without this keys gets deep copied instead of Arc::cloned
@@ -91,11 +87,11 @@ impl MokaCache {
     pub fn new() -> Self {
         Self {
             cache: Cache::new(1000),
-            keys: Arc::new(Mutex::new(HashMap::default())),
+            keys: Arc::new(DashMap::new()),
         }
     }
 
-    pub async fn insert<T>(&self, key: String, value: &T, cache_prefix: &'static str)
+    pub async fn insert<T>(&self, key: String, value: &T, cache_prefix: char)
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
@@ -105,13 +101,10 @@ impl MokaCache {
                 .await;
         }
 
-        (*self.keys.lock().await)
-            .entry(cache_prefix)
-            .or_insert_with(Vec::new)
-            .push(key);
+        (*self.keys).entry(cache_prefix).or_default().push(key);
     }
 
-    pub async fn insert_vec<T>(&self, key: String, value: &[T], cache_prefix: &'static str)
+    pub async fn insert_vec<T>(&self, key: String, value: &[T], cache_prefix: char)
     where
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
@@ -127,10 +120,7 @@ impl MokaCache {
             .insert(key.clone().into(), CacheValue::CacheVec(data))
             .await;
 
-        (*self.keys.lock().await)
-            .entry(cache_prefix)
-            .or_insert_with(Vec::new)
-            .push(key);
+        (*self.keys).entry(cache_prefix).or_default().push(key);
     }
 
     pub async fn get<T>(&self, key: &str) -> Option<T>
@@ -153,41 +143,23 @@ impl MokaCache {
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
         if let CacheValue::CacheVec(values) = self.cache.get(key).await? {
-            if values.len() < 100 {
-                values
-                    .iter()
-                    .map(|v| {
-                        if let Ok((v, _)) = bincode::serde::decode_from_slice(v, CONFIG) {
-                            Some(v)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect()
-            } else {
-                tokio_rayon::spawn(move || {
-                    values
-                        .par_iter()
-                        .map(|v| {
-                            if let Ok((v, _)) = bincode::serde::decode_from_slice(v, CONFIG) {
-                                Some(v)
-                            } else {
-                                None
-                            }
-                        })
-                        .collect()
+            values
+                .iter()
+                .map(|v| {
+                    if let Ok((v, _)) = bincode::serde::decode_from_slice(v, CONFIG) {
+                        Some(v)
+                    } else {
+                        None
+                    }
                 })
-                .await
-            }
+                .collect()
         } else {
             None
         }
     }
 
-    pub async fn invalidate_cache_prefix(&self, cache_prefix: &'static str) {
-        let values = (*self.keys.lock().await)
-            .get_mut(cache_prefix)
-            .map(std::mem::take);
+    pub async fn invalidate_cache_prefix(&self, cache_prefix: char) {
+        let values = (*self.keys).get_mut(&cache_prefix);
 
         if let Some(keys) = values {
             futures::future::join_all(keys.iter().map(|x| self.cache.invalidate(x.as_str()))).await;

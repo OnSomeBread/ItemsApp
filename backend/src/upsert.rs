@@ -86,7 +86,7 @@ pub trait Upsert: DeserializeOwned + Serialize {
         }
     }
 
-    fn unique_cache_prefix() -> &'static str;
+    fn unique_cache_prefix() -> char;
 
     async fn background_task(
         file: &'static str,
@@ -126,7 +126,7 @@ impl Upsert for Item {
         upsert_items(values, pgpool, is_api_call).await
     }
 
-    fn unique_cache_prefix() -> &'static str {
+    fn unique_cache_prefix() -> char {
         ITEMS_UNIQUE_CACHE_PREFIX
     }
 }
@@ -148,7 +148,7 @@ impl Upsert for Task {
         upsert_tasks(values, pgpool).await
     }
 
-    fn unique_cache_prefix() -> &'static str {
+    fn unique_cache_prefix() -> char {
         TASKS_UNIQUE_CACHE_PREFIX
     }
 }
@@ -170,7 +170,7 @@ impl Upsert for Ammo {
         upsert_ammo(values, pgpool).await
     }
 
-    fn unique_cache_prefix() -> &'static str {
+    fn unique_cache_prefix() -> char {
         AMMO_UNIQUE_CACHE_PREFIX
     }
 }

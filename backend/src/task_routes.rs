@@ -185,8 +185,8 @@ pub async fn get_tasks(
     #[allow(clippy::cast_possible_wrap)]
     let player_lvl = player_lvl as i32;
 
-    let ids = if include_completed && device.0.is_some() {
-        get_completed_task_by_device_id(&app_state.pgpool, device.0.unwrap()).await?
+    let ids = if include_completed && let Some(device_id) = device.0 {
+        get_completed_task_by_device_id(&app_state.pgpool, device_id).await?
     } else {
         vec![]
     };
@@ -272,8 +272,8 @@ pub async fn get_tasks_base(
     #[allow(clippy::cast_possible_wrap)]
     let player_lvl = player_lvl as i32;
 
-    let ids = if include_completed && device.0.is_some() {
-        get_completed_task_by_device_id(&app_state.pgpool, device.0.unwrap()).await?
+    let ids = if include_completed && let Some(device_id) = device.0 {
+        get_completed_task_by_device_id(&app_state.pgpool, device_id).await?
     } else {
         vec![]
     };
