@@ -1,19 +1,25 @@
-# needs to run before running docker file
-# cargo sqlx prepare 
-
-FROM rust:1.90.0-slim AS builder
-WORKDIR /ItemsApp
-COPY . .
+FROM messense/rust-musl-cross:x86_64-musl as chef
 ENV SQLX_OFFLINE=true
-RUN cargo +nightly build --release
+RUN cargo install cargo-chef
+WORKDIR /backend
 
-FROM debian:bookworm-slim
-WORKDIR /ItemsApp
+FROM chef AS planner
+COPY . .
+# Generate info for caching dependencies
+RUN cargo chef prepare --recipe-path recipe.json
 
-RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM chef AS builder
+COPY --from=planner /backend/recipe.json recipe.json
+# Build & cache dependencies
+RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path recipe.json
+COPY . .
 
-COPY --from=builder /ItemsApp/target/release/backend-rust .
+# Build
+RUN cargo build --release --target x86_64-unknown-linux-musl
+
+FROM scratch
+COPY --from=builder /backend/target/x86_64-unknown-linux-musl/release/backend /backend
 COPY ./migrations ./migrations
 
+ENTRYPOINT ["/backend"]
 EXPOSE 8000
-CMD ["./backend-rust"]
