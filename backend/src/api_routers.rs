@@ -28,9 +28,7 @@ use tokio::try_join;
 
 use std::time::Instant;
 
-const API_DOCUMENTATION: &str = r"
-
-all item routes beginning with /items
+const API_DOCUMENTATION: &str = r"all item routes beginning with /items
 /
 /stats
 /history
