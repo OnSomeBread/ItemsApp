@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use crate::{
     api_routers::Device,
     database_types::{Ammo, DeviceAmmoQueryParams},
@@ -10,11 +8,10 @@ use crate::{
         AppErrorHandling,
     },
 };
-use axum::{
-    Json,
-    extract::{Query, State},
-};
+use axum::{Json, extract::State};
+use axum_extra::extract::Query;
 use sqlx::{PgPool, types::Uuid};
+use std::time::Instant;
 
 // gives data on different interesting stats about the data stored
 pub async fn ammo_stats(State(app_state): State<AppState>) -> Result<Json<AmmoStats>, AppError> {
