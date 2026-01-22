@@ -58,7 +58,7 @@ function NeededItemScroll({
     });
     params.append("offset", offset.toString());
 
-    fetch(API_BASE + "/api/tasks/get_required_items?" + params.toString(), {
+    fetch(API_BASE + "/tasks/get_required_items?" + params.toString(), {
       cache: "no-store",
       headers,
     })

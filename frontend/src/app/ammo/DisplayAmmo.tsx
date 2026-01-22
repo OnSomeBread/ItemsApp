@@ -19,13 +19,13 @@ async function DisplayAmmo({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/ammo/stats", {
+  const res1 = await fetch(DOCKER_BACKEND + "/ammo/stats", {
     cache: "no-store",
     headers,
   });
   const ammoStats = (await res1.json()) as AmmoStats;
 
-  const res2 = await fetch(DOCKER_BACKEND + "/api/ammo/query_parms", {
+  const res2 = await fetch(DOCKER_BACKEND + "/ammo/query_parms", {
     cache: "no-store",
     headers,
   });
@@ -42,7 +42,7 @@ async function DisplayAmmo({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res3 = await fetch(DOCKER_BACKEND + "/api/ammo?" + params.toString(), {
+  const res3 = await fetch(DOCKER_BACKEND + "/ammo?" + params.toString(), {
     cache: "no-store",
     headers,
   });

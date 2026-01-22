@@ -33,7 +33,7 @@ function DisplayItems() {
     if (key === "offset" || value.toString() === "") continue;
     params.append(key, value.toString());
   }
-  const query = "/api/items?" + params.toString();
+  const query = "/items?" + params.toString();
 
   const fetchItems = (offset: number) => {
     if (typeof window === "undefined") return;

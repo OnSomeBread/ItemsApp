@@ -40,7 +40,7 @@ async function BitCoinProfit({ searchParams }: PageProps) {
 
   // get bitcoin data
   const res1 = await fetch(
-    DOCKER_BACKEND + "/api/items/ids?ids=59faff1d86f7746c51718c9c",
+    DOCKER_BACKEND + "/items/ids?ids=59faff1d86f7746c51718c9c",
     {
       cache: "no-store",
     }
@@ -52,7 +52,7 @@ async function BitCoinProfit({ searchParams }: PageProps) {
 
   // get gpu data
   const res2 = await fetch(
-    DOCKER_BACKEND + "/api/items/ids?ids=57347ca924597744596b4e71",
+    DOCKER_BACKEND + "/items/ids?ids=57347ca924597744596b4e71",
     {
       cache: "no-store",
     }
@@ -67,7 +67,7 @@ async function BitCoinProfit({ searchParams }: PageProps) {
   if (fuelType === "smallFuel") {
     // get small fuel can data
     const res3 = await fetch(
-      DOCKER_BACKEND + "/api/items/ids?ids=5d1b371186f774253763a656",
+      DOCKER_BACKEND + "/items/ids?ids=5d1b371186f774253763a656",
       {
         cache: "no-store",
       }
@@ -82,7 +82,7 @@ async function BitCoinProfit({ searchParams }: PageProps) {
   } else {
     // get large fuel can data
     const res4 = await fetch(
-      DOCKER_BACKEND + "/api/items/ids?ids=5d1b36a186f7742523398433",
+      DOCKER_BACKEND + "/items/ids?ids=5d1b36a186f7742523398433",
       {
         cache: "no-store",
       }

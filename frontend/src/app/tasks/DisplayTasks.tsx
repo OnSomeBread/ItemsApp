@@ -19,13 +19,13 @@ async function DisplayTasks({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/tasks/stats", {
+  const res1 = await fetch(DOCKER_BACKEND + "/tasks/stats", {
     cache: "no-store",
     headers,
   });
   const taskStats = (await res1.json()) as TaskStats;
 
-  const res2 = await fetch(DOCKER_BACKEND + "/api/tasks/query_parms", {
+  const res2 = await fetch(DOCKER_BACKEND + "/tasks/query_parms", {
     cache: "no-store",
     headers,
   });
@@ -42,14 +42,14 @@ async function DisplayTasks({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res3 = await fetch(DOCKER_BACKEND + "/api/tasks?" + params.toString(), {
+  const res3 = await fetch(DOCKER_BACKEND + "/tasks?" + params.toString(), {
     cache: "no-store",
     headers,
   });
   const tasks = (await res3.json()) as Task[];
   queryParams.offset = queryParams.limit;
 
-  const res4 = await fetch(DOCKER_BACKEND + "/api/tasks/get_completed", {
+  const res4 = await fetch(DOCKER_BACKEND + "/tasks/get_completed", {
     cache: "no-store",
     headers,
   });

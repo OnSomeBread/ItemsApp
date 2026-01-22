@@ -60,7 +60,7 @@ function TaskScroll({
   }, [timer]);
 
   const fetchNewCompletedTasks = () => {
-    fetch(API_BASE + "/api/tasks/get_completed", {
+    fetch(API_BASE + "/tasks/get_completed", {
       cache: "no-store",
       headers,
     })
@@ -76,7 +76,7 @@ function TaskScroll({
   };
 
   const fetchNewTaskStats = () => {
-    fetch(API_BASE + "/api/tasks/stats", {
+    fetch(API_BASE + "/tasks/stats", {
       cache: "no-store",
       headers,
     })
@@ -103,7 +103,7 @@ function TaskScroll({
       fetchNewTaskStats();
     }
 
-    fetch(API_BASE + "/api/tasks?" + params.toString(), {
+    fetch(API_BASE + "/tasks?" + params.toString(), {
       cache: "no-store",
       headers,
     })
@@ -155,7 +155,7 @@ function TaskScroll({
       direction: direction,
     };
 
-    fetch(API_BASE + "/api/tasks/set_complete", {
+    fetch(API_BASE + "/tasks/set_complete", {
       method: "POST",
       cache: "no-store",
       headers,
@@ -173,7 +173,7 @@ function TaskScroll({
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}
         onClear={() => {
-          fetch(API_BASE + "/api/tasks/clear_completed_tasks", {
+          fetch(API_BASE + "/tasks/clear_completed_tasks", {
             cache: "no-store",
             headers,
           })

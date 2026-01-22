@@ -19,7 +19,7 @@ async function DisplayNeededItems({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/tasks/stats", {
+  const res1 = await fetch(DOCKER_BACKEND + "/tasks/stats", {
     cache: "no-store",
     headers,
   });
@@ -37,7 +37,7 @@ async function DisplayNeededItems({ searchParams }: PageProps) {
   });
 
   const res2 = await fetch(
-    DOCKER_BACKEND + "/api/tasks/get_required_items?" + params.toString(),
+    DOCKER_BACKEND + "/tasks/get_required_items?" + params.toString(),
     {
       cache: "no-store",
       headers,

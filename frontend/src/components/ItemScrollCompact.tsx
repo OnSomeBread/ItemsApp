@@ -59,7 +59,7 @@ function ItemScrollCompact({
     });
     params.append("offset", offset.toString());
 
-    fetch(API_BASE + "/api/items?" + params.toString(), {
+    fetch(API_BASE + "/items?" + params.toString(), {
       cache: "no-store",
       headers,
     })

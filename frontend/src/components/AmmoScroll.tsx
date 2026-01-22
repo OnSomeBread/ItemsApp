@@ -61,7 +61,7 @@ function AmmoScroll({
     });
     params.append("offset", offset.toString());
 
-    fetch(API_BASE + "/api/ammo?" + params.toString(), {
+    fetch(API_BASE + "/ammo?" + params.toString(), {
       cache: "no-store",
       headers,
     })

@@ -19,13 +19,13 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/api/items/stats", {
+  const res1 = await fetch(DOCKER_BACKEND + "/items/stats", {
     cache: "no-store",
     headers,
   });
   const itemStats = (await res1.json()) as ItemStats;
 
-  const res2 = await fetch(DOCKER_BACKEND + "/api/items/query_parms", {
+  const res2 = await fetch(DOCKER_BACKEND + "/items/query_parms", {
     cache: "no-store",
     headers,
   });
@@ -42,7 +42,7 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res3 = await fetch(DOCKER_BACKEND + "/api/items?" + params.toString(), {
+  const res3 = await fetch(DOCKER_BACKEND + "/items?" + params.toString(), {
     cache: "no-store",
     headers,
   });
