@@ -7,6 +7,7 @@ use crate::item_routes::{
     get_device_item_query_parms, get_item_history, get_items, get_items_help, item_stats,
     items_from_db_to_items,
 };
+use crate::query_types::{AmmoQueryParams, ItemQueryParams, TaskQueryParams};
 use crate::query_types::{
     AppError, AppError::UninitalizedDatabase, AppErrorHandling, IdsQueryParams,
 };
@@ -27,8 +28,41 @@ use tokio::try_join;
 
 use std::time::Instant;
 
+const API_DOCUMENTATION: &str = r"
+
+all item routes beginning with /items
+/
+/stats
+/history
+/ids
+/query_parms
+/help
+
+all task routes beginning with /tasks
+/
+/base
+/stats
+/ids
+/get_required_items
+/adj_list
+/get_completed
+/set_complete
+/clear_completed_tasks
+/query_parms
+/help
+
+all ammo routes beginning with /ammo
+/
+/stats
+/ids
+/query_parms
+/help
+
+the save parameter for each of the endpoints requires device id and it will save query params to database
+";
+
 // checks if the database is initalized
-async fn health(State(app_state): State<AppState>) -> Result<(), AppError> {
+async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
     let (items_count, tasks_count, ammo_count) = try_join!(
         sqlx::query_scalar!("SELECT COUNT(*) FROM Item").fetch_one(&app_state.pgpool),
         sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pgpool),
@@ -44,7 +78,22 @@ async fn health(State(app_state): State<AppState>) -> Result<(), AppError> {
             "The Database has not yet been initalized",
         )))
     } else {
-        Ok(())
+        let item_help = serde_json::to_string_pretty(
+            &get_items_help(Query(ItemQueryParams::default())).await.0,
+        )
+        .unwrap_or_default();
+        let task_help = serde_json::to_string_pretty(
+            &get_tasks_help(Query(TaskQueryParams::default())).await.0,
+        )
+        .unwrap_or_default();
+        let ammo_help =
+            serde_json::to_string_pretty(&get_ammo_help(Query(AmmoQueryParams::default())).await.0)
+                .unwrap_or_default();
+
+        Ok(format!(
+            "{}\nitems default query params at /items\n{}\n\ntasks default query params at /tasks\n{}\n\nammo default query params at /ammo\n{}",
+            API_DOCUMENTATION, item_help, task_help, ammo_help
+        ))
     }
 }
 
