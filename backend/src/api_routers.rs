@@ -28,7 +28,7 @@ use tokio::try_join;
 use std::time::Instant;
 
 // checks if the database is initalized
-async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
+async fn health(State(app_state): State<AppState>) -> Result<(), AppError> {
     let (items_count, tasks_count, ammo_count) = try_join!(
         sqlx::query_scalar!("SELECT COUNT(*) FROM Item").fetch_one(&app_state.pgpool),
         sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pgpool),
@@ -44,7 +44,7 @@ async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
             "The Database has not yet been initalized",
         )))
     } else {
-        Ok(String::from("Status Ok"))
+        Ok(())
     }
 }
 
@@ -338,7 +338,7 @@ fn ammo_router() -> Router<AppState> {
 
 pub fn api_router() -> Router<AppState> {
     Router::new()
-        .route("/health", get(health))
+        .route("/", get(health))
         .nest("/items", items_router())
         .nest("/tasks", tasks_router())
         .nest("/ammo", ammo_router())

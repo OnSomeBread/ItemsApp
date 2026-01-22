@@ -277,13 +277,13 @@ impl Test for Ammo {
     }
 }
 
-const URL: &str = "http://127.0.0.1:8000/api";
+const URL: &str = "http://127.0.0.1:8000";
 const DEVICE_ID: &str = "501b8491-c3fe-4e37-9428-ce1456c1d386";
 
 #[tokio::test]
 async fn test_health() {
     let res = Client::new()
-        .get(format!("{}{}", URL, "/health"))
+        .get(URL.to_string())
         .send()
         .await
         .expect("health endpoint failed");
