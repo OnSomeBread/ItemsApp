@@ -1,4 +1,4 @@
-FROM clux/muslrust:nightly AS chef
+FROM clux/muslrust:1.95.0-nightly-2026-01-21 AS chef
 RUN cargo install cargo-chef
 WORKDIR /backend
 ENV SQLX_OFFLINE=true
