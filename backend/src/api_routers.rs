@@ -95,16 +95,6 @@ async fn health(State(app_state): State<AppState>) -> Result<String, AppError> {
     }
 }
 
-// in app state there are timers to see when when a page refreshes the helps to unwrap it into a number in seconds
-#[allow(clippy::cast_possible_wrap)]
-pub async fn get_time_in_seconds(timer: &Arc<RwLock<Instant>>) -> i64 {
-    timer
-        .read()
-        .await
-        .saturating_duration_since(Instant::now())
-        .as_secs() as i64
-}
-
 pub trait Page: Send + Sync + Serialize + DeserializeOwned + Clone + 'static {
     async fn fetch_by_ids(
         pgpool: &sqlx::PgPool,

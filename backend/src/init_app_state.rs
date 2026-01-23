@@ -13,6 +13,7 @@ use tokio::sync::RwLock;
 #[derive(Clone)]
 pub struct AppState {
     pub pgpool: sqlx::PgPool,
+    #[allow(dead_code)]
     pub redispool: bb8::Pool<RedisConnectionManager>,
     pub cache: AppCache,
     pub rate_limit: Arc<DashMap<String, (f64, Instant)>>,

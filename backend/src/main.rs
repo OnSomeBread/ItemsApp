@@ -11,7 +11,6 @@ mod query_types;
 mod task_routes;
 mod upsert;
 
-use crate::middleware::rate_limit_user;
 use anyhow::Result;
 use axum::Router;
 use axum::extract::Request;

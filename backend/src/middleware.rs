@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::init_app_state::AppState;
 use axum::{
     extract::{Request, State},
