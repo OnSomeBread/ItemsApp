@@ -48,10 +48,10 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .merge(api_routers::api_router())
-        .layer(axum::middleware::from_fn_with_state(
-            app_state.clone(),
-            rate_limit_user,
-        ))
+        // .layer(axum::middleware::from_fn_with_state(
+        //     app_state.clone(),
+        //     rate_limit_user,
+        // ))
         .with_state(app_state)
         .layer(
             TraceLayer::new_for_http()
