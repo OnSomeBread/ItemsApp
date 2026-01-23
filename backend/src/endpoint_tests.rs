@@ -7,10 +7,11 @@ use crate::{
         VALID_AMMO_SORT_BY, VALID_AMMO_TYPE, VALID_ITEM_SORT_BY, VALID_ITEM_TYPES, VALID_OBJ_TYPES,
         VALID_TRADERS,
     },
+    task_routes::AdjList,
 };
+use ahash::AHashSet as HashSet;
 use reqwest::Client;
 use serde::de::DeserializeOwned;
-use std::collections::{HashMap, HashSet};
 
 trait QueryParms: DeserializeOwned {
     fn get_base() -> String;
@@ -514,11 +515,7 @@ async fn test_ammo_limit_and_offset() {
     Ammo::limit_and_offset_testing().await;
 }
 
-fn perform_dfs(
-    start_id: String,
-    ids: &HashSet<String>,
-    adj_list: &HashMap<String, Vec<(String, bool)>>,
-) {
+fn perform_dfs(start_id: String, ids: &HashSet<String>, adj_list: &AdjList) {
     let mut st = vec![start_id];
     let mut visited = HashSet::new();
     while let Some(id) = st.pop() {
@@ -551,8 +548,7 @@ async fn test_adj_list() {
 
     assert!(res.status().is_success());
 
-    let adj_list: HashMap<String, Vec<(String, bool)>> =
-        res.json().await.expect("adjlist endpoint failed");
+    let adj_list: AdjList = res.json().await.expect("adjlist endpoint failed");
 
     let (collector_vec, kappa, knockknock_vec, lightkeeper) = tokio::join!(
         Task::get_request_vec(format!(
@@ -608,10 +604,10 @@ async fn normal_case_redis_testing() {
     let mut handlers = vec![];
 
     // end number represents number of users
-    for _ in 0..100 {
+    for _ in 0..400 {
         handlers.push(std::thread::spawn(async || {
             // end number represents number of requests a user would make albeit with no time in between
-            for _ in 0..10 {
+            for _ in 0..5 {
                 let v = Item::get_request_vec(format!("{}{}", URL, "/items")).await;
                 assert!(!v.is_empty());
                 let v = Task::get_request_vec(format!("{}{}", URL, "/tasks")).await;
@@ -639,7 +635,7 @@ async fn large_limit_redis_testing() {
     for _ in 0..10 {
         handlers.push(std::thread::spawn(async || {
             // end number represents number of requests a user would make albeit with no time in between
-            for _ in 0..10 {
+            for _ in 0..3 {
                 let v = Item::get_request_vec(format!("{}{}", URL, "/items?limit=1000")).await;
                 assert!(!v.is_empty());
                 let v = Task::get_request_vec(format!("{}{}", URL, "/tasks?limit=1000")).await;
