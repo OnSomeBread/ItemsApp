@@ -101,16 +101,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axum-client-ip"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33cf70e1cd8c8c51240442aeb19fc840d2db9614eb69ba67a4705ab755591738"
-dependencies = [
- "axum",
- "client-ip",
-]
-
-[[package]]
 name = "axum-core"
 version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -172,7 +162,6 @@ dependencies = [
  "ahash",
  "anyhow",
  "axum",
- "axum-client-ip",
  "axum-extra",
  "bb8-redis",
  "chrono",
@@ -298,15 +287,6 @@ dependencies = [
  "serde",
  "wasm-bindgen",
  "windows-link",
-]
-
-[[package]]
-name = "client-ip"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31211fc26899744f5b22521fdc971e5f3875991d8880537537470685a0e9552d"
-dependencies = [
- "http",
 ]
 
 [[package]]

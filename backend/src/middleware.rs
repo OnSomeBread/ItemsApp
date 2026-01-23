@@ -1,30 +1,47 @@
 use crate::init_app_state::AppState;
 use axum::{
-    extract::{ConnectInfo, Request, State},
+    extract::{Request, State},
+    http::HeaderMap,
     middleware::Next,
     response::Response,
 };
-use axum_client_ip::ClientIp;
 use reqwest::StatusCode;
-use std::net::SocketAddr;
+use std::time::Instant;
 
-pub async fn get_connect_info(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    req: Request,
-    next: Next,
-) -> Result<Response, StatusCode> {
-    tracing::info!("{:?}", addr.ip());
-
-    Ok(next.run(req).await)
-}
+const MAX_TOKENS: f64 = 50.0;
+const REFILL_RATE: f64 = 5.0;
 
 pub async fn rate_limit_user(
     State(app_state): State<AppState>,
-    ip: ClientIp,
+    headers: HeaderMap,
     req: Request,
     next: Next,
 ) -> Result<Response, StatusCode> {
-    tracing::info!("{:?}", ip);
+    let Some(ip): Option<String> = headers
+        .get("x-real-ip")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| s.parse().ok())
+    else {
+        return Ok(next.run(req).await);
+    };
 
-    Ok(next.run(req).await) //Err(StatusCode::TOO_MANY_REQUESTS)
+    let mut e = app_state
+        .rate_limit
+        .entry(ip.clone())
+        .or_insert_with(|| (MAX_TOKENS, Instant::now()));
+
+    #[allow(clippy::cast_precision_loss)]
+    let elapsed_secs = e.1.elapsed().as_millis() as u64 as f64 / 1_000.0;
+    e.0 += elapsed_secs * REFILL_RATE;
+    e.0 = e.0.min(MAX_TOKENS);
+    e.1 = Instant::now();
+
+    if e.0 < 1.0 {
+        return Err(StatusCode::TOO_MANY_REQUESTS);
+    }
+    e.0 -= 1.0;
+
+    drop(e);
+
+    Ok(next.run(req).await)
 }

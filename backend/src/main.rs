@@ -11,20 +11,17 @@ mod query_types;
 mod task_routes;
 mod upsert;
 
+use crate::middleware::rate_limit_user;
 use anyhow::Result;
 use axum::Router;
 use axum::extract::Request;
 use axum::http::Response;
-use axum_client_ip::ClientIpSource;
 use dotenvy::dotenv;
 use init_app_state::init_app_state;
 use std::env;
-use std::net::SocketAddr;
 use std::time::Duration;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
-
-use crate::middleware::{get_connect_info, rate_limit_user};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -51,12 +48,10 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .merge(api_routers::api_router())
-        .layer(axum::middleware::from_fn(get_connect_info))
-        // .layer(axum::middleware::from_fn_with_state(
-        //     app_state.clone(),
-        //     rate_limit_user,
-        // ))
-        // .layer(ClientIpSource::XRealIp.into_extension())
+        .layer(axum::middleware::from_fn_with_state(
+            app_state.clone(),
+            rate_limit_user,
+        ))
         .with_state(app_state)
         .layer(
             TraceLayer::new_for_http()
@@ -95,11 +90,7 @@ async fn main() -> Result<()> {
         .layer(cors);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;
-    axum::serve(
-        listener,
-        app.into_make_service_with_connect_info::<SocketAddr>(),
-    )
-    .await?;
+    axum::serve(listener, app).await?;
 
     Ok(())
 }

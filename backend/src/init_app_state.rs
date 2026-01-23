@@ -9,14 +9,13 @@ use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
-use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct AppState {
     pub pgpool: sqlx::PgPool,
     pub redispool: bb8::Pool<RedisConnectionManager>,
     pub cache: AppCache,
-    pub rate_limit: Arc<DashMap<Uuid, (f64, Instant)>>,
+    pub rate_limit: Arc<DashMap<String, (f64, Instant)>>,
     pub next_items_call_timer: Arc<RwLock<Instant>>,
     pub next_tasks_call_timer: Arc<RwLock<Instant>>,
     pub next_ammo_call_timer: Arc<RwLock<Instant>>,
@@ -76,14 +75,16 @@ pub async fn init_app_state(postgres_url: String, redis_url: String) -> Result<A
         &pgpool,
     );
 
+    let rate_limit = Arc::new(DashMap::new());
+
     Ok(AppState {
         pgpool,
         redispool,
         cache,
+        rate_limit,
         next_items_call_timer,
         next_tasks_call_timer,
         next_ammo_call_timer,
-        rate_limit: Arc::new(DashMap::new()),
     })
 }
 
