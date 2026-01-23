@@ -3,9 +3,8 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Item, ItemQueryParams, ItemStats } from "../types";
-import { formatSecondsToTime, getBestBuy, getBestSell } from "../utils";
+import { apiFetch, formatSecondsToTime, getBestBuy, getBestSell } from "../utils";
 import ItemSearchBar from "./ItemSearchBar";
-import { API_BASE } from "../constants";
 import ImageComponent from "./ImageComponent";
 
 interface Props {
@@ -59,7 +58,7 @@ function ItemScrollCompact({
     });
     params.append("offset", offset.toString());
 
-    fetch(API_BASE + "/items?" + params.toString(), {
+    apiFetch("/items?" + params.toString(), {
       cache: "no-store",
       headers,
     })

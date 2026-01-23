@@ -42,13 +42,16 @@ function ItemChart({ itemHistory }: Props) {
           domain={["dataMin", "dataMax"]}
         />
         <Tooltip
-          labelFormatter={(t: string) =>
-            new Date(t).toLocaleDateString("en-US", {
-              weekday: "short",
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            })
+          labelFormatter={(label) => {
+          if (typeof label !== "string") return label;
+
+          return new Date(label).toLocaleDateString("en-US", {
+                weekday: "short",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })
+            }
           }
           formatter={(t: string | undefined) => Number(t).toLocaleString("en-us")}
         />

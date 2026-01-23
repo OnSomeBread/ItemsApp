@@ -147,11 +147,3 @@ export const ALL_AMMO_TYPES = {
   grenade: "Grenade",
   flashbang: "Flashbang",
 };
-
-export const dev: boolean = false;
-export const API_BASE: string = dev ? "http://localhost:8000" : "/api";
-export const DOCKER_BACKEND: string = dev
-  ? "http://localhost:8000"
-  : "http://nginx:8080/api";
-
-//(process.env.NEXT_PUBLIC_BACKEND_SERVER as string) ?? "";

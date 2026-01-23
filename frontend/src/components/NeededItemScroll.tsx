@@ -3,8 +3,7 @@ import type { ItemBase, TaskQueryParams, TaskStats } from "../types";
 import { useEffect, useRef, useState } from "react";
 import TaskSearchBar from "./TaskSearchBar";
 import { motion } from "framer-motion";
-import { API_BASE } from "../constants";
-import { formatSecondsToTime } from "../utils";
+import { apiFetch, formatSecondsToTime } from "../utils";
 import Link from "next/link";
 import ImageComponent from "./ImageComponent";
 
@@ -58,7 +57,7 @@ function NeededItemScroll({
     });
     params.append("offset", offset.toString());
 
-    fetch(API_BASE + "/tasks/get_required_items?" + params.toString(), {
+    apiFetch("/tasks/get_required_items?" + params.toString(), {
       cache: "no-store",
       headers,
     })

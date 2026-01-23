@@ -1,9 +1,10 @@
 import PageSwitch from "../../components/PageSwitch";
 import TaskScroll from "../../components/TaskScroll";
-import { DEFAULT_TASK_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
 import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
 import type { Task, TaskBase, TaskQueryParams, TaskStats } from "../../types";
 import { cookies } from "next/headers";
+import { apiFetch } from "../../utils";
+import { DEFAULT_TASK_QUERY_PARAMS } from "../../constants";
 
 type PageProps = {
   searchParams: Promise<{ queryParams?: TaskQueryParams }>;
@@ -19,13 +20,13 @@ async function DisplayTasks({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/tasks/stats", {
+  const res1 = await apiFetch("/tasks/stats", {
     cache: "no-store",
     headers,
   });
   const taskStats = (await res1.json()) as TaskStats;
 
-  const res2 = await fetch(DOCKER_BACKEND + "/tasks/query_parms", {
+  const res2 = await apiFetch("/tasks/query_parms", {
     cache: "no-store",
     headers,
   });
@@ -42,14 +43,14 @@ async function DisplayTasks({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res3 = await fetch(DOCKER_BACKEND + "/tasks?" + params.toString(), {
+  const res3 = await apiFetch("/tasks?" + params.toString(), {
     cache: "no-store",
     headers,
   });
   const tasks = (await res3.json()) as Task[];
   queryParams.offset = queryParams.limit;
 
-  const res4 = await fetch(DOCKER_BACKEND + "/tasks/get_completed", {
+  const res4 = await apiFetch("/tasks/get_completed", {
     cache: "no-store",
     headers,
   });

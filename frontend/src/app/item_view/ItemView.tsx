@@ -1,8 +1,8 @@
-import { DOCKER_BACKEND } from "../../constants";
 import type { Item, ItemHistory } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 import ImageComponent from "../../components/ImageComponent";
 import dynamic from "next/dynamic";
+import { apiFetch } from "../../utils";
 
 const ItemChart = dynamic(() => import("../../components/ItemChart"));
 
@@ -14,13 +14,12 @@ async function ItemView({ searchParams }: PageProps) {
   const id = (await searchParams)?.id;
   if (id === undefined) return <p>no item passed in</p>;
 
-  const res1 = await fetch(DOCKER_BACKEND + "/items/ids?ids=" + id, {
+  const res1 = await apiFetch("/items/ids?ids=" + id, {
     cache: "no-store",
   });
   const item = ((await res1.json()) as Item[])[0];
 
-  const res2 = await fetch(
-    DOCKER_BACKEND + "/items/history?item_id=" + item._id,
+  const res2 = await apiFetch("/items/history?item_id=" + item._id,
     {
       cache: "no-store",
     }

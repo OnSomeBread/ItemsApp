@@ -5,8 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import TaskSearchBar from "./TaskSearchBar";
 import { motion } from "framer-motion";
 import TaskComponent from "./TaskComponent";
-import { API_BASE } from "../constants";
-import { formatSecondsToTime } from "../utils";
+import { apiFetch, formatSecondsToTime } from "../utils";
 
 interface Props {
   initTasks: Task[];
@@ -60,7 +59,7 @@ function TaskScroll({
   }, [timer]);
 
   const fetchNewCompletedTasks = () => {
-    fetch(API_BASE + "/tasks/get_completed", {
+    apiFetch("/tasks/get_completed", {
       cache: "no-store",
       headers,
     })
@@ -76,7 +75,7 @@ function TaskScroll({
   };
 
   const fetchNewTaskStats = () => {
-    fetch(API_BASE + "/tasks/stats", {
+    apiFetch("/tasks/stats", {
       cache: "no-store",
       headers,
     })
@@ -103,7 +102,7 @@ function TaskScroll({
       fetchNewTaskStats();
     }
 
-    fetch(API_BASE + "/tasks?" + params.toString(), {
+    apiFetch("/tasks?" + params.toString(), {
       cache: "no-store",
       headers,
     })
@@ -155,7 +154,7 @@ function TaskScroll({
       direction: direction,
     };
 
-    fetch(API_BASE + "/tasks/set_complete", {
+    apiFetch("/tasks/set_complete", {
       method: "POST",
       cache: "no-store",
       headers,
@@ -173,7 +172,7 @@ function TaskScroll({
         queryParams={queryParams}
         changeQueryParams={changeQueryParams}
         onClear={() => {
-          fetch(API_BASE + "/tasks/clear_completed_tasks", {
+          apiFetch("/tasks/clear_completed_tasks", {
             cache: "no-store",
             headers,
           })

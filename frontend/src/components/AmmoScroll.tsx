@@ -3,8 +3,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import type { Ammo, AmmoQueryParams, AmmoStats } from "../types";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { API_BASE } from "../constants";
-import { formatSecondsToTime } from "../utils";
+import { apiFetch, formatSecondsToTime } from "../utils";
 import AmmoSearchBar from "./AmmoSearchBar";
 import Link from "next/link";
 import ImageComponent from "./ImageComponent";
@@ -61,7 +60,7 @@ function AmmoScroll({
     });
     params.append("offset", offset.toString());
 
-    fetch(API_BASE + "/ammo?" + params.toString(), {
+    apiFetch("/ammo?" + params.toString(), {
       cache: "no-store",
       headers,
     })

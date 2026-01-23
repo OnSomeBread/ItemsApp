@@ -1,9 +1,10 @@
 import AmmoScroll from "../../components/AmmoScroll";
 import PageSwitch from "../../components/PageSwitch";
-import { DEFAULT_AMMO_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
+import { DEFAULT_AMMO_QUERY_PARAMS } from "../../constants";
 import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
 import type { AmmoQueryParams, Ammo, AmmoStats } from "../../types";
 import { cookies } from "next/headers";
+import { apiFetch } from "../../utils";
 
 type PageProps = {
   searchParams: Promise<{ queryParams?: AmmoQueryParams }>;
@@ -19,13 +20,13 @@ async function DisplayAmmo({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/ammo/stats", {
+  const res1 = await apiFetch("/ammo/stats", {
     cache: "no-store",
     headers,
   });
   const ammoStats = (await res1.json()) as AmmoStats;
 
-  const res2 = await fetch(DOCKER_BACKEND + "/ammo/query_parms", {
+  const res2 = await apiFetch("/ammo/query_parms", {
     cache: "no-store",
     headers,
   });
@@ -42,7 +43,7 @@ async function DisplayAmmo({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res3 = await fetch(DOCKER_BACKEND + "/ammo?" + params.toString(), {
+  const res3 = await apiFetch("/ammo?" + params.toString(), {
     cache: "no-store",
     headers,
   });

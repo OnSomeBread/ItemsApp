@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import ItemScrollCompact from "../../components/ItemScrollCompact";
 import PageSwitch from "../../components/PageSwitch";
-import { DEFAULT_ITEM_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
+import { DEFAULT_ITEM_QUERY_PARAMS } from "../../constants";
 import type { Item, ItemQueryParams, ItemStats } from "../../types";
 import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
+import { apiFetch } from "../../utils";
 
 type PageProps = {
   searchParams: Promise<{ queryParams?: ItemQueryParams }>;
@@ -19,13 +20,13 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/items/stats", {
+  const res1 = await apiFetch("/items/stats", {
     cache: "no-store",
     headers,
   });
   const itemStats = (await res1.json()) as ItemStats;
 
-  const res2 = await fetch(DOCKER_BACKEND + "/items/query_parms", {
+  const res2 = await apiFetch("/items/query_parms", {
     cache: "no-store",
     headers,
   });
@@ -42,7 +43,7 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res3 = await fetch(DOCKER_BACKEND + "/items?" + params.toString(), {
+  const res3 = await apiFetch("/items?" + params.toString(), {
     cache: "no-store",
     headers,
   });

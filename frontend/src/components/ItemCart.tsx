@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import ItemComponent from "./ItemComponent";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Item } from "../types";
-import api from "../api";
+import { apiFetch } from "../utils";
 
 function ItemCart() {
   const [allItems, setAllItems] = useState<Item[] | null>(null);
@@ -25,20 +25,22 @@ function ItemCart() {
       setAllItems(null);
       return;
     }
-    api
-      .get<Item[]>(query)
+
+    apiFetch(query)
       .then((response) => {
-        // sort all of the items by when they where added to the cart ascending
-        response.data.sort((itema, itemb) => {
-          const timea = parseInt(
-            localStorage.getItem("date-added-item-" + itema._id) || "0"
-          );
-          const timeb = parseInt(
-            localStorage.getItem("date-added-item-" + itemb._id) || "0"
-          );
-          return timea - timeb;
-        });
-        setAllItems(response.data);
+        response.json().then((items: Item[])=> {
+          // sort all of the items by when they where added to the cart ascending
+          items.sort((itema, itemb) => {
+            const timea = parseInt(
+              localStorage.getItem("date-added-item-" + itema._id) || "0"
+            );
+            const timeb = parseInt(
+              localStorage.getItem("date-added-item-" + itemb._id) || "0"
+            );
+            return timea - timeb;
+          });
+          setAllItems(items);
+        })
       })
       .catch((err) => console.error(err));
   }, [query, count]);

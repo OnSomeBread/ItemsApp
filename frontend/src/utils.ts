@@ -44,3 +44,17 @@ export function formatSecondsToTime(totalSeconds: number): string {
 
   return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
+
+export function apiFetch(path: string, init?: RequestInit) {
+  const dev = true;
+  const base = dev ? "http://localhost/api": "https://markschaefer.dev/api";
+  if (typeof window === "undefined") {
+    return fetch(`http://nginx:8080/api${path}`, init);
+  }
+
+  if (dev) {
+    return fetch(`${base}${path}`, init);
+  }
+
+  return fetch(`${base}${path}`, init);
+}

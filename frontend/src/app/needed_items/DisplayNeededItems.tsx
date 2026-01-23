@@ -1,9 +1,10 @@
 import NeededItemScroll from "../../components/NeededItemScroll";
 import PageSwitch from "../../components/PageSwitch";
-import { DEFAULT_TASK_QUERY_PARAMS, DOCKER_BACKEND } from "../../constants";
+import { DEFAULT_TASK_QUERY_PARAMS } from "../../constants";
 import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
 import type { ItemBase, TaskQueryParams, TaskStats } from "../../types";
 import { cookies } from "next/headers";
+import { apiFetch } from "../../utils";
 
 type PageProps = {
   searchParams: Promise<{ queryParams?: TaskQueryParams }>;
@@ -19,7 +20,7 @@ async function DisplayNeededItems({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await fetch(DOCKER_BACKEND + "/tasks/stats", {
+  const res1 = await apiFetch("/tasks/stats", {
     cache: "no-store",
     headers,
   });
@@ -36,8 +37,7 @@ async function DisplayNeededItems({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res2 = await fetch(
-    DOCKER_BACKEND + "/tasks/get_required_items?" + params.toString(),
+  const res2 = await apiFetch("/tasks/get_required_items?" + params.toString(),
     {
       cache: "no-store",
       headers,

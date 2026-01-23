@@ -2,10 +2,10 @@ import type { TaskAdjList, TaskBase } from "../../types";
 import PageSwitch from "../../components/PageSwitch";
 import { type Edge } from "@xyflow/react";
 import TraderSelect from "../../components/TraderSelect";
-import { DOCKER_BACKEND } from "../../constants";
 import dynamic from "next/dynamic";
 import { cookies } from "next/headers";
 import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
+import { apiFetch } from "../../utils";
 
 const TaskTreeComponent = dynamic(
   () => import("../../components/TaskTreeComponent")
@@ -34,7 +34,7 @@ async function TaskTree({ searchParams }: PageProps) {
   if (is_lightkeeper === undefined) is_lightkeeper = false;
   if (include_completed === undefined) include_completed = true;
 
-  const res1 = await fetch(DOCKER_BACKEND + "/tasks/adj_list", {
+  const res1 = await apiFetch("/tasks/adj_list", {
     cache: "no-store",
   });
   const adjList = (await res1.json()) as TaskAdjList;
@@ -47,9 +47,7 @@ async function TaskTree({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res2 = await fetch(
-    DOCKER_BACKEND +
-      "/tasks/base?trader=" +
+  const res2 = await apiFetch("/tasks/base?trader=" +
       trader +
       "&is_kappa=" +
       is_kappa +
