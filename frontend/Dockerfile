@@ -1,18 +1,17 @@
-FROM node:current-alpine3.22 AS build
-WORKDIR /ItemsApp
+FROM oven/bun:1.3.6-alpine AS build
+WORKDIR /frontend
 
-COPY ./package*.json ./
-RUN npm ci
+COPY bun.lock package.json ./
+RUN bun install --frozen-lockfile
 
 COPY . .
-RUN npm run build
+RUN bun run build
+FROM oven/bun:1.3.6-alpine
+WORKDIR /frontend
 
-FROM node:current-alpine3.22
-WORKDIR /ItemsApp
-COPY --from=build /ItemsApp/.next/standalone ./
-COPY --from=build /ItemsApp/.next/static ./.next/static
-COPY --from=build /ItemsApp/public ./public
+COPY --from=build /frontend/.next/standalone ./
+COPY --from=build /frontend/.next/static ./.next/static
+COPY --from=build /frontend/public ./public
 
 EXPOSE 3000
-CMD ["node", "server.js"]
-
+CMD ["bun", "server.js"]

@@ -8,14 +8,14 @@ services:
     build:
       dockerfile: Dockerfile
     volumes:
-      - ./icons:/ItemsApp/public:ro
+      - ./icons:/frontend/public:ro
     environment:
       - CHOKIDAR_USEPOLLING=false
     restart: unless-stopped
 
   nginx:
     container_name: "nginx"
-    image: nginx:stable-alpine3.21-slim
+    image: nginx:mainline-alpine3.23-slim
     ports:
       - "80:80"
     volumes:

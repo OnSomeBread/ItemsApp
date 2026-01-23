@@ -14,9 +14,9 @@ services:
     expose:
       - "8000"
     volumes:
-      - ./most_recent_items.json:/ItemsApp/most_recent_items.json
-      - ./most_recent_tasks.json:/ItemsApp/most_recent_tasks.json
-      - ./most_recent_ammo.json:/ItemsApp/most_recent_ammo.json
+      - ./most_recent_items.json:/most_recent_items.json
+      - ./most_recent_tasks.json:/most_recent_tasks.json
+      - ./most_recent_ammo.json:/most_recent_ammo.json
     depends_on:
       - db
       - redis
@@ -34,7 +34,7 @@ services:
     expose:
       - "3000"
     volumes:
-      - ./icons:/ItemsApp/public:ro
+      - ./icons:/frontend/public:ro
     environment:
       - HOSTNAME=0.0.0.0
       - CHOKIDAR_USEPOLLING=false
@@ -44,7 +44,7 @@ services:
 
   nginx:
     container_name: "nginx"
-    image: nginx:stable-alpine3.21-slim
+    image: nginx:mainline-alpine3.23-slim
     ports:
       - "80:80"
       - "443:443"
