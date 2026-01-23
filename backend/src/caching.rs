@@ -1,3 +1,4 @@
+use crate::task_routes::AdjList;
 use dashmap::DashMap;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -49,8 +50,9 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 enum CacheValue {
-    CacheStr(Vec<u8>),
-    CacheVec(Vec<Vec<u8>>),
+    One(Vec<u8>),
+    Vec(Vec<Vec<u8>>),
+    AdjList(Vec<u8>),
 }
 
 #[derive(Clone)]
@@ -72,8 +74,7 @@ impl AppCache {
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
         if let Ok(data) = postcard::to_allocvec(value) {
-            self.cache
-                .insert(key.clone().into(), CacheValue::CacheStr(data));
+            self.cache.insert(key.clone().into(), CacheValue::One(data));
         }
 
         (*self.keys).entry(cache_prefix).or_default().push(key);
@@ -91,8 +92,7 @@ impl AppCache {
                 return;
             }
         }
-        self.cache
-            .insert(key.clone().into(), CacheValue::CacheVec(data));
+        self.cache.insert(key.clone().into(), CacheValue::Vec(data));
 
         (*self.keys).entry(cache_prefix).or_default().push(key);
     }
@@ -102,7 +102,7 @@ impl AppCache {
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
         let value = self.cache.get(key)?.clone();
-        if let CacheValue::CacheStr(value) = value {
+        if let CacheValue::One(value) = value {
             postcard::from_bytes::<T>(&value).ok()
         } else {
             None
@@ -114,11 +114,29 @@ impl AppCache {
         T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
     {
         let value = self.cache.get(key)?.clone();
-        if let CacheValue::CacheVec(values) = value {
+        if let CacheValue::Vec(values) = value {
             values
                 .iter()
                 .map(|v| postcard::from_bytes::<T>(v).ok())
                 .collect()
+        } else {
+            None
+        }
+    }
+
+    pub fn insert_adj_list(&self, key: String, value: &AdjList, cache_prefix: char) {
+        if let Ok(data) = postcard::to_allocvec(value) {
+            self.cache
+                .insert(key.clone().into(), CacheValue::AdjList(data));
+        }
+
+        (*self.keys).entry(cache_prefix).or_default().push(key);
+    }
+
+    pub fn get_adj_list(&self, key: &str) -> Option<AdjList> {
+        let value = self.cache.get(key)?.clone();
+        if let CacheValue::AdjList(value) = value {
+            postcard::from_bytes::<AdjList>(&value).ok()
         } else {
             None
         }

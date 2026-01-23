@@ -1,4 +1,4 @@
-use crate::api_routers::{Device, Page, fetch_tasks_by_ids, get_time_in_seconds};
+use crate::api_routers::{Device, Page, fetch_tasks_by_ids};
 use crate::database_types::{
     DeviceTaskQueryParams, ItemBase, NeededItemsDB, Objective, Task, TaskBase, TaskFromDB,
     TaskRequirement,
@@ -6,15 +6,15 @@ use crate::database_types::{
 use crate::init_app_state::{AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{AppErrorHandling, TaskQueryParams, TaskStats};
-use ahash::RandomState;
+use ahash::{AHashMap as HashMap, AHashSet as HashSet};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
-use redis::AsyncCommands;
 use sqlx::PgPool;
 use sqlx::types::Uuid;
-use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 use tokio::try_join;
+
+pub type AdjList = HashMap<String, Vec<(String, bool)>>;
 
 #[derive(sqlx::FromRow)]
 struct GrabIds {
@@ -43,7 +43,7 @@ pub async fn task_stats(
     )
     .bad_sql("Stats")?;
 
-    let completed_tasks: HashSet<String, RandomState> =
+    let completed_tasks: HashSet<String> =
         get_completed_task_by_device_id(&app_state.pgpool, device_id)
             .await?
             .into_iter()
@@ -105,8 +105,7 @@ pub async fn tasks_from_db_to_tasks(
         .await
         .bad_sql("Objective and Task Requirement")?;
 
-    let mut hm: HashMap<String, (Vec<Objective>, Vec<TaskRequirement>), RandomState> =
-        HashMap::default();
+    let mut hm: HashMap<String, (Vec<Objective>, Vec<TaskRequirement>)> = HashMap::new();
     for buy in objective_vec {
         hm.entry(buy.task_id.clone())
             .or_insert_with(|| (Vec::new(), Vec::new()))
@@ -373,18 +372,11 @@ pub async fn get_device_task_query_parms(
 // "prerequisite" which is all the tasks that come before current task or
 // "unlocks" is all the tasks that come after current task
 // effectively mapping every task to their adjacent tasks
-async fn fetch_adj_list(
-    app_state: &AppState,
-) -> Result<HashMap<String, Vec<(String, bool)>, RandomState>, AppError> {
+async fn fetch_adj_list(app_state: &AppState) -> Result<AdjList, AppError> {
     let cache_key = TASKS_UNIQUE_CACHE_PREFIX.to_string() + "adj_list";
-    let mut conn = app_state.redispool.get().await.ok();
-    if let Some(conn) = conn.as_mut() {
-        let adj_list: Option<Option<String>> = conn.get(&cache_key).await.ok();
-        if let Some(adj_list_str) = adj_list.flatten()
-            && let Ok(adj_list_val) = serde_json::from_str(&adj_list_str)
-        {
-            return Ok(adj_list_val);
-        }
+
+    if let Some(ans) = app_state.cache.get_adj_list(&cache_key) {
+        return Ok(ans);
     }
 
     let task_requirements = sqlx::query_as!(TaskRequirement, "SELECT * FROM TaskRequirement")
@@ -392,7 +384,7 @@ async fn fetch_adj_list(
         .await
         .bad_sql("TaskRequirements")?;
 
-    let mut adj_list: HashMap<String, Vec<(String, bool)>, RandomState> = HashMap::default();
+    let mut adj_list: AdjList = HashMap::new();
     for req in task_requirements {
         let from_id = req.task_id;
         let to_id = req.req_task_id;
@@ -405,29 +397,18 @@ async fn fetch_adj_list(
         adj_list.entry(to_id).or_default().push((from_id, true));
     }
 
-    let pool = app_state.redispool.clone();
+    let cache = app_state.cache.clone();
     let tokio_adj_list = adj_list.clone();
-    let tasks_call = app_state.next_tasks_call_timer.clone();
-    let moved_cache_key = cache_key.clone();
 
     // store the adj_list that have not been found in redis cache
     tokio::spawn(async move {
-        if let Ok(mut conn) = pool.get().await
-            && let Ok(data) = serde_json::to_string(&tokio_adj_list)
-        {
-            let _: redis::RedisResult<()> = conn.set(cache_key, data).await;
-
-            let time_in_seconds = get_time_in_seconds(&tasks_call).await;
-            let _: redis::RedisResult<()> = conn.expire(moved_cache_key, time_in_seconds).await;
-        }
+        cache.insert_adj_list(cache_key, &tokio_adj_list, TASKS_UNIQUE_CACHE_PREFIX);
     });
 
     Ok(adj_list)
 }
 
-pub async fn get_adj_list(
-    State(app_state): State<AppState>,
-) -> Result<Json<HashMap<String, Vec<(String, bool)>, RandomState>>, AppError> {
+pub async fn get_adj_list(State(app_state): State<AppState>) -> Result<Json<AdjList>, AppError> {
     Ok(Json(fetch_adj_list(&app_state).await?))
 }
 
@@ -502,10 +483,10 @@ pub async fn set_completed_task(
     // perform a dfs on adj_list
     let adj_list = fetch_adj_list(&app_state).await?;
 
-    let mut visited: HashSet<String, RandomState> = HashSet::default();
+    let mut visited: HashSet<String> = HashSet::new();
 
     let mut st = vec![task_id.clone()];
-    let mut marked_tasks: HashSet<String, RandomState> = HashSet::default();
+    let mut marked_tasks: HashSet<String> = HashSet::new();
     while let Some(top) = st.pop() {
         if visited.contains(&top) {
             continue;
@@ -520,7 +501,7 @@ pub async fn set_completed_task(
         }
     }
 
-    let mut completed_tasks: HashSet<String, RandomState> =
+    let mut completed_tasks: HashSet<String> =
         get_completed_task_by_device_id(&app_state.pgpool, device_id)
             .await?
             .into_iter()
@@ -658,7 +639,7 @@ pub async fn get_required_items(
     .bad_sql("NeededItems")?;
 
     // group item ids
-    let mut item_to_count: HashMap<String, i32, RandomState> = HashMap::default();
+    let mut item_to_count: HashMap<String, i32> = HashMap::new();
     for v in values {
         for item_id in v.needed_item_ids {
             *item_to_count.entry(item_id).or_insert(0) += v.count;
