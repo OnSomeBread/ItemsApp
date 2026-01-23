@@ -217,10 +217,10 @@ pub async fn get_tasks(
     let mut txn = app_state.pgpool.begin().await.bad_sql("Tasks")?;
     let tasks_from_db = sqlx::query_as!(
                 TaskFromDB,
-                "SELECT * FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
+                "SELECT * FROM Task t WHERE (task_name ILIKE '%' || $1 || '%' OR task_name % $1) AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
                 ($5 IS FALSE OR kappa_required = TRUE) AND ($6 IS FALSE OR lightkeeper_required = TRUE) AND 
                 EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) ORDER BY _id ASC LIMIT $8 OFFSET $9",
-                format!("%{search}%"),
+                search,
                 format!("%{trader}%"),
                 player_lvl,
                 &ids,
@@ -297,10 +297,10 @@ pub async fn get_tasks_base(
 
     let tasks = sqlx::query_as!(
                 TaskBase,
-                "SELECT _id, task_name FROM Task t WHERE task_name ILIKE $1 AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
+                "SELECT _id, task_name FROM Task t WHERE (task_name ILIKE '%' || $1 || '%' OR task_name % $1) AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND 
                 ($5 IS FALSE OR kappa_required = TRUE) AND ($6 IS FALSE OR lightkeeper_required = TRUE) AND 
                 EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) ORDER BY _id ASC LIMIT $8 OFFSET $9",
-                format!("%{search}%"),
+                search,
                 format!("%{trader}%"),
                 player_lvl,
                 &ids,
@@ -622,11 +622,11 @@ pub async fn get_required_items(
     let values = sqlx::query_as!(
         NeededItemsDB,
         "SELECT o.count, o.needed_item_ids FROM Task t INNER JOIN Objective o 
-        ON t._id = o.task_id AND o.obj_type ILIKE $7 WHERE t.task_name ILIKE $1 AND t.trader ILIKE $2 AND 
+        ON t._id = o.task_id AND o.obj_type ILIKE $7 WHERE (t.task_name ILIKE '%' || $1 || '%' OR t.task_name % $1) AND t.trader ILIKE $2 AND 
         t.min_player_level <= $3 AND NOT (t._id = ANY($4)) AND 
         ($5 IS FALSE OR t.kappa_required = TRUE) AND ($6 IS FALSE OR t.lightkeeper_required = TRUE)
         ORDER BY t._id ASC",
-        format!("%{search}%"),
+        search,
         format!("%{trader}%"),
         player_lvl,
         &ids,

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT o.count, o.needed_item_ids FROM Task t INNER JOIN Objective o \n        ON t._id = o.task_id AND o.obj_type ILIKE $7 WHERE (t.task_name ILIKE '%' || $1 || '%' OR t.task_name % $1) AND t.trader ILIKE $2 AND \n        t.min_player_level <= $3 AND NOT (t._id = ANY($4)) AND \n        ($5 IS FALSE OR t.kappa_required = TRUE) AND ($6 IS FALSE OR t.lightkeeper_required = TRUE)\n        ORDER BY t._id ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "needed_item_ids",
+        "type_info": "TextArray"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4",
+        "BpcharArray",
+        "Bool",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "1f94a2e7e1ae83a6e94de5e5af47f998fc459b02315d26369b8e42cc4a7730c7"
+}

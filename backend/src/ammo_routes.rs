@@ -77,13 +77,13 @@ pub async fn get_ammo(
 
     let sql = format!(
         "SELECT * FROM Ammo 
-        WHERE caliber ILIKE $1 AND damage >= $2 AND penetration_power >= $3 AND initial_speed >= $4 AND ammo_type ILIKE $5 ORDER BY {} {} LIMIT $6 OFFSET $7",
+        WHERE (caliber ILIKE '%' || $1 || '%' OR caliber % $1) AND damage >= $2 AND penetration_power >= $3 AND initial_speed >= $4 AND ammo_type ILIKE $5 ORDER BY {} {} LIMIT $6 OFFSET $7",
         sort_by,
         if sort_asc { "ASC" } else { "DESC" },
     );
 
     let ammo = sqlx::query_as(&sql)
-        .bind(format!("%{search}%"))
+        .bind(search)
         .bind(damage)
         .bind(penetration_power)
         .bind(initial_speed)
