@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH numbered AS (SELECT *, ROW_NUMBER() OVER (ORDER BY recorded_time ASC) AS rn FROM SavedItemData WHERE item_id = $1) \n        SELECT price_rub, recorded_time FROM numbered WHERE rn % $2 = 1",
+  "query": "SELECT price_rub, recorded_time FROM SavedItemData WHERE item_id = $1 ORDER BY recorded_time ASC",
   "describe": {
     "columns": [
       {
@@ -16,8 +16,7 @@
     ],
     "parameters": {
       "Left": [
-        "Bpchar",
-        "Int8"
+        "Bpchar"
       ]
     },
     "nullable": [
@@ -25,5 +24,5 @@
       false
     ]
   },
-  "hash": "6212a891ee50240b85173c640eb07288c6a067201bdef7399e51a4be7645dfb9"
+  "hash": "465029a05e62167f9bb380afed54036acd962c527cd78811f0ad823cdf24d173"
 }

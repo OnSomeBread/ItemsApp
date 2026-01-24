@@ -2,7 +2,8 @@ use crate::{
     caching::AppCache,
     deserialize_json_types::{AMMO_QUERY, Ammo, ITEMS_QUERY, Item, TASKS_QUERY, Task},
     init_app_state::{
-        AMMO_UNIQUE_CACHE_PREFIX, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX,
+        AMMO_UNIQUE_CACHE_PREFIX, ITEM_HISTORY_SIZE, ITEMS_UNIQUE_CACHE_PREFIX,
+        TASKS_UNIQUE_CACHE_PREFIX,
     },
 };
 use chrono::Utc;
@@ -428,7 +429,7 @@ async fn upsert_items(
             (PARTITION BY item_id ORDER BY recorded_time DESC) AS rn FROM SavedItemData) 
             t WHERE t.rn > $1) 
             sub WHERE d.id = sub.id;",
-            500
+            ITEM_HISTORY_SIZE
         )
         .execute(&mut *txn)
         .await?;

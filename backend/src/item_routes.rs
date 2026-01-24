@@ -2,7 +2,7 @@ use crate::api_routers::Device;
 use crate::database_types::{
     BuyFor, DeviceItemQueryParams, Item, ItemFromDB, SavedItemData, SellFor,
 };
-use crate::init_app_state::{AppState, ITEMS_UNIQUE_CACHE_PREFIX};
+use crate::init_app_state::{AppState, ITEM_SLEEP_TIME, ITEMS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, ItemStats};
 use axum::{extract::State, response::Json};
@@ -305,24 +305,26 @@ pub async fn get_item_history(
     }
 
     let item_id = query_parms.item_id.unwrap();
-    let cache_key = ITEMS_UNIQUE_CACHE_PREFIX.to_string() + item_id.clone().as_str() + "-history";
+    let cache_key = item_id.clone() + "-history";
 
     if let Some(values) = app_state.cache.get_vec(&cache_key) {
         return Ok(Json(values));
     }
 
-    // since data is sampled at 1 every 10 minutes then 6 would be every hour
-    let item_history_sample_amount = 12;
-    let item_history = sqlx::query_as!(
+    let rows = sqlx::query_as!(
         SavedItemData,
-        "WITH numbered AS (SELECT *, ROW_NUMBER() OVER (ORDER BY recorded_time ASC) AS rn FROM SavedItemData WHERE item_id = $1) 
-        SELECT price_rub, recorded_time FROM numbered WHERE rn % $2 = 1",
-        item_id,
-        item_history_sample_amount
+        "SELECT price_rub, recorded_time FROM SavedItemData WHERE item_id = $1 ORDER BY recorded_time ASC",
+        item_id
     )
     .fetch_all(&app_state.pgpool)
     .await
     .bad_sql("ItemHistory")?;
+
+    // since data is sampled at 1 every ITEM_SLEEP_TIME then item_history_sample_amount * ITEM_SLEEP_TIME = seconds difference of each sample
+    let item_history: Vec<SavedItemData> = rows
+        .into_iter()
+        .step_by(3600 / ITEM_SLEEP_TIME as usize)
+        .collect();
 
     let tokio_values = item_history.clone();
     tokio::spawn(async move {
