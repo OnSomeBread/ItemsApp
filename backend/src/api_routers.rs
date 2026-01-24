@@ -277,10 +277,15 @@ impl Page for Ammo {
     }
 }
 
-pub async fn fetch_tasks_by_ids<T: Page + Cacheable>(
+pub async fn fetch_page_by_ids<T: Page + Cacheable>(
     app_state: &AppState,
     ids: Vec<String>,
 ) -> Result<Vec<T>, AppError> {
+    // DON'T REMOVE MASSIVE PERFORMANCE GAIN
+    if ids.is_empty() {
+        return Ok(vec![]);
+    }
+
     let mut not_found_ids = vec![];
     let mut found_values: Vec<T> = vec![];
     for id in ids {
@@ -318,7 +323,7 @@ async fn get_page_by_ids<T: Page + Cacheable>(
 ) -> Result<Json<Vec<T>>, AppError> {
     let ids = query_parms.ids.unwrap_or(Vec::new());
 
-    Ok(Json(fetch_tasks_by_ids(&app_state, ids).await?))
+    Ok(Json(fetch_page_by_ids(&app_state, ids).await?))
 }
 
 pub struct Device(pub Option<Uuid>);

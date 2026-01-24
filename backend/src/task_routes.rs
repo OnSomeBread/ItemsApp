@@ -1,4 +1,4 @@
-use crate::api_routers::{Device, Page, fetch_tasks_by_ids};
+use crate::api_routers::{Device, Page, fetch_page_by_ids};
 use crate::database_types::{
     DeviceTaskQueryParams, ItemBase, NeededItemsDB, Objective, Task, TaskBase, TaskFromDB,
     TaskRequirement,
@@ -497,7 +497,7 @@ pub async fn get_completed_tasks(
     let completed_tasks =
         get_completed_task_by_device_id(&app_state.pgpool, device.0.unwrap()).await?;
 
-    Ok(Json(fetch_tasks_by_ids(&app_state, completed_tasks).await?))
+    Ok(Json(fetch_page_by_ids(&app_state, completed_tasks).await?))
 }
 
 #[derive(serde::Deserialize)]
