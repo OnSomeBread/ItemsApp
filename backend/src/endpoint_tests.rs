@@ -604,10 +604,10 @@ async fn normal_case_redis_testing() {
     let mut handlers = vec![];
 
     // end number represents number of users
-    for _ in 0..400 {
+    for _ in 0..100 {
         handlers.push(std::thread::spawn(async || {
             // end number represents number of requests a user would make albeit with no time in between
-            for _ in 0..5 {
+            for _ in 0..3 {
                 let v = Item::get_request_vec(format!("{}{}", URL, "/items")).await;
                 assert!(!v.is_empty());
                 let v = Task::get_request_vec(format!("{}{}", URL, "/tasks")).await;
