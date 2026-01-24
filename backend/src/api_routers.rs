@@ -24,10 +24,9 @@ use axum_extra::extract::Query;
 use serde::{Serialize, de::DeserializeOwned};
 use sqlx::types::Uuid;
 use std::sync::Arc;
+use std::time::Instant;
 use tokio::sync::RwLock;
 use tokio::try_join;
-
-use std::time::Instant;
 
 const API_DOCUMENTATION: &str = r"all item routes beginning with /items
 /

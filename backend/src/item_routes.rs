@@ -5,12 +5,11 @@ use crate::database_types::{
 use crate::init_app_state::{AppState, ITEM_SLEEP_TIME, ITEMS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
 use crate::query_types::{AppErrorHandling, ItemHistoryQueryParams, ItemQueryParams, ItemStats};
+use ahash::AHashMap as HashMap;
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use sqlx::PgPool;
 use sqlx::types::Uuid;
-use std::collections::HashMap;
-use std::hash::RandomState;
 use std::time::Instant;
 
 // gives data on different interesting stats about the data stored
@@ -70,7 +69,7 @@ pub async fn items_from_db_to_items(
 
     txn.commit().await.bad_sql("Items")?;
 
-    let mut hm: HashMap<String, (Vec<BuyFor>, Vec<SellFor>), RandomState> = HashMap::default();
+    let mut hm: HashMap<String, (Vec<BuyFor>, Vec<SellFor>)> = HashMap::new();
     for buy in buy_for_vec {
         hm.entry(buy.item_id.clone())
             .or_insert_with(|| (Vec::new(), Vec::new()))
