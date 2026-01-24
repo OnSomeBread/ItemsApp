@@ -242,7 +242,7 @@ pub async fn get_tasks(
         tokio::spawn(async move {
             app_state
                 .cache
-                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX);
+                .insert_vec(cache_key, tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX);
         });
     }
 
@@ -320,7 +320,7 @@ pub async fn get_tasks_base(
         tokio::spawn(async move {
             app_state
                 .cache
-                .insert_vec(cache_key, &tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX);
+                .insert_vec(cache_key, tokio_tasks, TASKS_UNIQUE_CACHE_PREFIX);
         });
     }
 
@@ -375,7 +375,7 @@ pub async fn get_device_task_query_parms(
 async fn fetch_adj_list(app_state: &AppState) -> Result<AdjList, AppError> {
     let cache_key = TASKS_UNIQUE_CACHE_PREFIX.to_string() + "adj_list";
 
-    if let Some(ans) = app_state.cache.get_adj_list(&cache_key) {
+    if let Some(ans) = app_state.cache.get(&cache_key) {
         return Ok(ans);
     }
 
@@ -402,7 +402,7 @@ async fn fetch_adj_list(app_state: &AppState) -> Result<AdjList, AppError> {
 
     // store the adj_list that have not been found in redis cache
     tokio::spawn(async move {
-        cache.insert_adj_list(cache_key, &tokio_adj_list, TASKS_UNIQUE_CACHE_PREFIX);
+        cache.insert(cache_key, tokio_adj_list, TASKS_UNIQUE_CACHE_PREFIX);
     });
 
     Ok(adj_list)
@@ -663,11 +663,11 @@ pub async fn get_required_items(
         tokio::spawn(async move {
             app_state
                 .cache
-                .insert_vec(item_cache_key, &tokio_items, ITEMS_UNIQUE_CACHE_PREFIX);
+                .insert_vec(item_cache_key, tokio_items, ITEMS_UNIQUE_CACHE_PREFIX);
 
             app_state
                 .cache
-                .insert_vec(count_cache_key, &tokio_counts, TASKS_UNIQUE_CACHE_PREFIX);
+                .insert_vec(count_cache_key, tokio_counts, TASKS_UNIQUE_CACHE_PREFIX);
         });
     }
 

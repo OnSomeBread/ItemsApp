@@ -98,7 +98,7 @@ pub async fn get_ammo(
     tokio::spawn(async move {
         app_state
             .cache
-            .insert_vec(cache_key, &tokio_values, AMMO_UNIQUE_CACHE_PREFIX);
+            .insert_vec(cache_key, tokio_values, AMMO_UNIQUE_CACHE_PREFIX);
     });
 
     Ok(Json(ammo))

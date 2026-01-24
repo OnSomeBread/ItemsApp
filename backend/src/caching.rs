@@ -1,7 +1,6 @@
+use crate::database_types::{Ammo, Item, ItemBase, SavedItemData, Task, TaskBase};
 use crate::task_routes::AdjList;
 use dashmap::DashMap;
-use serde::Serialize;
-use serde::de::DeserializeOwned;
 use std::sync::Arc;
 
 // pub trait RedisCache: DeserializeOwned + Serialize + Send + 'static {
@@ -48,17 +47,58 @@ use std::sync::Arc;
 // // impl RedisCache for TaskBase {}
 // // impl RedisCache for Ammo {}
 
+pub trait Cacheable: Sized + Clone {
+    fn into_cache_type(self) -> CacheType;
+    fn from_cache_type(cache_type: &CacheType) -> Option<Self>;
+}
+
+macro_rules! define_cache_types {
+    ($($variant:ident($ty:ty)),* $(,)?) => {
+        #[derive(Clone)]
+        pub enum CacheType {
+            $(
+                $variant($ty),
+            )*
+        }
+
+        $(
+            impl Cacheable for $ty {
+                fn into_cache_type(self) -> CacheType {
+                    CacheType::$variant(self)
+                }
+
+                fn from_cache_type(cache: &CacheType) -> Option<Self> {
+                    match cache {
+                        CacheType::$variant(v) => Some(v.clone()),
+                        _ => None,
+                    }
+                }
+            }
+        )*
+    };
+}
+
+define_cache_types! {
+    I32(i32),
+    Item(Item),
+    ItemBase(ItemBase),
+    Ammo(Ammo),
+    Task(Task),
+    TaskBase(TaskBase),
+    SavedItemData(SavedItemData),
+    AdjList(AdjList),
+}
+
 #[derive(Clone)]
 enum CacheValue {
-    One(Vec<u8>),
-    Vec(Vec<Vec<u8>>),
-    AdjList(Vec<u8>),
+    One(CacheType),
+    Vec(Vec<CacheType>),
 }
 
 #[derive(Clone)]
 pub struct AppCache {
     cache: Arc<DashMap<Box<str>, CacheValue>>,
-    keys: Arc<DashMap<char, Vec<String>>>,
+    keys: Arc<DashMap<char, Vec<Box<str>>>>,
 }
 
 impl AppCache {
@@ -69,76 +109,48 @@ impl AppCache {
         }
     }
 
-    pub fn insert<T>(&self, key: String, value: &T, cache_prefix: char)
+    pub fn insert<T>(&self, key: impl Into<Box<str>>, value: T, cache_prefix: char)
     where
-        T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
+        T: Cacheable + Clone + Send + Sync,
     {
-        if let Ok(data) = postcard::to_allocvec(value) {
-            self.cache.insert(key.clone().into(), CacheValue::One(data));
-        }
+        let key = key.into();
+        self.cache
+            .insert(key.clone(), CacheValue::One(value.into_cache_type()));
 
         (*self.keys).entry(cache_prefix).or_default().push(key);
     }
 
-    pub fn insert_vec<T>(&self, key: String, value: &[T], cache_prefix: char)
+    pub fn insert_vec<T>(&self, key: impl Into<Box<str>>, value: Vec<T>, cache_prefix: char)
     where
-        T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
+        T: Cacheable + Clone + Send + Sync,
     {
-        let mut data = vec![];
-        for v in value {
-            if let Ok(value_bytes) = postcard::to_allocvec(v) {
-                data.push(value_bytes);
-            } else {
-                return;
-            }
-        }
-        self.cache.insert(key.clone().into(), CacheValue::Vec(data));
+        let key = key.into();
+        self.cache.insert(
+            key.clone(),
+            CacheValue::Vec(value.into_iter().map(Cacheable::into_cache_type).collect()),
+        );
 
         (*self.keys).entry(cache_prefix).or_default().push(key);
     }
 
     pub fn get<T>(&self, key: &str) -> Option<T>
     where
-        T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
+        T: Cacheable + Clone + Send + Sync,
     {
-        let value = self.cache.get(key)?.clone();
-        if let CacheValue::One(value) = value {
-            postcard::from_bytes::<T>(&value).ok()
-        } else {
-            None
+        let value = self.cache.get(key)?;
+        match value.value() {
+            CacheValue::One(v) => T::from_cache_type(v),
+            CacheValue::Vec(_) => None,
         }
     }
 
     pub fn get_vec<T>(&self, key: &str) -> Option<Vec<T>>
     where
-        T: Serialize + DeserializeOwned + 'static + Clone + Send + Sync,
+        T: Cacheable + Clone + Send + Sync,
     {
-        let value = self.cache.get(key)?.clone();
-        if let CacheValue::Vec(values) = value {
-            values
-                .iter()
-                .map(|v| postcard::from_bytes::<T>(v).ok())
-                .collect()
-        } else {
-            None
-        }
-    }
-
-    pub fn insert_adj_list(&self, key: String, value: &AdjList, cache_prefix: char) {
-        if let Ok(data) = postcard::to_allocvec(value) {
-            self.cache
-                .insert(key.clone().into(), CacheValue::AdjList(data));
-        }
-
-        (*self.keys).entry(cache_prefix).or_default().push(key);
-    }
-
-    pub fn get_adj_list(&self, key: &str) -> Option<AdjList> {
-        let value = self.cache.get(key)?.clone();
-        if let CacheValue::AdjList(value) = value {
-            postcard::from_bytes::<AdjList>(&value).ok()
-        } else {
-            None
+        match self.cache.get(key)?.value() {
+            CacheValue::Vec(values) => values.iter().map(T::from_cache_type).collect(),
+            CacheValue::One(_) => None,
         }
     }
 
@@ -147,7 +159,7 @@ impl AppCache {
 
         if let Some(keys) = values {
             keys.iter().for_each(|x| {
-                self.cache.remove(x.as_str());
+                self.cache.remove(x);
             });
         }
     }

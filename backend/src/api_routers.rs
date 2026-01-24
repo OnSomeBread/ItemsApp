@@ -1,4 +1,5 @@
 use crate::ammo_routes::{ammo_stats, get_ammo, get_ammo_help, get_device_ammo_query_parms};
+use crate::caching::Cacheable;
 use crate::database_types::{Ammo, Item, ItemBase, ItemFromDB, Task, TaskBase, TaskFromDB};
 use crate::init_app_state::{
     AMMO_UNIQUE_CACHE_PREFIX, AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX,
@@ -276,7 +277,7 @@ impl Page for Ammo {
     }
 }
 
-pub async fn fetch_tasks_by_ids<T: Page>(
+pub async fn fetch_tasks_by_ids<T: Page + Cacheable>(
     app_state: &AppState,
     ids: Vec<String>,
 ) -> Result<Vec<T>, AppError> {
@@ -300,7 +301,7 @@ pub async fn fetch_tasks_by_ids<T: Page>(
         for value in tokio_values {
             let key = T::make_cache_key(value.id());
 
-            cache.insert(key, &value, T::unique_cache_key_prefix());
+            cache.insert(key, value, T::unique_cache_key_prefix());
         }
     });
 
@@ -311,7 +312,7 @@ pub async fn fetch_tasks_by_ids<T: Page>(
 }
 
 // returns ids from respective page
-async fn get_page_by_ids<T: Page>(
+async fn get_page_by_ids<T: Page + Cacheable>(
     Query(query_parms): Query<IdsQueryParams>,
     State(app_state): State<AppState>,
 ) -> Result<Json<Vec<T>>, AppError> {

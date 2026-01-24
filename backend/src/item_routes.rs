@@ -195,15 +195,14 @@ pub async fn get_items(
     let items_from_db = if sort_by == "flea_market" {
         let sql = format!(
             "SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
-            WHERE LOWER(b.trader_name) = 'flea market' AND ($1 = '' OR i.item_name ILIKE '%' || $1 || '%' OR i.item_name % $1) AND i.item_types ILIKE $2 AND ($3 IS FALSE OR i.is_flea = TRUE)
-            ORDER BY b.price_rub {} LIMIT $4 OFFSET $5;",
+            WHERE LOWER(b.trader_name) = 'flea market' AND ($1 = '' OR i.item_name ILIKE '%' || $1 || '%' OR i.item_name % $1) AND i.item_types ILIKE $2 AND i.is_flea = TRUE
+            ORDER BY b.price_rub {} LIMIT $3 OFFSET $4;",
             if sort_asc { "ASC" } else { "DESC" },
         );
 
         sqlx::query_as(&sql)
             .bind(search)
             .bind(format!("%{item_type}%"))
-            .bind(is_flea)
             .bind(i64::from(limit))
             .bind(i64::from(offset))
             .fetch_all(&mut *txn)
@@ -211,9 +210,10 @@ pub async fn get_items(
             .bad_sql("Items")?
     } else {
         let sql = format!(
-            "SELECT * FROM Item 
-            WHERE ($1 = '' OR item_name ILIKE '%' || $1 || '%' OR item_name % $1) AND item_types ILIKE $2 AND ($3 IS FALSE OR is_flea = TRUE)
+            "SELECT * FROM Item
+            WHERE ($1 = '' OR item_name ILIKE '%' || $1 || '%' OR item_name % $1) AND item_types ILIKE $2 {}
             ORDER BY {} {} LIMIT $4 OFFSET $5",
+            if is_flea {"AND is_flea = TRUE"} else {""},
             sort_by,
             if sort_asc { "ASC" } else { "DESC" },
         );
@@ -235,7 +235,7 @@ pub async fn get_items(
     tokio::spawn(async move {
         app_state
             .cache
-            .insert_vec(cache_key, &tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
+            .insert_vec(cache_key, tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
     });
 
     Ok(Json(items))
@@ -315,7 +315,7 @@ pub async fn get_item_history(
     tokio::spawn(async move {
         app_state
             .cache
-            .insert_vec(cache_key, &tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
+            .insert_vec(cache_key, tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
     });
 
     Ok(Json(item_history))
