@@ -297,6 +297,11 @@ pub async fn fetch_page_by_ids<T: Page + Cacheable>(
         }
     }
 
+    // another check to avoid reading in the database
+    if not_found_ids.is_empty() {
+        return Ok(found_values);
+    }
+
     let mut values: Vec<T> = T::fetch_by_ids(&app_state.pgpool, &not_found_ids).await?;
 
     let tokio_values = values.clone();
