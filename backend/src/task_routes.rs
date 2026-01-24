@@ -4,20 +4,17 @@ use crate::database_types::{
     TaskRequirement,
 };
 use crate::init_app_state::{AppState, ITEMS_UNIQUE_CACHE_PREFIX, TASKS_UNIQUE_CACHE_PREFIX};
+use crate::query_types::{AdjList, AppErrorHandling, TaskQueryParams, TaskStats};
 use crate::query_types::{AppError, AppError::BadRequest};
-use crate::query_types::{AppErrorHandling, TaskQueryParams, TaskStats};
 use ahash::{AHashMap as HashMap, AHashSet as HashSet};
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
 use sqlx::PgPool;
 use sqlx::types::Uuid;
 use std::time::Instant;
-use tokio::try_join;
 
-pub type AdjList = HashMap<String, Vec<(String, bool)>>;
-
-#[derive(sqlx::FromRow)]
-struct GrabIds {
+#[derive(Clone)]
+pub struct GrabIds {
     _id: String,
 }
 
@@ -31,17 +28,58 @@ pub async fn task_stats(
     }
     let device_id = device.0.unwrap();
 
-    let (tasks_count, kappa_required, lightkeeper_required) = try_join!(
-        sqlx::query_scalar!("SELECT COUNT(*) FROM Task").fetch_one(&app_state.pgpool),
-        sqlx::query_as!(GrabIds, "SELECT _id FROM Task WHERE kappa_required = True")
-            .fetch_all(&app_state.pgpool),
-        sqlx::query_as!(
+    let tasks_count: i64 = if let Some(count) = app_state.cache.get("tasks_stats_count") {
+        count
+    } else {
+        let count = sqlx::query_scalar!("SELECT COUNT(*) FROM Task")
+            .fetch_one(&app_state.pgpool)
+            .await
+            .bad_sql("Task Stats")?
+            .unwrap_or(0);
+
+        let tokio_cache = app_state.cache.clone();
+        tokio::spawn(async move {
+            tokio_cache.insert("tasks_stats_count", count, TASKS_UNIQUE_CACHE_PREFIX);
+        });
+        count
+    };
+
+    let kappa_required: Vec<GrabIds> = if let Some(kappa) =
+        app_state.cache.get_vec("tasks_stats_kappa")
+    {
+        kappa
+    } else {
+        let kappa = sqlx::query_as!(GrabIds, "SELECT _id FROM Task WHERE kappa_required = True")
+            .fetch_all(&app_state.pgpool)
+            .await
+            .bad_sql("Task Stats Kappa")?;
+        let tokio_cache = app_state.cache.clone();
+        let tokio_values = kappa.clone();
+        tokio::spawn(async move {
+            tokio_cache.insert_vec("tasks_stats_kappa", tokio_values, TASKS_UNIQUE_CACHE_PREFIX);
+        });
+        kappa
+    };
+
+    let lightkeeper_required: Vec<GrabIds> = if let Some(lightkeeper) =
+        app_state.cache.get_vec("tasks_stats_kappa")
+    {
+        lightkeeper
+    } else {
+        let lightkeeper = sqlx::query_as!(
             GrabIds,
             "SELECT _id FROM Task WHERE lightkeeper_required = True"
         )
-        .fetch_all(&app_state.pgpool),
-    )
-    .bad_sql("Stats")?;
+        .fetch_all(&app_state.pgpool)
+        .await
+        .bad_sql("Task Stats Lightkeeper")?;
+        let tokio_cache = app_state.cache.clone();
+        let tokio_values = lightkeeper.clone();
+        tokio::spawn(async move {
+            tokio_cache.insert_vec("tasks_stats_kappa", tokio_values, TASKS_UNIQUE_CACHE_PREFIX);
+        });
+        lightkeeper
+    };
 
     let completed_tasks: HashSet<String> =
         get_completed_task_by_device_id(&app_state.pgpool, device_id)
@@ -68,7 +106,7 @@ pub async fn task_stats(
 
     Ok(Json(TaskStats {
         tasks_completed_count: completed_tasks.len(),
-        tasks_count: tasks_count.unwrap_or(0),
+        tasks_count,
         kappa_completed_count,
         kappa_required_count: kappa_required.len(),
         lightkeeper_completed_count,

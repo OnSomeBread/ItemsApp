@@ -15,11 +15,6 @@ use std::time::Instant;
 
 // gives data on different interesting stats about the data stored
 pub async fn ammo_stats(State(app_state): State<AppState>) -> Result<Json<AmmoStats>, AppError> {
-    let ammo_count = sqlx::query_scalar!("SELECT COUNT(*) FROM Ammo")
-        .fetch_one(&app_state.pgpool)
-        .await
-        .bad_sql("Ammo Stats")?;
-
     let time_in_seconds = app_state
         .next_ammo_call_timer
         .read()
@@ -27,8 +22,27 @@ pub async fn ammo_stats(State(app_state): State<AppState>) -> Result<Json<AmmoSt
         .saturating_duration_since(Instant::now())
         .as_secs();
 
+    if let Some(ammo_count) = app_state.cache.get("ammo_stats") {
+        return Ok(Json(AmmoStats {
+            ammo_count,
+            time_till_ammo_refresh_secs: time_in_seconds,
+        }));
+    }
+
+    let ammo_count = sqlx::query_scalar!("SELECT COUNT(*) FROM Ammo")
+        .fetch_one(&app_state.pgpool)
+        .await
+        .bad_sql("Ammo Stats")?
+        .unwrap_or(0);
+
+    tokio::spawn(async move {
+        app_state
+            .cache
+            .insert("ammo_stats", ammo_count, AMMO_UNIQUE_CACHE_PREFIX);
+    });
+
     Ok(Json(AmmoStats {
-        ammo_count: ammo_count.unwrap_or(0),
+        ammo_count,
         time_till_ammo_refresh_secs: time_in_seconds,
     }))
 }

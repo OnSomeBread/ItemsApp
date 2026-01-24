@@ -1,5 +1,6 @@
 use crate::database_types::{Ammo, Item, ItemBase, SavedItemData, Task, TaskBase};
-use crate::task_routes::AdjList;
+use crate::query_types::AdjList;
+use crate::task_routes::GrabIds;
 use dashmap::DashMap;
 use std::sync::Arc;
 
@@ -80,6 +81,8 @@ macro_rules! define_cache_types {
 
 define_cache_types! {
     I32(i32),
+    I64(i64),
+    GrabIds(GrabIds),
     Item(Item),
     ItemBase(ItemBase),
     Ammo(Ammo),

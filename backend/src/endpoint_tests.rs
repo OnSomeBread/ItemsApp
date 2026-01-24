@@ -4,10 +4,9 @@ use crate::{
         Ammo, DeviceAmmoQueryParams, DeviceItemQueryParams, DeviceTaskQueryParams, Item, Task,
     },
     query_types::{
-        VALID_AMMO_SORT_BY, VALID_AMMO_TYPE, VALID_ITEM_SORT_BY, VALID_ITEM_TYPES, VALID_OBJ_TYPES,
-        VALID_TRADERS,
+        AdjList, VALID_AMMO_SORT_BY, VALID_AMMO_TYPE, VALID_ITEM_SORT_BY, VALID_ITEM_TYPES,
+        VALID_OBJ_TYPES, VALID_TRADERS,
     },
-    task_routes::AdjList,
 };
 use ahash::AHashSet as HashSet;
 use reqwest::Client;

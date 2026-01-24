@@ -1,3 +1,4 @@
+use ahash::AHashMap as HashMap;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Json, Response},
@@ -40,6 +41,8 @@ impl<T> AppErrorHandling<T> for Result<T, sqlx::Error> {
 const fn default_true() -> bool {
     true
 }
+
+pub type AdjList = HashMap<String, Vec<(String, bool)>>;
 
 #[derive(Serialize)]
 pub struct ItemStats {
