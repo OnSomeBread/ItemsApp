@@ -8,8 +8,8 @@ use crate::query_types::{AppErrorHandling, ItemHistoryQueryParams, ItemQueryPara
 use ahash::AHashMap as HashMap;
 use axum::{extract::State, response::Json};
 use axum_extra::extract::Query;
-use sqlx::PgPool;
 use sqlx::types::Uuid;
+use sqlx::{PgPool, Postgres};
 use std::time::Instant;
 
 // gives data on different interesting stats about the data stored
@@ -166,36 +166,6 @@ pub async fn get_items(
         return Ok(Json(values));
     }
 
-    // welp doing this is much cleaner but far slower than the main query ¯\_(ツ)_/¯
-    // THIS QUERY REQUIRES INDEX ON item_id FOR BOTH buyfor and sellfor but is faster than above approach
-    // let items_test: Vec<Item> = sqlx::query_as!(
-    //     Item,
-    //     r#"SELECT i.*,
-    //         COALESCE(buys.buys, '{}') AS "buys!:Vec<BuyFor>",
-    //         COALESCE(sells.sells, '{}') AS "sells!:Vec<SellFor>"
-    //         FROM Item i
-    //         LEFT JOIN LATERAL (
-    //             SELECT ARRAY_AGG(b.*) AS buys
-    //             FROM BuyFor b
-    //             WHERE b.item_id = i._id
-    //         ) buys ON TRUE
-    //         LEFT JOIN LATERAL (
-    //             SELECT ARRAY_AGG(s.*) AS sells
-    //             FROM SellFor s
-    //             WHERE s.item_id = i._id
-    //         ) sells ON TRUE
-    //         WHERE i.item_name % $1 AND i.item_types ILIKE $2
-    //         ORDER BY i.base_price DESC LIMIT $3 OFFSET $4;"#,
-    //     format!("%{}%", search),
-    //     format!("%{}%", item_type),
-    //     limit as i64,
-    //     offset as i64
-    // )
-    // .fetch_all(&pgpool)
-    // .await
-    // .map_err(|_| BadSqlQuery("Items Query did not run successfully".into()))?;
-    // return Ok(Json(items_test));
-
     let sort_by = sort_by.to_lowercase();
     let is_flea = sort_by == "flea_market"
         || sort_by == "buy_from_flea_instant_profit"
@@ -205,41 +175,48 @@ pub async fn get_items(
         || sort_by == "change_last_48h_percent";
 
     let mut txn = app_state.pgpool.begin().await.bad_sql("Items")?;
-    let items_from_db = if sort_by == "flea_market" {
-        let sql = format!(
-            "SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
-            WHERE LOWER(b.trader_name) = 'flea market' AND ($1 = '' OR i.item_name ILIKE '%' || $1 || '%' OR i.item_name % $1) AND i.item_types ILIKE $2 AND i.is_flea = TRUE
-            ORDER BY b.price_rub {} LIMIT $3 OFFSET $4;",
-            if sort_asc { "ASC" } else { "DESC" },
-        );
-
-        sqlx::query_as(&sql)
-            .bind(search)
-            .bind(format!("%{item_type}%"))
-            .bind(i64::from(limit))
-            .bind(i64::from(offset))
-            .fetch_all(&mut *txn)
-            .await
-            .bad_sql("Items")?
+    let mut qb: sqlx::QueryBuilder<'_, Postgres> = sqlx::query_builder::QueryBuilder::new("");
+    if sort_by == "flea_market" {
+        qb.push("SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id WHERE LOWER(b.trader_name) = 'flea market' ");
     } else {
-        let sql = format!(
-            "SELECT * FROM Item
-            WHERE ($1 = '' OR item_name ILIKE '%' || $1 || '%' OR item_name % $1) AND item_types ILIKE $2 {}
-            ORDER BY {} {} LIMIT $3 OFFSET $4",
-            if is_flea {"AND is_flea = TRUE"} else {""},
-            sort_by,
-            if sort_asc { "ASC" } else { "DESC" },
-        );
+        qb.push("SELECT i.* FROM Item i WHERE 1=1 ");
+    }
 
-        sqlx::query_as(&sql)
-            .bind(search)
-            .bind(format!("%{item_type}%"))
-            .bind(i64::from(limit))
-            .bind(i64::from(offset))
-            .fetch_all(&mut *txn)
-            .await
-            .bad_sql("Items")?
-    };
+    if !search.is_empty() {
+        qb.push("AND (i.item_name ILIKE ")
+            .push_bind(format!("%{}%", search))
+            .push(" OR i.item_name % ")
+            .push_bind(search)
+            .push(") ");
+    }
+
+    qb.push("AND i.item_types ILIKE ")
+        .push_bind(format!("%{}%", item_type));
+
+    if is_flea {
+        qb.push(" AND i.is_flea = TRUE ");
+    }
+
+    if sort_by == "flea_market" {
+        qb.push(" ORDER BY b.price_rub ")
+            .push(if sort_asc { "ASC" } else { "DESC" });
+    } else {
+        qb.push(" ORDER BY i.")
+            .push(sort_by)
+            .push(" ")
+            .push(if sort_asc { "ASC" } else { "DESC" });
+    }
+
+    qb.push(" LIMIT ")
+        .push_bind(i64::from(limit))
+        .push(" OFFSET ")
+        .push_bind(i64::from(offset));
+
+    let items_from_db = qb
+        .build_query_as()
+        .fetch_all(&mut *txn)
+        .await
+        .bad_sql("Items")?;
 
     let items = items_from_db_to_items(items_from_db, txn).await?;
 
