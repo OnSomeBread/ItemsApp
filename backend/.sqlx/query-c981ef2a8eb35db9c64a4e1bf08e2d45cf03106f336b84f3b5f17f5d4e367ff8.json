@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM Task t WHERE (task_name ILIKE '%' || $1 || '%' OR task_name % $1) AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND \n                ($5 IS FALSE OR kappa_required = TRUE) AND ($6 IS FALSE OR lightkeeper_required = TRUE) AND \n                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) ORDER BY _id ASC LIMIT $8 OFFSET $9",
+  "query": "SELECT * FROM Task t WHERE ($1 = '' OR task_name ILIKE '%' || $1 || '%' OR task_name % $1) AND trader ILIKE $2 AND min_player_level <= $3 AND NOT (_id = ANY($4)) AND \n                ($5 IS FALSE OR kappa_required = TRUE) AND ($6 IS FALSE OR lightkeeper_required = TRUE) AND \n                EXISTS (SELECT 1 FROM Objective o WHERE o.task_id = t._id AND o.obj_type ILIKE $7) ORDER BY _id ASC LIMIT $8 OFFSET $9",
   "describe": {
     "columns": [
       {
@@ -68,5 +68,5 @@
       false
     ]
   },
-  "hash": "76d9a1670ce147d29784cbe4475c3f1c733f9222329e24d167e4bea70b9a1e53"
+  "hash": "c981ef2a8eb35db9c64a4e1bf08e2d45cf03106f336b84f3b5f17f5d4e367ff8"
 }

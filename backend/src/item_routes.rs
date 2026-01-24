@@ -195,7 +195,7 @@ pub async fn get_items(
     let items_from_db = if sort_by == "flea_market" {
         let sql = format!(
             "SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id 
-            WHERE LOWER(b.trader_name) = 'flea market' AND (i.item_name ILIKE '%' || $1 || '%' OR i.item_name % $1) AND i.item_types ILIKE $2 AND ($3 IS FALSE OR i.is_flea = TRUE)
+            WHERE LOWER(b.trader_name) = 'flea market' AND ($1 = '' OR i.item_name ILIKE '%' || $1 || '%' OR i.item_name % $1) AND i.item_types ILIKE $2 AND ($3 IS FALSE OR i.is_flea = TRUE)
             ORDER BY b.price_rub {} LIMIT $4 OFFSET $5;",
             if sort_asc { "ASC" } else { "DESC" },
         );
@@ -212,7 +212,7 @@ pub async fn get_items(
     } else {
         let sql = format!(
             "SELECT * FROM Item 
-            WHERE (item_name ILIKE '%' || $1 || '%' OR item_name % $1) AND item_types ILIKE $2 AND ($3 IS FALSE OR is_flea = TRUE)
+            WHERE ($1 = '' OR item_name ILIKE '%' || $1 || '%' OR item_name % $1) AND item_types ILIKE $2 AND ($3 IS FALSE OR is_flea = TRUE)
             ORDER BY {} {} LIMIT $4 OFFSET $5",
             sort_by,
             if sort_asc { "ASC" } else { "DESC" },
