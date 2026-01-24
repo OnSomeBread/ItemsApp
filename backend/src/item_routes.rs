@@ -212,7 +212,7 @@ pub async fn get_items(
         let sql = format!(
             "SELECT * FROM Item
             WHERE ($1 = '' OR item_name ILIKE '%' || $1 || '%' OR item_name % $1) AND item_types ILIKE $2 {}
-            ORDER BY {} {} LIMIT $4 OFFSET $5",
+            ORDER BY {} {} LIMIT $3 OFFSET $4",
             if is_flea {"AND is_flea = TRUE"} else {""},
             sort_by,
             if sort_asc { "ASC" } else { "DESC" },
@@ -221,7 +221,6 @@ pub async fn get_items(
         sqlx::query_as(&sql)
             .bind(search)
             .bind(format!("%{item_type}%"))
-            .bind(is_flea)
             .bind(i64::from(limit))
             .bind(i64::from(offset))
             .fetch_all(&mut *txn)
