@@ -1,6 +1,6 @@
 use crate::api_routers::Device;
 use crate::database_types::{
-    BuyFor, DeviceItemQueryParams, Item, ItemFromDB, SavedItemData, SellFor,
+    BuyFor, DeviceItemQueryParams, FieldValue, Item, ItemFromDB, SavedItemData, SellFor,
 };
 use crate::init_app_state::{AppState, ITEM_SLEEP_TIME, ITEMS_UNIQUE_CACHE_PREFIX};
 use crate::query_types::{AppError, AppError::BadRequest};
@@ -128,6 +128,7 @@ fn save_item_query_parms(device_id: Uuid, query_parms: ItemQueryParams, pgpool: 
 // for multiple runs then slows down presumibly from the extra connections
 // the second approach is to query all at once as a join which does not have
 // the connections issue and is much easier to work with but is also much slower
+#[allow(clippy::too_many_lines)]
 pub async fn get_items(
     device: Device,
     Query(query_parms): Query<ItemQueryParams>,
@@ -162,20 +163,30 @@ pub async fn get_items(
         search,
     );
 
-    // let prev_cache_key = format!(
-    //     "{}{}{}{}{}{}{}",
-    //     ITEMS_UNIQUE_CACHE_PREFIX,
-    //     if sort_asc { "1" } else { "0" },
-    //     sort_by,
-    //     limit,
-    //     item_type,
-    //     offset,
-    //     search,
-    // );
-
     if let Some(values) = app_state.cache.get_vec(&cache_key) {
         return Ok(Json(values));
     }
+
+    // this is for keyset pagination
+    let prev_last_value: Option<Item> = if offset >= limit {
+        let prev_cache_key = format!(
+            "{}{}{}{}{}{}{}",
+            ITEMS_UNIQUE_CACHE_PREFIX,
+            if sort_asc { "1" } else { "0" },
+            sort_by,
+            limit,
+            item_type,
+            offset - limit,
+            search,
+        );
+
+        app_state
+            .cache
+            .get_vec::<Item>(&prev_cache_key)
+            .and_then(|values| values.last().map(std::borrow::ToOwned::to_owned))
+    } else {
+        None
+    };
 
     let sort_by = sort_by.to_lowercase();
     let is_flea = sort_by == "flea_market"
@@ -185,7 +196,6 @@ pub async fn get_items(
         || sort_by == "avg_24h_price"
         || sort_by == "change_last_48h_percent";
 
-    let mut txn = app_state.pgpool.begin().await.bad_sql("Items")?;
     let mut qb: sqlx::QueryBuilder<'_, Postgres> = sqlx::query_builder::QueryBuilder::new("");
     if sort_by == "flea_market" {
         qb.push("SELECT i.* FROM Item i LEFT JOIN BuyFor b ON i._id = b.item_id WHERE LOWER(b.trader_name) = 'flea market' ");
@@ -209,18 +219,90 @@ pub async fn get_items(
         qb.push("AND i.is_flea = TRUE ");
     }
 
-    if sort_by == "flea_market" {
-        qb.push("ORDER BY b.price_rub, i._id ");
+    let successful_keyset = if let Some(item) = prev_last_value
+        && let Some((sort_order, id)) = item.get_keyset_offset(&sort_by)
+    {
+        /*
+        for stable keyset pagination the query looks like this
+        AND (
+            sort_col > last_sort_value
+            OR (
+                sort_col = last_sort_value
+                AND i._id > last_id
+            )
+        )
+        */
+
+        qb.push("AND (");
+        if sort_by == "flea_market" {
+            qb.push("b.price_rub");
+        } else {
+            qb.push("i.".to_string() + &sort_by);
+        }
+
+        qb.push(if sort_asc { " > " } else { " < " });
+
+        match sort_order.clone() {
+            FieldValue::String(v) => {
+                qb.push_bind(v);
+            }
+            FieldValue::I32(v) => {
+                qb.push_bind(v);
+            }
+            FieldValue::Float(v) => {
+                qb.push_bind(v);
+            }
+        }
+
+        qb.push(" OR (");
+
+        if sort_by == "flea_market" {
+            qb.push("b.price_rub");
+        } else {
+            qb.push("i.".to_string() + &sort_by);
+        }
+
+        qb.push(" = ");
+
+        match sort_order {
+            FieldValue::String(v) => {
+                qb.push_bind(v);
+            }
+            FieldValue::I32(v) => {
+                qb.push_bind(v);
+            }
+            FieldValue::Float(v) => {
+                qb.push_bind(v);
+            }
+        }
+
+        qb.push(" AND i._id")
+            .push(if sort_asc { " > " } else { " < " })
+            .push_bind(id)
+            .push(")) ");
+
+        true
     } else {
-        qb.push("ORDER BY i.").push(sort_by).push(", i._id ");
+        false
+    };
+
+    if sort_by == "flea_market" {
+        qb.push("ORDER BY b.price_rub");
+    } else {
+        qb.push("ORDER BY i.").push(sort_by);
     }
 
-    qb.push(if sort_asc { "ASC" } else { "DESC" });
-    qb.push(" LIMIT ")
-        .push_bind(i64::from(limit))
-        .push(" OFFSET ")
-        .push_bind(i64::from(offset));
+    qb.push(if sort_asc { " ASC" } else { " DESC" })
+        .push(", i._id ")
+        .push(if sort_asc { "ASC" } else { "DESC" })
+        .push(" LIMIT ")
+        .push_bind(i64::from(limit));
 
+    if !successful_keyset {
+        qb.push(" OFFSET ").push_bind(i64::from(offset));
+    }
+
+    let mut txn = app_state.pgpool.begin().await.bad_sql("Items")?;
     let items_from_db = qb
         .build_query_as()
         .fetch_all(&mut *txn)

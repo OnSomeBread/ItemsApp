@@ -68,6 +68,10 @@ trait Test: DeserializeOwned {
             panic!("{}", (Self::get_base() + " endpoint did not get correctly"))
         });
 
+        if !res.status().is_success() {
+            eprintln!("FAILED RESPONSE {:?}", res);
+        }
+
         assert!(res.status().is_success());
         res.json().await.unwrap_or_else(|_| {
             panic!(
@@ -508,7 +512,43 @@ async fn test_ammo_search() {
 // this tests enforces that limit and offset grab the correct values
 #[tokio::test]
 async fn test_item_limit_and_offset() {
-    Item::limit_and_offset_testing().await;
+    // this test needs to be more extensive because of the unique pagination of this page
+    for sort_by in VALID_ITEM_SORT_BY {
+        let values = Item::get_request_vec(format!(
+            "{}{}{}{}",
+            URL,
+            Item::get_base(),
+            "?limit=100&sort_by=",
+            sort_by
+        ))
+        .await;
+        assert!(values.len() == 100);
+
+        let mut build_values = vec![];
+        for n in (0..100).step_by(10) {
+            build_values.extend(
+                Item::get_request_vec(format!(
+                    "{}{}{}{}{}{}",
+                    URL,
+                    Item::get_base(),
+                    "?limit=10&sort_by=",
+                    sort_by,
+                    "&offset=",
+                    n
+                ))
+                .await,
+            );
+        }
+
+        assert!(build_values.len() == 100);
+        assert!(
+            values.iter().map(|x| x.get_id()).collect::<Vec<&str>>()
+                == build_values
+                    .iter()
+                    .map(|x| x.get_id())
+                    .collect::<Vec<&str>>()
+        );
+    }
 }
 
 #[tokio::test]

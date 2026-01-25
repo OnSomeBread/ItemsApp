@@ -1,3 +1,4 @@
+use crate::query_types::VALID_ITEM_SORT_BY;
 use redis_macros::{FromRedisValue, ToRedisArgs};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
@@ -64,6 +65,53 @@ pub struct Item {
     pub is_flea: bool,
     pub buys: Vec<BuyFor>,
     pub sells: Vec<SellFor>,
+}
+
+#[derive(Debug, Clone)]
+pub enum FieldValue {
+    String(String),
+    I32(i32),
+    Float(f32),
+}
+
+impl Item {
+    pub fn struct_data_from_str(&self, name: &str) -> Option<FieldValue> {
+        match name.to_ascii_lowercase().as_str() {
+            "_id" => Some(FieldValue::String(self._id.clone())),
+            "item_name" => Some(FieldValue::String(self.item_name.clone())),
+            "short_name" => Some(FieldValue::String(self.short_name.clone())),
+            "avg_24h_price" => Some(FieldValue::I32(self.avg_24h_price)),
+            "base_price" => Some(FieldValue::I32(self.base_price)),
+            "change_last_48h_percent" => Some(FieldValue::Float(self.change_last_48h_percent)),
+            "item_types" => Some(FieldValue::String(self.item_types.clone())),
+            "buy_from_flea_instant_profit" => {
+                Some(FieldValue::I32(self.buy_from_flea_instant_profit))
+            }
+            "buy_from_trader_instant_profit" => {
+                Some(FieldValue::I32(self.buy_from_trader_instant_profit))
+            }
+            "per_slot" => Some(FieldValue::I32(self.per_slot)),
+            _ => None,
+        }
+    }
+
+    pub fn get_keyset_offset(&self, sort_by: &str) -> Option<(FieldValue, String)> {
+        if sort_by.eq_ignore_ascii_case("flea_market") {
+            let val = self
+                .buys
+                .iter()
+                .find(|x| x.trader_name.eq_ignore_ascii_case("flea market"))?;
+            return Some((FieldValue::I32(val.price_rub), self._id.clone()));
+        }
+        Some((
+            self.struct_data_from_str(
+                VALID_ITEM_SORT_BY
+                    .iter()
+                    .find(|x| x.eq_ignore_ascii_case(sort_by))?,
+            )?,
+            self._id.clone(),
+        ))
+    }
 }
 
 #[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
