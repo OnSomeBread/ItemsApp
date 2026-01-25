@@ -91,7 +91,7 @@ pub async fn get_ammo(
 
     let sql = format!(
         "SELECT * FROM Ammo 
-        WHERE ($1 = '' OR caliber ILIKE '%' || $1 || '%' OR caliber % $1) AND damage >= $2 AND penetration_power >= $3 AND initial_speed >= $4 AND ammo_type ILIKE $5 ORDER BY {} {} LIMIT $6 OFFSET $7",
+        WHERE ($1 = '' OR caliber ILIKE '%' || $1 || '%' OR caliber % $1) AND damage >= $2 AND penetration_power >= $3 AND initial_speed >= $4 AND ammo_type ILIKE $5 ORDER BY {} {}, item_id LIMIT $6 OFFSET $7",
         sort_by,
         if sort_asc { "ASC" } else { "DESC" },
     );

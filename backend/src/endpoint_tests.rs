@@ -192,6 +192,13 @@ trait Test: DeserializeOwned {
         }
 
         assert!(build_values.len() == 100);
+        assert!(
+            values.iter().map(|x| x.get_id()).collect::<Vec<&str>>()
+                == build_values
+                    .iter()
+                    .map(|x| x.get_id())
+                    .collect::<Vec<&str>>()
+        );
     }
 
     async fn device_id_testing() {

@@ -162,6 +162,17 @@ pub async fn get_items(
         search,
     );
 
+    // let prev_cache_key = format!(
+    //     "{}{}{}{}{}{}{}",
+    //     ITEMS_UNIQUE_CACHE_PREFIX,
+    //     if sort_asc { "1" } else { "0" },
+    //     sort_by,
+    //     limit,
+    //     item_type,
+    //     offset,
+    //     search,
+    // );
+
     if let Some(values) = app_state.cache.get_vec(&cache_key) {
         return Ok(Json(values));
     }
@@ -191,22 +202,20 @@ pub async fn get_items(
     }
 
     qb.push("AND i.item_types ILIKE ")
-        .push_bind(format!("%{}%", item_type));
+        .push_bind(format!("%{}%", item_type))
+        .push(" ");
 
     if is_flea {
-        qb.push(" AND i.is_flea = TRUE ");
+        qb.push("AND i.is_flea = TRUE ");
     }
 
     if sort_by == "flea_market" {
-        qb.push(" ORDER BY b.price_rub ")
-            .push(if sort_asc { "ASC" } else { "DESC" });
+        qb.push("ORDER BY b.price_rub, i._id ");
     } else {
-        qb.push(" ORDER BY i.")
-            .push(sort_by)
-            .push(" ")
-            .push(if sort_asc { "ASC" } else { "DESC" });
+        qb.push("ORDER BY i.").push(sort_by).push(", i._id ");
     }
 
+    qb.push(if sort_asc { "ASC" } else { "DESC" });
     qb.push(" LIMIT ")
         .push_bind(i64::from(limit))
         .push(" OFFSET ")
