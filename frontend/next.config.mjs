@@ -12,7 +12,10 @@ const nextConfig = {
   // experimental: {
   //   ppr: 'incremental',
   // },
-  eslint: {dirs: ['src']}
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
+  eslint: { dirs: ['src'] }
 }
 
 //export default nextConfig
