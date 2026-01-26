@@ -49,13 +49,13 @@ sqlx = { version = "0.8.6", features = [
     "chrono",
 ] }
 
-redis = { version = "1.0.2", features = [
-    "tokio-rustls-comp",
-    "cluster-async",
-    "r2d2",
-] }
-bb8-redis = "0.26.0"
-redis-macros = "1.0.1"
+# redis = { version = "1.0.2", features = [
+#     "tokio-rustls-comp",
+#     "cluster-async",
+#     "r2d2",
+# ] }
+# bb8-redis = "0.26.0"
+# redis-macros = "1.0.1"
 
 dotenvy = "0.15.7"
 serde = { version = "1.0.228", features = ["derive"] }

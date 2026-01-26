@@ -1,10 +1,9 @@
 use crate::query_types::VALID_ITEM_SORT_BY;
-use redis_macros::{FromRedisValue, ToRedisArgs};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 use sqlx::types::chrono::{DateTime, Utc};
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Clone, sqlx::Type)]
 pub struct BuyFor {
     #[serde(skip)]
     pub id: i32,
@@ -17,7 +16,7 @@ pub struct BuyFor {
     pub item_id: String,
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone, sqlx::Type)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Clone, sqlx::Type)]
 pub struct SellFor {
     #[serde(skip)]
     pub id: i32,
@@ -47,7 +46,7 @@ pub struct ItemFromDB {
     pub is_flea: bool,
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Clone)]
 pub struct Item {
     pub _id: String,
     pub item_name: String,
@@ -114,7 +113,7 @@ impl Item {
     }
 }
 
-#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Clone, sqlx::FromRow)]
 #[allow(unused)]
 pub struct ItemBase {
     pub _id: String,
@@ -144,7 +143,7 @@ impl From<ItemFromDB> for Item {
     }
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Clone)]
 pub struct Objective {
     #[serde(skip)]
     #[allow(dead_code)]
@@ -164,7 +163,7 @@ pub struct NeededItemsDB {
     pub needed_item_ids: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, FromRedisValue, ToRedisArgs, Clone)]
+#[derive(Serialize, Deserialize, sqlx::FromRow, Clone)]
 pub struct TaskRequirement {
     #[serde(skip)]
     #[allow(dead_code)]
@@ -186,7 +185,7 @@ pub struct TaskFromDB {
     pub wiki: String,
 }
 
-#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Task {
     pub _id: String,
     pub task_name: String,
@@ -200,7 +199,7 @@ pub struct Task {
     pub task_requirements: Vec<TaskRequirement>,
 }
 
-#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct TaskBase {
     pub _id: String,
     pub task_name: String,
@@ -223,7 +222,7 @@ impl From<TaskFromDB> for Task {
     }
 }
 
-#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct SavedItemData {
     pub price_rub: i32,
     pub recorded_time: DateTime<Utc>,
@@ -274,7 +273,7 @@ pub struct DeviceAmmoQueryParams {
 //     pub last_visited: DateTime<Utc>,
 // }
 
-#[derive(Serialize, Deserialize, FromRedisValue, ToRedisArgs, Clone, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct Ammo {
     pub accuracy_modifier: f32,
     pub ammo_type: String,

@@ -2,7 +2,7 @@ use crate::caching::AppCache;
 use crate::deserialize_json_types::{Ammo, Item, Task};
 use crate::upsert::Upsert;
 use anyhow::Result;
-use bb8_redis::{RedisConnectionManager, bb8};
+//use bb8_redis::{RedisConnectionManager, bb8};
 use dashmap::DashMap;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
@@ -13,8 +13,8 @@ use tokio::sync::RwLock;
 #[derive(Clone)]
 pub struct AppState {
     pub pgpool: sqlx::PgPool,
-    #[allow(dead_code)]
-    pub redispool: bb8::Pool<RedisConnectionManager>,
+    // #[allow(dead_code)]
+    // pub redispool: bb8::Pool<RedisConnectionManager>,
     pub cache: AppCache,
     pub rate_limit: Arc<DashMap<String, (f64, Instant)>>,
     pub next_items_call_timer: Arc<RwLock<Instant>>,
@@ -39,7 +39,7 @@ const DELETE_DEVICE_PREFERENCES_TIME: u64 = 3600 * 24;
 // this is the max total size of the item history table in db where 1 entry gets added every ITEM_SLEEP_TIME for every item
 pub const ITEM_HISTORY_SIZE: i64 = 1000;
 
-pub async fn init_app_state(postgres_url: String, redis_url: String) -> Result<AppState> {
+pub async fn init_app_state(postgres_url: String, _redis_url: String) -> Result<AppState> {
     let pgpool = loop {
         match PgPoolOptions::new()
             .min_connections(5)
@@ -59,11 +59,11 @@ pub async fn init_app_state(postgres_url: String, redis_url: String) -> Result<A
 
     init_data(&pgpool).await?;
 
-    let redispool = bb8::Pool::builder()
-        .connection_timeout(Duration::from_millis(100))
-        .max_size(10)
-        .build(RedisConnectionManager::new(redis_url)?)
-        .await?;
+    // let redispool = bb8::Pool::builder()
+    //     .connection_timeout(Duration::from_millis(100))
+    //     .max_size(10)
+    //     .build(RedisConnectionManager::new(redis_url)?)
+    //     .await?;
 
     let next_items_call_timer = Arc::new(RwLock::new(Instant::now()));
     let next_tasks_call_timer = Arc::new(RwLock::new(Instant::now()));
@@ -83,7 +83,6 @@ pub async fn init_app_state(postgres_url: String, redis_url: String) -> Result<A
 
     Ok(AppState {
         pgpool,
-        redispool,
         cache,
         rate_limit,
         next_items_call_timer,

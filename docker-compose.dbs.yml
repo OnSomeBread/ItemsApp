@@ -15,17 +15,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  redis:
-    image: redis:alpine3.22
-    command: ["redis-server", "--save", "", "--appendonly", "no", "--hz", "1"]
-    #image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.34.1
-    #command:
-    #  ["dragonfly", "--dbfilename=", "", "--cache_mode", "true", "--hz", "1"]
-    restart: unless-stopped
-    expose:
-      - "6379"
-    ports:
-      - "6379:6379"
+  # redis:
+  #   image: redis:alpine3.22
+  #   command: ["redis-server", "--save", "", "--appendonly", "no", "--hz", "1"]
+  #   #image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.34.1
+  #   #command:
+  #   #  ["dragonfly", "--dbfilename=", "", "--cache_mode", "true", "--hz", "1"]
+  #   restart: unless-stopped
+  #   expose:
+  #     - "6379"
+  #   ports:
+  #     - "6379:6379"
 
 volumes:
   pgdata:
