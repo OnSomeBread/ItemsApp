@@ -1,7 +1,7 @@
 import NeededItemScroll from "../../components/NeededItemScroll";
 import PageSwitch from "../../components/PageSwitch";
 import { DEFAULT_TASK_QUERY_PARAMS } from "../../constants";
-import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
+import { DEVICE_UUID_COOKIE_NAME } from "../../proxy";
 import type { ItemBase, TaskQueryParams, TaskStats } from "../../types";
 import { cookies } from "next/headers";
 import { apiFetch } from "../../utils";

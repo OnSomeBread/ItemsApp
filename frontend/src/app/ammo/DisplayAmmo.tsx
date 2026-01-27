@@ -1,7 +1,7 @@
 import AmmoScroll from "../../components/AmmoScroll";
 import PageSwitch from "../../components/PageSwitch";
 import { DEFAULT_AMMO_QUERY_PARAMS } from "../../constants";
-import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
+import { DEVICE_UUID_COOKIE_NAME } from "../../proxy";
 import type { AmmoQueryParams, Ammo, AmmoStats } from "../../types";
 import { cookies } from "next/headers";
 import { apiFetch } from "../../utils";

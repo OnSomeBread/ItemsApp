@@ -4,7 +4,7 @@ import { type Edge } from "@xyflow/react";
 import TraderSelect from "../../components/TraderSelect";
 import dynamic from "next/dynamic";
 import { cookies } from "next/headers";
-import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
+import { DEVICE_UUID_COOKIE_NAME } from "../../proxy";
 import { apiFetch } from "../../utils";
 
 const TaskTreeComponent = dynamic(

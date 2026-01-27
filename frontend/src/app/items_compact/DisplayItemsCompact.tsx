@@ -3,7 +3,7 @@ import ItemScrollCompact from "../../components/ItemScrollCompact";
 import PageSwitch from "../../components/PageSwitch";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../../constants";
 import type { Item, ItemQueryParams, ItemStats } from "../../types";
-import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
+import { DEVICE_UUID_COOKIE_NAME } from "../../proxy";
 import { apiFetch } from "../../utils";
 
 type PageProps = {

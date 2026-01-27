@@ -1,5 +1,5 @@
 import type { Buy, Item, Sell } from "../types";
-import { type ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import Link from "next/link";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../constants";
 import { getBestBuy, getBestSell } from "../utils";
@@ -105,4 +105,9 @@ function ItemComponent({ item, idx, children, fields, height }: Props) {
   );
 }
 
-export default ItemComponent;
+export default memo(ItemComponent, (prevProps, nextProps) => {
+  return prevProps.item._id === nextProps.item._id && 
+         prevProps.idx === nextProps.idx &&
+         prevProps.fields === nextProps.fields &&
+         prevProps.height === nextProps.height;
+});

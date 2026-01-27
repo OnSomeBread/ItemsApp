@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { DEFAULT_TASK_QUERY_PARAMS } from "../constants";
 import ImageComponent from "./ImageComponent";
+import { memo } from "react";
 
 interface Props {
   task: Task;
@@ -65,4 +66,4 @@ function TaskComponent({ task, idx, onClickButton }: Props) {
   );
 }
 
-export default TaskComponent;
+export default memo(TaskComponent);

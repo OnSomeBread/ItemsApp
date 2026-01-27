@@ -1,6 +1,6 @@
 import PageSwitch from "../../components/PageSwitch";
 import TaskScroll from "../../components/TaskScroll";
-import { DEVICE_UUID_COOKIE_NAME } from "../../middleware";
+import { DEVICE_UUID_COOKIE_NAME } from "../../proxy";
 import type { Task, TaskBase, TaskQueryParams, TaskStats } from "../../types";
 import { cookies } from "next/headers";
 import { apiFetch } from "../../utils";
