@@ -13,7 +13,6 @@ const nextConfig = {
   experimental: {
     webpackMemoryOptimizations: true,
   },
-  eslint: { dirs: ['src'] },
 
   images: {
     formats: ['image/avif', 'image/webp'],
