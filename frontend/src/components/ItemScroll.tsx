@@ -3,6 +3,7 @@ import ItemComponentButtons from "./ItemComponentButtons.tsx";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Item, ItemQueryParams } from "../types.ts";
 import ItemComponent from "./ItemComponent.tsx";
+import { memo, useMemo } from "react";
 
 interface Props {
   allItems: Item[] | null;
@@ -19,15 +20,28 @@ function ItemScroll({
   queryParams,
   changeCount,
 }: Props) {
-  const containerVarients = {
-    show: {
-      transition: {
-        staggerChildren:
-          // first load has a stagger animation but when infinite scrolling its turned off
-          allItems && allItems.length > queryParams.limit ? 0 : 0.04,
+  const isFirstLoad = useMemo(() => {
+    return !allItems || allItems.length <= queryParams.limit;
+  }, [allItems?.length, queryParams.limit]);
+
+  const containerVarients = useMemo(
+    () => ({
+      show: {
+        transition: {
+          staggerChildren: isFirstLoad ? 0.04 : 0,
+        },
       },
-    },
-  };
+    }),
+    [isFirstLoad]
+  );
+
+  const itemVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0 },
+      show: { opacity: 1 },
+    }),
+    []
+  );
 
   return (
     <InfiniteScroll
@@ -38,7 +52,6 @@ function ItemScroll({
     >
       <AnimatePresence>
         <motion.ul
-          key={allItems?.length}
           variants={containerVarients}
           initial="hidden"
           animate="show"
@@ -48,12 +61,9 @@ function ItemScroll({
             <motion.li
               key={x._id}
               transition={{
-                duration: allItems.length <= queryParams.limit ? 0.8 : 0,
+                duration: isFirstLoad ? 0.8 : 0,
               }}
-              variants={{
-                hidden: { opacity: 0 },
-                show: { opacity: 1 },
-              }}
+              variants={itemVariants}
               style={{ listStyleType: "none" }}
             >
               <ItemComponent
@@ -76,4 +86,4 @@ function ItemScroll({
   );
 }
 
-export default ItemScroll;
+export default memo(ItemScroll);

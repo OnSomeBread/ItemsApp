@@ -14,17 +14,22 @@ async function ItemView({ searchParams }: PageProps) {
   const id = (await searchParams)?.id;
   if (id === undefined) return <p>no item passed in</p>;
 
-  const res1 = await apiFetch("/items/ids?ids=" + id, {
-    cache: "no-store",
-  });
-  const item = ((await res1.json()) as Item[])[0];
-
-  const res2 = await apiFetch("/items/history?item_id=" + item._id,
-    {
+  // fetch item data and history in parallel
+  const [res1, res2] = await Promise.all([
+    apiFetch("/items/ids?ids=" + id, {
       cache: "no-store",
-    }
-  );
-  const itemHistory = (await res2.json()) as ItemHistory[];
+    }),
+    apiFetch("/items/history?item_id=" + id, {
+      cache: "no-store",
+    }),
+  ]);
+
+  const [itemData, itemHistory] = await Promise.all([
+    res1.json() as Promise<Item[]>,
+    res2.json() as Promise<ItemHistory[]>,
+  ]);
+
+  const item = itemData[0];
 
   return (
     <>

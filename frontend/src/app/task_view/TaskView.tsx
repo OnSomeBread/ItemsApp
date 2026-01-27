@@ -12,16 +12,22 @@ async function TaskView({ searchParams }: PageProps) {
   const id = (await searchParams)?.id;
   if (id === undefined) return <p>no task passed in</p>;
 
-  const res1 = await apiFetch("/tasks/ids?ids=" + id, {
-    cache: "no-store",
-  });
+  // fetch task and adjacency list in parallel
+  const [res1, res2] = await Promise.all([
+    apiFetch("/tasks/ids?ids=" + id, {
+      cache: "force-cache",
+    }),
+    apiFetch("/tasks/adj_list", {
+      cache: "force-cache",
+    }),
+  ]);
 
-  const task = ((await res1.json()) as Task[])[0];
+  const [taskData, adjList] = await Promise.all([
+    res1.json() as Promise<Task[]>,
+    res2.json() as Promise<TaskAdjList>,
+  ]);
 
-  const res2 = await apiFetch("/tasks/adj_list", {
-    cache: "no-store",
-  });
-  const adjList = (await res2.json()) as TaskAdjList;
+  const task = taskData[0];
 
   // maps task id to status for all adjTasks
   const statusMap = new Map<string, string>();
@@ -38,12 +44,26 @@ async function TaskView({ searchParams }: PageProps) {
       statusMap.set(tsk[0], tsk[1] ? "unlocks" : "prerequisite");
     });
 
-  const res3 = await apiFetch("/tasks/ids?" + params.toString(),
-    {
+  const allItemIds = task.objectives.flatMap((obj) => obj.needed_item_ids);
+  const itemParams = new URLSearchParams();
+  allItemIds.forEach((itm) => {
+    itemParams.append("ids", itm);
+  });
+
+  // Fetch related tasks and items in parallel
+  const [res3, res4] = await Promise.all([
+    apiFetch("/tasks/ids?" + params.toString(), {
       cache: "no-store",
-    }
-  );
-  const adjTasks = (await res3.json()) as Task[];
+    }),
+    apiFetch("/items/ids?" + itemParams.toString(), {
+      cache: "no-store",
+    }),
+  ]);
+
+  const [adjTasks, items] = await Promise.all([
+    res3.json() as Promise<Task[]>,
+    res4.json() as Promise<ItemBase[]>,
+  ]);
 
   const taskPreqs = adjTasks?.filter(
     (tst) => statusMap.get(tst._id) !== "unlocks"
@@ -53,18 +73,6 @@ async function TaskView({ searchParams }: PageProps) {
     (tst) => statusMap.get(tst._id) === "unlocks"
   );
 
-  const allItemIds = task.objectives.flatMap((obj) => obj.needed_item_ids);
-  const itemParams = new URLSearchParams();
-  allItemIds.forEach((itm) => {
-    itemParams.append("ids", itm);
-  });
-
-  const res4 = await apiFetch("/items/ids?" + itemParams.toString(),
-    {
-      cache: "no-store",
-    }
-  );
-  const items = (await res4.json()) as ItemBase[];
   const id_to_item: Map<string, ItemBase> = new Map();
   items.forEach((itm) => id_to_item.set(itm._id, itm));
 

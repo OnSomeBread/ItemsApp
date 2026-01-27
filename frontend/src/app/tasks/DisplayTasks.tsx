@@ -20,17 +20,27 @@ async function DisplayTasks({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await apiFetch("/tasks/stats", {
-    cache: "no-store",
-    headers,
-  });
-  const taskStats = (await res1.json()) as TaskStats;
+  // fetch stats, query params, and completed tasks in parallel (they are relatively static)
+  const [res1, res2, res4] = await Promise.all([
+    apiFetch("/tasks/stats", {
+      cache: "no-store",
+      headers,
+    }),
+    apiFetch("/tasks/query_parms", {
+      cache: "no-store",
+      headers,
+    }),
+    apiFetch("/tasks/get_completed", {
+      cache: "no-store",
+      headers,
+    }),
+  ]);
 
-  const res2 = await apiFetch("/tasks/query_parms", {
-    cache: "no-store",
-    headers,
-  });
-  const resQueryParams = (await res2.json()) as TaskQueryParams;
+  const [taskStats, resQueryParams, completedTasks] = await Promise.all([
+    res1.json() as Promise<TaskStats>,
+    res2.json() as Promise<TaskQueryParams>,
+    res4.json() as Promise<TaskBase[]>,
+  ]);
 
   const queryParams = (await searchParams)?.queryParams ?? {
     ...DEFAULT_TASK_QUERY_PARAMS,
@@ -49,12 +59,6 @@ async function DisplayTasks({ searchParams }: PageProps) {
   });
   const tasks = (await res3.json()) as Task[];
   queryParams.offset = queryParams.limit;
-
-  const res4 = await apiFetch("/tasks/get_completed", {
-    cache: "no-store",
-    headers,
-  });
-  const completedTasks = (await res4.json()) as TaskBase[];
 
   return (
     <>

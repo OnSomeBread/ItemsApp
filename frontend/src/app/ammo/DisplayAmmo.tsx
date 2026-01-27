@@ -20,17 +20,22 @@ async function DisplayAmmo({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await apiFetch("/ammo/stats", {
-    cache: "no-store",
-    headers,
-  });
-  const ammoStats = (await res1.json()) as AmmoStats;
+  // fetch stats and query params in parallel
+  const [res1, res2] = await Promise.all([
+    apiFetch("/ammo/stats", {
+      cache: "no-store",
+      headers,
+    }),
+    apiFetch("/ammo/query_parms", {
+      cache: "no-store",
+      headers,
+    }),
+  ]);
 
-  const res2 = await apiFetch("/ammo/query_parms", {
-    cache: "no-store",
-    headers,
-  });
-  const resQueryParams = (await res2.json()) as AmmoQueryParams;
+  const [ammoStats, resQueryParams] = await Promise.all([
+    res1.json() as Promise<AmmoStats>,
+    res2.json() as Promise<AmmoQueryParams>,
+  ]);
 
   const queryParams = (await searchParams)?.queryParams ?? {
     ...DEFAULT_AMMO_QUERY_PARAMS,

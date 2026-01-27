@@ -20,17 +20,22 @@ async function DisplayItemsCompact({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await apiFetch("/items/stats", {
-    cache: "no-store",
-    headers,
-  });
-  const itemStats = (await res1.json()) as ItemStats;
+  // fetch stats and query params in parallel
+  const [res1, res2] = await Promise.all([
+    apiFetch("/items/stats", {
+      cache: "no-store",
+      headers,
+    }),
+    apiFetch("/items/query_parms", {
+      cache: "no-store",
+      headers,
+    }),
+  ]);
 
-  const res2 = await apiFetch("/items/query_parms", {
-    cache: "no-store",
-    headers,
-  });
-  const resQueryParams = (await res2.json()) as ItemQueryParams;
+  const [itemStats, resQueryParams] = await Promise.all([
+    res1.json() as Promise<ItemStats>,
+    res2.json() as Promise<ItemQueryParams>,
+  ]);
 
   const queryParams = (await searchParams)?.queryParams ?? {
     ...DEFAULT_ITEM_QUERY_PARAMS,

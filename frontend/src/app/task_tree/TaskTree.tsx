@@ -34,11 +34,6 @@ async function TaskTree({ searchParams }: PageProps) {
   if (is_lightkeeper === undefined) is_lightkeeper = false;
   if (include_completed === undefined) include_completed = true;
 
-  const res1 = await apiFetch("/tasks/adj_list", {
-    cache: "no-store",
-  });
-  const adjList = (await res1.json()) as TaskAdjList;
-
   const deviceCookie = cookieStore.get(DEVICE_UUID_COOKIE_NAME);
   const deviceId = deviceCookie ? deviceCookie.value : undefined;
 
@@ -47,21 +42,31 @@ async function TaskTree({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res2 = await apiFetch("/tasks/base?trader=" +
-      trader +
-      "&is_kappa=" +
-      is_kappa +
-      "&is_lightkeeper=" +
-      is_lightkeeper +
-      "&include_completed=" +
-      include_completed +
-      "&limit=1000&save=false",
-    {
+  // build query params using URLSearchParams
+  const queryParams = new URLSearchParams({
+    trader,
+    is_kappa: is_kappa.toString(),
+    is_lightkeeper: is_lightkeeper.toString(),
+    include_completed: include_completed.toString(),
+    limit: "1000",
+    save: "false",
+  });
+
+  // Fetch adjacency list and tasks in parallel
+  const [res1, res2] = await Promise.all([
+    apiFetch("/tasks/adj_list", {
+      cache: "no-store",
+    }),
+    apiFetch("/tasks/base?" + queryParams.toString(), {
       cache: "no-store",
       headers,
-    }
-  );
-  const allTasks = (await res2.json()) as TaskBase[];
+    }),
+  ]);
+
+  const [adjList, allTasks] = await Promise.all([
+    res1.json() as Promise<TaskAdjList>,
+    res2.json() as Promise<TaskBase[]>,
+  ]);
 
   const initNodes =
     allTasks?.map((task) => ({
@@ -69,28 +74,26 @@ async function TaskTree({ searchParams }: PageProps) {
       data: { label: task.task_name },
     })) ?? [];
 
-  const idToTask = new Map<string, TaskBase>(
-    allTasks?.map((task) => [task._id, task]) ?? []
-  );
+  const idToTaskSet = new Set(allTasks?.map((task) => task._id) ?? []);
 
   const initEdges: Edge[] = [];
   if (adjList) {
     initNodes.forEach((node) => {
-      const connections = adjList[node.id]?.filter(
-        (dir) => dir[1] === true && idToTask.has(dir[0])
-      );
-      connections?.forEach((val) =>
-        initEdges.push({
-          id: node.id + val[0],
-          source: node.id,
-          target: val[0],
-          style: { strokeWidth: 2 },
-        })
-      );
+      const connections = adjList[node.id];
+      if (connections) {
+        connections.forEach(([targetId, isActive]) => {
+          if (isActive && idToTaskSet.has(targetId)) {
+            initEdges.push({
+              id: node.id + targetId,
+              source: node.id,
+              target: targetId,
+              style: { strokeWidth: 2 },
+            });
+          }
+        });
+      }
     });
   }
-
-  if (!adjList || !allTasks) return <article aria-busy="true" />;
 
   return (
     // the div styling is to make the subdivs display over eachother

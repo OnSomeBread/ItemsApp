@@ -1,6 +1,6 @@
 "use client";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from "react";
 import Link from "next/link";
 import type { Item, ItemQueryParams, ItemStats } from "../types";
 import { apiFetch, formatSecondsToTime, getBestBuy, getBestSell } from "../utils";
@@ -51,7 +51,7 @@ function ItemScrollCompact({
     return () => clearInterval(interval);
   }, [timer]);
 
-  const fetchItems = (offset: number) => {
+  const fetchItems = useCallback((offset: number) => {
     const params = new URLSearchParams();
     Object.entries(queryParams).forEach(([key, value]) => {
       if (key !== "offset") params.append(key, value.toString());
@@ -78,20 +78,53 @@ function ItemScrollCompact({
           .catch((err) => console.error(err));
       })
       .catch((err) => console.error(err));
-  };
+  }, [queryParams, headers]);
 
-  const changeQueryParams = (key: string, value: string | number | boolean) => {
+  const changeQueryParams = useCallback((key: string, value: string | number | boolean) => {
     setQueryParams((prev) => {
       return { ...prev, [key]: value };
     });
     if (key !== "offset") {
       setChangedItemsToggle((prev) => !prev);
     }
-  };
+  }, []);
 
-  const fetchScroll = () => {
+  const fetchScroll = useCallback(() => {
     fetchItems(queryParams.offset);
-  };
+  }, [fetchItems, queryParams.offset]);
+
+  // memoize sort handlers
+  const handleNameSort = useCallback(() => {
+    setQueryParams((prev) => ({
+      ...prev,
+      sort_asc: !prev.sort_asc,
+      sort_by: "item_name",
+    }));
+  }, []);
+
+  const handleFleatoTraderSort = useCallback(() => {
+    setQueryParams((prev) => ({
+      ...prev,
+      sort_asc: !prev.sort_asc,
+      sort_by: "buy_from_flea_instant_profit",
+    }));
+  }, []);
+
+  const handleTraderToFleaSort = useCallback(() => {
+    setQueryParams((prev) => ({
+      ...prev,
+      sort_asc: !prev.sort_asc,
+      sort_by: "buy_from_trader_instant_profit",
+    }));
+  }, []);
+
+  const handlePerSlotSort = useCallback(() => {
+    setQueryParams((prev) => ({
+      ...prev,
+      sort_asc: !prev.sort_asc,
+      sort_by: "per_slot",
+    }));
+  }, []);
 
   return (
     <>
@@ -115,15 +148,7 @@ function ItemScrollCompact({
               <th className="font-medium">Icon</th>
               <th
                 className="font-medium"
-                onClick={() => {
-                  setQueryParams((prev) => {
-                    return {
-                      ...prev,
-                      sort_asc: !prev.sort_asc,
-                      sort_by: "item_name",
-                    };
-                  });
-                }}
+                onClick={handleNameSort}
               >
                 Name{" "}
                 {queryParams.sort_by === "item_name" &&
@@ -133,15 +158,7 @@ function ItemScrollCompact({
               <th className="font-medium">Sell For</th>
               <th
                 className="font-medium"
-                onClick={() => {
-                  setQueryParams((prev) => {
-                    return {
-                      ...prev,
-                      sort_asc: !prev.sort_asc,
-                      sort_by: "buy_from_flea_instant_profit",
-                    };
-                  });
-                }}
+                onClick={handleFleatoTraderSort}
               >
                 Flea ➝ Trader{" "}
                 {queryParams.sort_by === "buy_from_flea_instant_profit" &&
@@ -149,15 +166,7 @@ function ItemScrollCompact({
               </th>
               <th
                 className="font-medium"
-                onClick={() => {
-                  setQueryParams((prev) => {
-                    return {
-                      ...prev,
-                      sort_asc: !prev.sort_asc,
-                      sort_by: "buy_from_trader_instant_profit",
-                    };
-                  });
-                }}
+                onClick={handleTraderToFleaSort}
               >
                 Trader ➝ Flea{" "}
                 {queryParams.sort_by === "buy_from_trader_instant_profit" &&
@@ -165,15 +174,7 @@ function ItemScrollCompact({
               </th>
               <th
                 className="font-medium"
-                onClick={() => {
-                  setQueryParams((prev) => {
-                    return {
-                      ...prev,
-                      sort_asc: !prev.sort_asc,
-                      sort_by: "per_slot",
-                    };
-                  });
-                }}
+                onClick={handlePerSlotSort}
               >
                 Per Slot{" "}
                 {queryParams.sort_by === "per_slot" &&
@@ -183,104 +184,9 @@ function ItemScrollCompact({
             </tr>
           </thead>
           <tbody>
-            {allItems.map((item) => {
-              const bestBuy = getBestBuy(item);
-              const bestSell = getBestSell(item);
-
-              return (
-                <tr key={item._id}>
-                  <td className="!h-10 !w-16">
-                    <ImageComponent
-                      imgSrc={"/" + item._id + ".webp"}
-                      alt={item.item_name}
-                      priority={true}
-                      width={16}
-                      height={16}
-                    />
-                  </td>
-                  <td className="w-140">
-                    <Link
-                      href={{
-                        pathname: "/item_view",
-                        query: "id=" + item._id,
-                      }}
-                    >
-                      {item.item_name}
-                    </Link>
-                  </td>
-                  <td className="w-90">
-                    {bestBuy !== null &&
-                      bestBuy.trader_name !== "Flea Market" && (
-                        <p>
-                          {"buy " +
-                            bestBuy.buy_limit +
-                            " @ " +
-                            bestBuy.trader_name +
-                            " " +
-                            bestBuy.min_trader_level +
-                            " For " +
-                            bestBuy.price.toLocaleString("en-us") +
-                            " " +
-                            bestBuy.currency}
-                        </p>
-                      )}
-                    {bestBuy !== null &&
-                      bestBuy.trader_name === "Flea Market" && (
-                        <p>{bestBuy.price_rub.toLocaleString("en-us")} RUB</p>
-                      )}
-                  </td>
-                  <td className="w-60">
-                    {bestSell !== null && (
-                      <p>
-                        {bestSell.trader_name}:{" "}
-                        {bestSell.price_rub.toLocaleString("en-us")} RUB
-                      </p>
-                    )}
-                  </td>
-                  <td className="w-60">
-                    <p
-                      className={
-                        item.buy_from_flea_instant_profit > 0
-                          ? "!text-green-600"
-                          : "!text-red-600"
-                      }
-                    >
-                      {item.buy_from_flea_instant_profit.toLocaleString(
-                        "en-us"
-                      )}{" "}
-                      RUB
-                    </p>
-                  </td>
-                  <td className="w-60">
-                    <p
-                      className={
-                        item.buy_from_trader_instant_profit > 0
-                          ? "!text-green-600"
-                          : "!text-red-600"
-                      }
-                    >
-                      {item.buy_from_trader_instant_profit.toLocaleString(
-                        "en-us"
-                      )}{" "}
-                      RUB
-                    </p>
-                  </td>
-                  <td className="w-60">
-                    <p>{item.per_slot.toLocaleString("en-us")} RUB</p>
-                  </td>
-                  <td>
-                    <a
-                      href={item.wiki}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="!no-underline"
-                    >
-                      🔗
-                    </a>
-                  </td>
-                </tr>
-              );
-            })}
+            {allItems.map((item) => (
+              <ItemTableRow key={item._id} item={item} />
+            ))}
           </tbody>
         </table>
       </InfiniteScroll>
@@ -288,4 +194,98 @@ function ItemScrollCompact({
   );
 }
 
-export default ItemScrollCompact;
+export default memo(ItemScrollCompact);
+
+// memoized table row component to prevent re-renders of individual rows
+const ItemTableRow = memo(({ item }: { item: Item }) => {
+  const bestBuy = useMemo(() => getBestBuy(item), [item._id, item.buys]);
+  const bestSell = useMemo(() => getBestSell(item), [item._id, item.sells]);
+
+  return (
+    <tr>
+      <td className="!h-10 !w-16">
+        <ImageComponent
+          imgSrc={"/" + item._id + ".webp"}
+          alt={item.item_name}
+          priority={false}
+          width={16}
+          height={16}
+        />
+      </td>
+      <td className="w-140">
+        <Link
+          href={{
+            pathname: "/item_view",
+            query: "id=" + item._id,
+          }}
+        >
+          {item.item_name}
+        </Link>
+      </td>
+      <td className="w-90">
+        {bestBuy !== null &&
+          bestBuy.trader_name !== "Flea Market" && (
+            <p>
+              {"buy " +
+                bestBuy.buy_limit +
+                " @ " +
+                bestBuy.trader_name +
+                " " +
+                bestBuy.min_trader_level +
+                " For " +
+                bestBuy.price.toLocaleString("en-us") +
+                " " +
+                bestBuy.currency}
+            </p>
+          )}
+        {bestBuy !== null &&
+          bestBuy.trader_name === "Flea Market" && (
+            <p>{bestBuy.price_rub.toLocaleString("en-us")} RUB</p>
+          )}
+      </td>
+      <td className="w-60">
+        {bestSell !== null && (
+          <p>
+            {bestSell.trader_name}:{" "}
+            {bestSell.price_rub.toLocaleString("en-us")} RUB
+          </p>
+        )}
+      </td>
+      <td className="w-60">
+        <p
+          className={
+            item.buy_from_flea_instant_profit > 0
+              ? "!text-green-600"
+              : "!text-red-600"
+          }
+        >
+          {item.buy_from_flea_instant_profit.toLocaleString("en-us")} RUB
+        </p>
+      </td>
+      <td className="w-60">
+        <p
+          className={
+            item.buy_from_trader_instant_profit > 0
+              ? "!text-green-600"
+              : "!text-red-600"
+          }
+        >
+          {item.buy_from_trader_instant_profit.toLocaleString("en-us")} RUB
+        </p>
+      </td>
+      <td className="w-60">
+        <p>{item.per_slot.toLocaleString("en-us")} RUB</p>
+      </td>
+      <td>
+        <a
+          href={item.wiki}
+          target="_blank"
+          rel="noreferrer"
+          className="!no-underline"
+        >
+          🔗
+        </a>
+      </td>
+    </tr>
+  );
+});

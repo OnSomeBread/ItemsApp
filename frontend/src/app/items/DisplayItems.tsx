@@ -1,6 +1,6 @@
 "use client";
 import { DEFAULT_ITEM_QUERY_PARAMS } from "../../constants.ts";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { apiFetch, clearPageLocalStorage } from "../../utils.ts";
 import ItemSearchBar from "../../components/ItemSearchBar.tsx";
 import ItemScroll from "../../components/ItemScroll.tsx";
@@ -20,21 +20,25 @@ function DisplayItems() {
   // right now its used to switch between 2 interfaces strictly on mobile
   const [interfaceToggle, setInterfaceToggle] = useState<boolean>(false);
   const [queryParams, setQueryParams] = useState(DEFAULT_ITEM_QUERY_PARAMS);
-  const changeQueryParams = (key: string, value: string | number | boolean) => {
+  
+  const changeQueryParams = useCallback((key: string, value: string | number | boolean) => {
     setQueryParams((prev) => {
       return { ...prev, [key]: value };
     });
-  };
+  }, []);
 
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(queryParams)) {
-    // offset gets skipped for use effect grab since it creates dependency hell and best to add it for scrolling
-    if (key === "offset" || value.toString() === "") continue;
-    params.append(key, value.toString());
-  }
-  const query = "/items?" + params.toString();
+  // memoize query string to prevent unnecessary re-fetches
+  const query = useMemo(() => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(queryParams)) {
+      // offset gets skipped for use effect grab since it creates dependency hell and best to add it for scrolling
+      if (key === "offset" || value.toString() === "") continue;
+      params.append(key, value.toString());
+    }
+    return "/items?" + params.toString();
+  }, [queryParams]);
 
-  const fetchItems = (offset: number) => {
+  const fetchItems = useCallback((offset: number) => {
     if (typeof window === "undefined") return;
     if (fetchLoading) return;
     setFetchLoading(true);
@@ -43,28 +47,27 @@ function DisplayItems() {
       .then((response) => {
         response.json().then((items: Item[])=> {
           const newItems = items.map((item: Item) => {
-          return {
-            ...item,
-            count: parseInt(localStorage.getItem("item-" + item._id) || "0"),
-          };
-          
-        }
+            const count = localStorage.getItem("item-" + item._id);
+            return {
+              ...item,
+              count: count ? parseInt(count) : 0,
+            };
+          });
       
-      )
-      if (offset === 0) {
-          setAllItems(newItems);
-        } else {
-          setAllItems((prev) => [...(prev ?? []), ...newItems]);
-        }
-        changeQueryParams("offset", offset + queryParams.limit);
+          if (offset === 0) {
+            setAllItems(newItems);
+          } else {
+            setAllItems((prev) => [...(prev ?? []), ...newItems]);
+          }
+          changeQueryParams("offset", offset + queryParams.limit);
 
-        setHasMore(newItems.length === queryParams.limit);
-    });
+          setHasMore(newItems.length === queryParams.limit);
+      });
         
       })
       .catch((err) => console.error(err))
       .finally(() => setFetchLoading(false));
-  };
+  }, [query, fetchLoading, queryParams.limit, changeQueryParams]);
 
   // grabs the first page of items based on the search params
   useEffect(() => {
@@ -73,12 +76,12 @@ function DisplayItems() {
   }, [query]);
 
   // used for the infinite scroll to grab more items
-  const getMoreItems = () => {
+  const getMoreItems = useCallback(() => {
     fetchItems(queryParams.offset);
-  };
+  }, [fetchItems, queryParams.offset]);
 
   // this function is called when the buttons are pressed to change the value of a specific item in local storage
-  const changeCount = (idx: number, newNumber: number) => {
+  const changeCount = useCallback((idx: number, newNumber: number) => {
     if (typeof window === "undefined") return;
     setAllItems(
       allItems?.map((item, index) => {
@@ -99,10 +102,10 @@ function DisplayItems() {
         return { ...item, count: newNumber };
       }) || null
     );
-  };
+  }, [allItems]);
 
   // only deletes the keys for this page
-  const clearCounts = () => {
+  const clearCounts = useCallback(() => {
     if (typeof window === "undefined") return;
     clearPageLocalStorage("item");
     clearPageLocalStorage("date-added-item");
@@ -111,7 +114,7 @@ function DisplayItems() {
         return { ...item, count: 0 };
       }) || null
     );
-  };
+  }, [allItems]);
 
   return (
     <>

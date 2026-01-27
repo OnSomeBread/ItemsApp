@@ -20,12 +20,6 @@ async function DisplayNeededItems({ searchParams }: PageProps) {
     ...(deviceId ? { "x-device-id": deviceId } : {}),
   };
 
-  const res1 = await apiFetch("/tasks/stats", {
-    cache: "no-store",
-    headers,
-  });
-  const taskStats = (await res1.json()) as TaskStats;
-
   const queryParams = (await searchParams)?.queryParams ?? {
     ...DEFAULT_TASK_QUERY_PARAMS,
     is_kappa: true,
@@ -37,13 +31,22 @@ async function DisplayNeededItems({ searchParams }: PageProps) {
     params.append(key, value.toString());
   });
 
-  const res2 = await apiFetch("/tasks/get_required_items?" + params.toString(),
-    {
+  // Fetch task stats and required items in parallel
+  const [res1, res2] = await Promise.all([
+    apiFetch("/tasks/stats", {
       cache: "no-store",
       headers,
-    }
-  );
-  const items = (await res2.json()) as [ItemBase, number][];
+    }),
+    apiFetch("/tasks/get_required_items?" + params.toString(), {
+      cache: "no-store",
+      headers,
+    }),
+  ]);
+
+  const [taskStats, items] = await Promise.all([
+    res1.json() as Promise<TaskStats>,
+    res2.json() as Promise<[ItemBase, number][]>,
+  ]);
 
   return (
     <>
