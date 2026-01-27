@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 import {
   Label,
   Line,
@@ -25,7 +26,7 @@ function BitCoinProductionChart({
   ytoolLabel,
 }: Props) {
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width="100%" height={400} minWidth={300}>
       <LineChart
         data={bitcoinData}
         margin={{ top: 0, left: 10, right: 40, bottom: 10 }}
@@ -62,4 +63,4 @@ function BitCoinProductionChart({
   );
 }
 
-export default BitCoinProductionChart;
+export default memo(BitCoinProductionChart);

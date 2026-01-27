@@ -38,25 +38,27 @@ async function BitCoinProfit({ searchParams }: PageProps) {
   if (fuelType === undefined) fuelType = "largeFuel";
   if (hasSolar === undefined) hasSolar = "no";
 
-  // get bitcoin data
-  const res1 = await apiFetch("/items/ids?ids=59faff1d86f7746c51718c9c",
-    {
+  // fetch bitcoin and GPU data in parallel
+  const [res1, res2] = await Promise.all([
+    apiFetch("/items/ids?ids=59faff1d86f7746c51718c9c", {
       cache: "no-store",
-    }
-  );
-  const bitcoin = ((await res1.json()) as Item[])[0];
-  const bitcoinSell = bitcoin.sells.reduce((prev, curr) => {
+    }),
+    apiFetch("/items/ids?ids=57347ca924597744596b4e71", {
+      cache: "no-store",
+    }),
+  ]);
+
+  const [bitcoin, gpu] = await Promise.all([
+    res1.json() as Promise<Item[]>,
+    res2.json() as Promise<Item[]>,
+  ]);
+
+  const bitcoinData = bitcoin[0];
+  const gpuData = gpu[0];
+  const bitcoinSell = bitcoinData.sells.reduce((prev, curr) => {
     return prev.price_rub > curr.price_rub ? prev : curr;
   });
-
-  // get gpu data
-  const res2 = await apiFetch("/items/ids?ids=57347ca924597744596b4e71",
-    {
-      cache: "no-store",
-    }
-  );
-  const gpu = ((await res2.json()) as Item[])[0];
-  const gpuCardBuy = gpu.buys.find((buy) => buy.trader_name === "Flea Market");
+  const gpuCardBuy = gpuData.buys.find((buy) => buy.trader_name === "Flea Market");
   if (gpuCardBuy === undefined) return;
 
   let fuelCost = 0;
@@ -64,11 +66,9 @@ async function BitCoinProfit({ searchParams }: PageProps) {
 
   if (fuelType === "smallFuel") {
     // get small fuel can data
-    const res3 = await apiFetch("/items/ids?ids=5d1b371186f774253763a656",
-      {
-        cache: "no-store",
-      }
-    );
+    const res3 = await apiFetch("/items/ids?ids=5d1b371186f774253763a656", {
+      cache: "no-store",
+    });
     const smallFuel = ((await res3.json()) as Item[])[0];
 
     const smallFuelBuy = smallFuel.buys.reduce((prev, curr) => {
@@ -78,11 +78,9 @@ async function BitCoinProfit({ searchParams }: PageProps) {
     fuelLastSecs = 45473;
   } else {
     // get large fuel can data
-    const res4 = await apiFetch("/items/ids?ids=5d1b36a186f7742523398433",
-      {
-        cache: "no-store",
-      }
-    );
+    const res4 = await apiFetch("/items/ids?ids=5d1b36a186f7742523398433", {
+      cache: "no-store",
+    });
     const largeFuel = ((await res4.json()) as Item[])[0];
 
     const largeFuelBuy = largeFuel.buys.reduce((prev, curr) => {
@@ -126,26 +124,26 @@ async function BitCoinProfit({ searchParams }: PageProps) {
 
   const bitcoinProfitPerDayData = (day: number) => {
     return [...Array(day).keys()].map((num) => {
-      const day = num + 1;
+      const currentDay = num + 1;
       return {
-        x: day,
-        GpuCount1: profitOnDay(day, 1),
-        GpuCount10: profitOnDay(day, 10),
-        GpuCount25: profitOnDay(day, 25),
-        GpuCount50: profitOnDay(day, 50),
+        x: currentDay,
+        GpuCount1: profitOnDay(currentDay, 1),
+        GpuCount10: profitOnDay(currentDay, 10),
+        GpuCount25: profitOnDay(currentDay, 25),
+        GpuCount50: profitOnDay(currentDay, 50),
       };
     });
   };
 
   const bitcoinProfitPerDayDataWithCosts = (day: number) => {
     return [...Array(day).keys()].map((num) => {
-      const day = num + 1;
+      const currentDay = num + 1;
       return {
-        x: day,
-        GpuCount1: profitOnDayWithCosts(day, 1),
-        GpuCount10: profitOnDayWithCosts(day, 10),
-        GpuCount25: profitOnDayWithCosts(day, 25),
-        GpuCount50: profitOnDayWithCosts(day, 50),
+        x: currentDay,
+        GpuCount1: profitOnDayWithCosts(currentDay, 1),
+        GpuCount10: profitOnDayWithCosts(currentDay, 10),
+        GpuCount25: profitOnDayWithCosts(currentDay, 25),
+        GpuCount50: profitOnDayWithCosts(currentDay, 50),
       };
     });
   };

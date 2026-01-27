@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 import {
   Label,
   Line,
@@ -16,7 +17,7 @@ interface Props {
 
 function ItemChart({ itemHistory }: Props) {
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width="100%" height={400} minWidth={300}>
       <LineChart
         data={itemHistory}
         margin={{ top: 0, right: 40, left: 10, bottom: 0 }}
@@ -67,4 +68,4 @@ function ItemChart({ itemHistory }: Props) {
   );
 }
 
-export default ItemChart;
+export default memo(ItemChart);
