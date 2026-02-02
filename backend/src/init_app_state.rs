@@ -37,7 +37,7 @@ pub const AMMO_UNIQUE_CACHE_PREFIX: char = '#';
 const DELETE_DEVICE_PREFERENCES_TIME: u64 = 3600 * 24;
 
 // this is the max total size of the item history table in db where 1 entry gets added every ITEM_SLEEP_TIME for every item
-pub const ITEM_HISTORY_SIZE: i64 = 1000;
+pub const ITEM_HISTORY_SIZE: i64 = 500;
 
 pub async fn init_app_state(postgres_url: String, _redis_url: String) -> Result<AppState> {
     let pgpool = loop {
