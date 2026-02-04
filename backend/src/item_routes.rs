@@ -390,7 +390,7 @@ pub async fn get_item_history(
     // since data is sampled at 1 every ITEM_SLEEP_TIME then item_history_sample_amount * ITEM_SLEEP_TIME = seconds difference of each sample
     let item_history: Vec<SavedItemData> = rows
         .into_iter()
-        .step_by(3600 / ITEM_SLEEP_TIME as usize)
+        .step_by((3600 * 2) / ITEM_SLEEP_TIME as usize)
         .collect();
 
     let tokio_values = item_history.clone();
