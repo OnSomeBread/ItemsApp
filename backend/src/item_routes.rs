@@ -378,29 +378,32 @@ pub async fn get_item_history(
         return Ok(Json(values));
     }
 
+    let sample_interval = (3600 * 4) / ITEM_SLEEP_TIME as i64;
     let rows = sqlx::query_as!(
         SavedItemData,
-        "SELECT price_rub, recorded_time FROM SavedItemData WHERE item_id = $1 ORDER BY recorded_time ASC",
-        item_id
+        "SELECT price_rub, recorded_time FROM (
+            SELECT price_rub, recorded_time, 
+                   ROW_NUMBER() OVER (ORDER BY recorded_time ASC) as rn
+            FROM SavedItemData 
+            WHERE item_id = $1
+        ) subquery
+        WHERE (rn - 1) % $2 = 0
+        ORDER BY recorded_time ASC",
+        item_id,
+        sample_interval
     )
     .fetch_all(&app_state.pgpool)
     .await
     .bad_sql("ItemHistory")?;
 
-    // since data is sampled at 1 every ITEM_SLEEP_TIME then item_history_sample_amount * ITEM_SLEEP_TIME = seconds difference of each sample
-    let item_history: Vec<SavedItemData> = rows
-        .into_iter()
-        .step_by((3600 * 4) / ITEM_SLEEP_TIME as usize)
-        .collect();
-
-    let tokio_values = item_history.clone();
+    let tokio_values = rows.clone();
     tokio::spawn(async move {
         app_state
             .cache
             .insert_vec(cache_key, tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
     });
 
-    Ok(Json(item_history))
+    Ok(Json(rows))
 }
 
 pub async fn get_items_help(Query(query_parms): Query<ItemQueryParams>) -> Json<ItemQueryParams> {
