@@ -372,11 +372,11 @@ pub async fn get_item_history(
     }
 
     let item_id = query_parms.item_id.unwrap();
-    let cache_key = item_id.clone() + "-history";
+    // let cache_key = item_id.clone() + "-history";
 
-    if let Some(values) = app_state.cache.get_vec(&cache_key) {
-        return Ok(Json(values));
-    }
+    // if let Some(values) = app_state.cache.get_vec(&cache_key) {
+    //     return Ok(Json(values));
+    // }
 
     let sample_interval = (3600 * 4) / ITEM_SLEEP_TIME as i64;
     let rows = sqlx::query_as!(
@@ -396,12 +396,12 @@ pub async fn get_item_history(
     .await
     .bad_sql("ItemHistory")?;
 
-    let tokio_values = rows.clone();
-    tokio::spawn(async move {
-        app_state
-            .cache
-            .insert_vec(cache_key, tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
-    });
+    // let tokio_values = rows.clone();
+    // tokio::spawn(async move {
+    //     app_state
+    //         .cache
+    //         .insert_vec(cache_key, tokio_values, ITEMS_UNIQUE_CACHE_PREFIX);
+    // });
 
     Ok(Json(rows))
 }
