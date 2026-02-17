@@ -1,9 +1,9 @@
 import InfiniteScroll from "react-infinite-scroll-component";
 import ItemComponentButtons from "./ItemComponentButtons.tsx";
-import { AnimatePresence, motion } from "framer-motion";
+//import { AnimatePresence, motion } from "framer-motion";
 import type { Item, ItemQueryParams } from "../types.ts";
 import ItemComponent from "./ItemComponent.tsx";
-import { memo, useMemo } from "react";
+import { memo } from "react";
 
 interface Props {
   allItems: Item[] | null;
@@ -17,31 +17,31 @@ function ItemScroll({
   allItems,
   getMoreItems,
   hasMore,
-  queryParams,
+  //queryParams,
   changeCount,
 }: Props) {
-  const isFirstLoad = useMemo(() => {
-    return !allItems || allItems.length <= queryParams.limit;
-  }, [allItems?.length, queryParams.limit]);
+  // const isFirstLoad = useMemo(() => {
+  //   return !allItems || allItems.length <= queryParams.limit;
+  // }, [allItems?.length, queryParams.limit]);
 
-  const containerVarients = useMemo(
-    () => ({
-      show: {
-        transition: {
-          staggerChildren: isFirstLoad ? 0.04 : 0,
-        },
-      },
-    }),
-    [isFirstLoad]
-  );
+  // const containerVarients = useMemo(
+  //   () => ({
+  //     show: {
+  //       transition: {
+  //         staggerChildren: isFirstLoad ? 0.04 : 0,
+  //       },
+  //     },
+  //   }),
+  //   [isFirstLoad]
+  // );
 
-  const itemVariants = useMemo(
-    () => ({
-      hidden: { opacity: 0 },
-      show: { opacity: 1 },
-    }),
-    []
-  );
+  // const itemVariants = useMemo(
+  //   () => ({
+  //     hidden: { opacity: 0 },
+  //     show: { opacity: 1 },
+  //   }),
+  //   []
+  // );
 
   return (
     <InfiniteScroll
@@ -50,22 +50,24 @@ function ItemScroll({
       hasMore={hasMore}
       loader={<article aria-busy="true"></article>}
     >
-      <AnimatePresence>
+      {/* <AnimatePresence>
         <motion.ul
           variants={containerVarients}
           initial="hidden"
           animate="show"
           className="!grid !grid-cols-[repeat(auto-fill,minmax(275px,1fr))] gap-2 p-5"
-        >
+        > */}
+        <div className="!grid !grid-cols-[repeat(auto-fill,minmax(275px,1fr))] gap-2 p-5">
           {allItems?.map((x, i) => (
-            <motion.li
-              key={x._id}
-              transition={{
-                duration: isFirstLoad ? 0.8 : 0,
-              }}
-              variants={itemVariants}
-              style={{ listStyleType: "none" }}
-            >
+            // <motion.li
+            //   key={x._id}
+            //   transition={{
+            //     duration: isFirstLoad ? 0.8 : 0,
+            //   }}
+            //   variants={itemVariants}
+            //   style={{ listStyleType: "none" }}
+            // >
+            <div style={{ listStyleType: "none" }}>
               <ItemComponent
                 item={x}
                 idx={i}
@@ -77,11 +79,11 @@ function ItemScroll({
                   idx={i}
                   onChangeCount={changeCount}
                 ></ItemComponentButtons>
-              </ItemComponent>
-            </motion.li>
+              </ItemComponent></div>
+            // </motion.li>
           ))}
-        </motion.ul>
-      </AnimatePresence>
+        {/* </motion.ul>
+      </AnimatePresence> */}</div>
     </InfiniteScroll>
   );
 }
