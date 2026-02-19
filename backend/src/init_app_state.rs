@@ -42,9 +42,9 @@ pub const ITEM_HISTORY_SIZE: i64 = 500;
 pub async fn init_app_state(postgres_url: String, _redis_url: String) -> Result<AppState> {
     let pgpool = loop {
         match PgPoolOptions::new()
-            .min_connections(5)
+            .min_connections(2)
             .max_connections(10)
-            .idle_timeout(Duration::from_mins(30))
+            .idle_timeout(Duration::from_mins(10))
             .connect(&postgres_url)
             .await
         {
