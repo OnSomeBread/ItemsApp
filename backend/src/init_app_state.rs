@@ -2,8 +2,7 @@ use crate::caching::AppCache;
 use crate::deserialize_json_types::{Ammo, Item, Task};
 use crate::upsert::Upsert;
 use anyhow::Result;
-//use bb8_redis::{RedisConnectionManager, bb8};
-use dashmap::DashMap;
+//use dashmap::DashMap;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
@@ -13,10 +12,8 @@ use tokio::sync::RwLock;
 #[derive(Clone)]
 pub struct AppState {
     pub pgpool: sqlx::PgPool,
-    // #[allow(dead_code)]
-    // pub redispool: bb8::Pool<RedisConnectionManager>,
     pub cache: AppCache,
-    pub rate_limit: Arc<DashMap<String, (f64, Instant)>>,
+    //pub rate_limit: Arc<DashMap<String, (f64, Instant)>>,
     pub next_items_call_timer: Arc<RwLock<Instant>>,
     pub next_tasks_call_timer: Arc<RwLock<Instant>>,
     pub next_ammo_call_timer: Arc<RwLock<Instant>>,
@@ -42,9 +39,9 @@ pub const ITEM_HISTORY_SIZE: i64 = 500;
 pub async fn init_app_state(postgres_url: String, _redis_url: String) -> Result<AppState> {
     let pgpool = loop {
         match PgPoolOptions::new()
-            .min_connections(2)
+            .min_connections(1)
             .max_connections(10)
-            .idle_timeout(Duration::from_mins(10))
+            .idle_timeout(Duration::from_secs(60))
             .connect(&postgres_url)
             .await
         {
@@ -79,12 +76,12 @@ pub async fn init_app_state(postgres_url: String, _redis_url: String) -> Result<
         &pgpool,
     );
 
-    let rate_limit = Arc::new(DashMap::new());
+    //let rate_limit = Arc::new(DashMap::new());
 
     Ok(AppState {
         pgpool,
         cache,
-        rate_limit,
+        //rate_limit,
         next_items_call_timer,
         next_tasks_call_timer,
         next_ammo_call_timer,

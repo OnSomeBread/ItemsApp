@@ -160,10 +160,12 @@ impl AppCache {
     pub fn invalidate_cache_prefix(&self, cache_prefix: char) {
         let values = (*self.keys).get_mut(&cache_prefix);
 
-        if let Some(keys) = values {
+        if let Some(mut keys) = values {
             keys.iter().for_each(|x| {
                 self.cache.remove(x);
             });
+
+            keys.clear();
         }
     }
 }
