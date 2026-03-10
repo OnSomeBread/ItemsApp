@@ -5,7 +5,7 @@ COPY bun.lock package.json ./
 RUN bun install --frozen-lockfile
 
 COPY . .
-RUN bun run build
+RUN rm -rf .next && bun run build
 FROM oven/bun:1.3.6-alpine
 WORKDIR /frontend
 
